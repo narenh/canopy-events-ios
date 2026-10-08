@@ -16,7 +16,7 @@ struct VerifyEmailBanner: View {
                 Text("Verify your email")
                     .font(.subheadline.weight(.semibold))
                 Text("Confirm \(email ?? "your email") to host events and keep your account.")
-                    .font(.caption)
+                    .font(.subheadline)
                     .foregroundStyle(Palette.muted)
             }
             Spacer(minLength: 0)

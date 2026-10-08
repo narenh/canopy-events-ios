@@ -13,7 +13,7 @@ struct TagLabel: View {
             if let systemImage { Image(systemName: systemImage) }
         }
         .labelStyle(.titleAndIcon)
-        .font(.caption.weight(.semibold))
+        .font(.footnote.weight(.bold))
         .foregroundStyle(tint)
         .padding(.horizontal, Spacing.small)
         .padding(.vertical, Spacing.xSmall)

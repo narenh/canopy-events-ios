@@ -8,11 +8,19 @@ struct EventCard: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
 
+    /// 116 pt on a phone, 168 pt wider, as the web's.
+    private var thumbnailWidth: CGFloat { sizeClass == .regular ? 168 : 116 }
+
+    @Environment(\.dynamicTypeSize) private var typeSize
+
     var body: some View {
-        HStack(spacing: Spacing.medium) {
+        // At accessibility sizes the words get the whole width, under the picture.
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Spacing.medium))
+            : AnyLayout(HStackLayout(spacing: Spacing.medium))
+        layout {
             CoverPicture(event: event)
-                .frame(width: sizeClass == .regular ? 168 : 116)
-                .aspectRatio(3 / 2, contentMode: .fit)
+                .frame(width: thumbnailWidth, height: thumbnailWidth * 2 / 3)
                 .clipShape(.rect(cornerRadius: 12))
                 .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(.white.opacity(0.22), lineWidth: 1) }
 
