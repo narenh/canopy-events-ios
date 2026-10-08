@@ -21,7 +21,7 @@ extension APIError {
     static let entryNotFound = APIError(message: "That post is gone.", reason: .entryNotFound)
     static let notInvited = APIError(message: "They weren't invited.", reason: .notInvited)
     static let alreadyResponded = APIError(message: "They've already answered.", reason: .alreadyResponded)
-    static let personNotFound = APIError(message: "There's no Canopy account with that id.", reason: .personNotFound)
+    static let personNotFound = APIError(message: "There's no Canopy Account with that id.", reason: .personNotFound)
     static let notCohost = APIError(message: "They aren't a co-host.", reason: .notCohost)
     static let notRemoved = APIError(message: "They weren't removed.", reason: .notRemoved)
     static let isCreator = APIError(message: "You already host this event.", reason: .isCreator)

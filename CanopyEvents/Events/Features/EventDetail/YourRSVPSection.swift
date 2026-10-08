@@ -49,7 +49,7 @@ struct YourRSVPSection: View {
 
     private var heading: String {
         if event.isCancelled || event.isOver || event.myStatus == .removed { return "Your RSVP" }
-        return event.myStatus == .invited ? "You're invited. Are you going?" : "Are you going?"
+        return event.myStatus == .invited ? "RSVP" : "Are you going?"
     }
 
     /// Going or maybe to an event that allows plus-ones asks how many.

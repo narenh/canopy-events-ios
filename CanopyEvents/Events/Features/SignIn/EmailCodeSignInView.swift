@@ -56,7 +56,7 @@ struct EmailCodeSignInView: View {
             if try await session.checkSignInCode(code).state == .existing {
                 try await session.signInWithNewPasskey()
             } else {
-                errorMessage = "No Canopy account uses that email yet. Try quick sign-up."
+                errorMessage = "No Canopy Account uses that email yet. Try quick sign-up."
             }
         }
     }
