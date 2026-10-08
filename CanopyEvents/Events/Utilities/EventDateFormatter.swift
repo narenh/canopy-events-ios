@@ -22,11 +22,21 @@ enum EventDateFormatter {
         time(event.startsAt, event) + (event.endsAt.map { " – " + time($0, event) } ?? "")
     }
 
-    /// "Times are Eastern Time (EDT)." when the event's clock isn't yours.
+    /// "Times are in Eastern Time." when the event's clock isn't yours.
     static func zoneNote(for event: Event, viewer: TimeZone = .current) -> String? {
         let zone = event.eventTimeZone
         guard !TimeZoneName.sameClock(zone, viewer, at: event.startsAt) else { return nil }
-        return "Times are \(TimeZoneName.friendly(zone)) (\(TimeZoneName.abbreviation(zone, at: event.startsAt)))."
+        return "Times are in \(TimeZoneName.friendly(zone, at: event.startsAt))."
+    }
+
+    /// "Sat, Oct 31 · 7:30 PM Pacific Time": one moment, with its zone by
+    /// name (the wall's "moved it to...").
+    static func short(_ date: Date, in zone: TimeZone) -> String {
+        var day = Date.FormatStyle().weekday(.abbreviated).month(.abbreviated).day()
+        day.timeZone = zone
+        var time = Date.FormatStyle(date: .omitted, time: .shortened)
+        time.timeZone = zone
+        return date.formatted(day) + " · " + date.formatted(time) + " " + TimeZoneName.friendly(zone, at: date)
     }
 
     /// The bold line above a title in a list: "Sat, Oct 10 · 7:30 PM"

@@ -17,9 +17,9 @@ struct EventCard: View {
                 .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(.white.opacity(0.22), lineWidth: 1) }
 
             VStack(alignment: .leading, spacing: Spacing.xSmall) {
-                Text(EventDateFormatter.rowLine(for: event).uppercased())
+                Text(Self.unbroken(EventDateFormatter.rowLine(for: event).uppercased()))
                     .font(Typography.listWhen)
-                    .tracking(0.6)
+                    .tracking(0.4)
                     .foregroundStyle(Palette.link)
                 Text(event.title)
                     .font(Typography.listTitle)
@@ -36,6 +36,15 @@ struct EventCard: View {
             Spacer(minLength: 0)
         }
         .padding(.vertical, Spacing.xSmall)
+    }
+
+    /// The line breaks only between its pieces ("SAT, OCT 10 · 7:30 PM"
+    /// never splits "7:30 PM"), as the web's `unbroken` does.
+    static func unbroken(_ line: String) -> String {
+        line.components(separatedBy: " · ")
+            .map { $0.components(separatedBy: " – ").map { $0.replacingOccurrences(of: " ", with: "\u{00A0}") }
+                .joined(separator: " – ") }
+            .joined(separator: " · ")
     }
 
     @ViewBuilder private var tag: some View {

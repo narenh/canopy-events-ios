@@ -1,13 +1,19 @@
 import Foundation
 import Observation
 
-/// The create/edit form's state: a draft of the event's fields, and
-/// saving or cancelling it through the repository.
+/// The editor's state: a draft of the event's fields, a cover picked or
+/// removed (sent only on Save), and saving it all through the repository.
 @Observable
 final class EventEditorModel {
     /// The event being edited, or nil when making a new one.
     let original: Event?
     var draft: EventDraft
+    /// A photo picked for the cover, not uploaded until Save.
+    private(set) var pickedCover: Data?
+    /// The colour that matches the picked photo, once worked out.
+    private(set) var pickedCoverTheme: EventTheme?
+    /// The saved cover is to go, on Save.
+    private(set) var removesCover = false
     private(set) var isSaving = false
     var errorMessage: String?
 
@@ -18,41 +24,75 @@ final class EventEditorModel {
 
     var isNew: Bool { original == nil }
 
-    /// The form's "Ends" toggle. Turning it on picks start + 3 hours.
-    var hasEndTime: Bool {
-        get { draft.endsAt != nil }
-        set { draft.endsAt = newValue ? draft.startsAt.addingTimeInterval(3 * 60 * 60) : nil }
+    /// Whether the hero shows a photo (picked, or the saved one kept).
+    var hasCover: Bool { pickedCover != nil || (original?.hasCover == true && !removesCover) }
+
+    /// The colour "Match photo" applies: the picked photo's, else the
+    /// saved cover's (its `coverHue`), or nil when it isn't known.
+    var coverMatch: EventTheme? {
+        if pickedCover != nil { return pickedCoverTheme }
+        return removesCover ? nil : original?.coverTheme
     }
 
-    /// The form's "Limit spots" toggle. Turning it on starts at 20.
-    var hasCapacity: Bool {
-        get { draft.capacity != nil }
-        set { draft.capacity = newValue ? 20 : nil }
+    // MARK: When
+
+    /// Moving the start moves the end with it, keeping the length.
+    func setStart(_ start: Date) {
+        if let end = draft.endsAt {
+            draft.endsAt = start.addingTimeInterval(end.timeIntervalSince(draft.startsAt))
+        }
+        draft.startsAt = start
     }
 
-    /// Creates or updates the event. Returns it on success.
+    /// "+ End time": three hours after the start.
+    func addEnd() {
+        draft.endsAt = draft.startsAt.addingTimeInterval(3 * 60 * 60)
+    }
+
+    func removeEnd() {
+        draft.endsAt = nil
+    }
+
+    // MARK: Cover and colour
+
+    /// A photo was picked: keep it for Save, and jump the colour to it
+    /// when its colour can be worked out (the host can still change it).
+    func pick(_ data: Data) {
+        pickedCover = data
+        removesCover = false
+        pickedCoverTheme = PhotoHue.theme(ofImageData: data)
+        if let pickedCoverTheme { draft.theme = pickedCoverTheme }
+    }
+
+    func removeCover() {
+        pickedCover = nil
+        pickedCoverTheme = nil
+        removesCover = original?.hasCover == true
+    }
+
+    func matchPhoto() {
+        if let coverMatch { draft.theme = coverMatch }
+    }
+
+    // MARK: Saving
+
+    /// Creates or updates the event, then uploads or removes its cover.
+    /// Returns it on success.
     func save(using repository: any EventsRepository) async -> Event? {
         isSaving = true
         defer { isSaving = false }
         do {
-            if let original {
-                return try await repository.updateEvent(id: original.id, with: draft)
+            var event = if let original {
+                try await repository.updateEvent(id: original.id, with: draft)
             } else {
-                return try await repository.createEvent(draft)
+                try await repository.createEvent(draft)
             }
-        } catch {
-            errorMessage = error.localizedDescription
-            return nil
-        }
-    }
-
-    /// Cancels the event (it keeps its link and guest list).
-    func cancelEvent(using repository: any EventsRepository) async -> Event? {
-        guard let original else { return nil }
-        isSaving = true
-        defer { isSaving = false }
-        do {
-            return try await repository.cancelEvent(id: original.id)
+            if let pickedCover {
+                event = try await repository.setCover(eventId: event.id, imageData: pickedCover)
+            } else if removesCover {
+                event = try await repository.deleteCover(eventId: event.id)
+            }
+            return event
         } catch {
             errorMessage = error.localizedDescription
             return nil

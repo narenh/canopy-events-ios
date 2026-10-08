@@ -22,6 +22,7 @@ struct EventDetailView: View {
 
     init(eventId: Event.ID) {
         _model = State(initialValue: EventDetailModel(eventId: eventId))
+        _isEditing = State(initialValue: LaunchOptions.editsOpenEvent && LaunchOptions.openEventId == eventId)
     }
 
     var body: some View {

@@ -36,4 +36,24 @@ extension View {
             .keyboardType(.numberPad)
         #endif
     }
+
+    /// A spinning wheel of a date or time picker (the Mac's own compact
+    /// field there, which has no wheel).
+    func wheelDatePickerStyle() -> some View {
+        #if os(macOS)
+        datePickerStyle(.field)
+        #else
+        datePickerStyle(.wheel)
+        #endif
+    }
+
+    /// Scrolling puts the keyboard away (there's no keyboard to hide on
+    /// visionOS or the Mac).
+    func dismissesKeyboardOnScroll() -> some View {
+        #if os(iOS)
+        scrollDismissesKeyboard(.interactively)
+        #else
+        self
+        #endif
+    }
 }
