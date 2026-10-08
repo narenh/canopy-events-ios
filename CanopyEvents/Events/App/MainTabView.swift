@@ -62,8 +62,7 @@ struct MainTabView: View {
         .task {
             guard !LaunchOptions.showsNotificationCard else { return }  // a screenshot of the card, unobstructed
             if await NotificationPermission.requestIfUndetermined(), LaunchOptions.sendsTestNotification {
-                let card = try? await NotificationCard.load(MockEvents.eggsId, from: session.repository)
-                try? await LocalNotifications.schedule(MockNotifications.adamInvite, card: card)
+                try? await LocalNotifications.scheduleTestInvite(using: session.repository)
             }
         }
         .task {

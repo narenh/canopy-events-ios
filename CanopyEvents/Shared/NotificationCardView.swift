@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// The expanded invite notification, in the app's style: the cover hero
-/// (3:2, fading itself out) on the event's colour, the title, the big
+/// (fading itself out; 2:1 in the notification, 3:2 in the app) on the
+/// event's colour, the title, the big
 /// date and time, the place, the faces going, and two answer buttons.
 /// After an answer it shows what was said. Drawn by the notification
 /// extension; the app has it too (Profile's Debug section), to look at.
@@ -9,15 +10,20 @@ struct NotificationCardView: View {
     let card: NotificationCard
     /// The answer given, once one is (`GOING` / `NOT_GOING`).
     var answered: String?
+    /// The width it's drawn at, when the host knows it (the extension
+    /// sizes the notification from it); otherwise measured.
+    var width: CGFloat?
     let onAnswer: (String) -> Void
 
-    @State private var width: CGFloat = 0
+    @State private var measuredWidth: CGFloat = 0
+
+    private var drawnWidth: CGFloat { width ?? measuredWidth }
 
     var body: some View {
         let colors = ThemeColors(card.theme)
         VStack(alignment: .leading, spacing: 0) {
             hero
-                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { measuredWidth = $0 }
             VStack(alignment: .leading, spacing: Spacing.medium) {
                 Text(card.title)
                     .font(.system(.title, weight: .heavy))
@@ -38,7 +44,7 @@ struct NotificationCardView: View {
             }
             .foregroundStyle(.white)
             .padding(.horizontal, Spacing.large)
-            .padding(.top, -width / 6)
+            .padding(.top, -drawnWidth / 6)
             .padding(.bottom, Spacing.large)
         }
         .background(colors.base.color)
@@ -47,8 +53,7 @@ struct NotificationCardView: View {
     }
 
     private var hero: some View {
-        Color.clear
-            .aspectRatio(3 / 2, contentMode: .fit)
+        heroFrame
             .overlay {
                 AsyncImage(url: card.coverUrl) { phase in
                     if let image = phase.image {
@@ -60,6 +65,18 @@ struct NotificationCardView: View {
             }
             .clipped()
             .heroFade()
+    }
+
+    /// In the notification (a known width): the clear 2:1 part of the
+    /// hero, sized exactly. iOS caps an expanded notification's height
+    /// (about 380 pt on a 6.3" phone) and cuts off the top of anything
+    /// taller, and the full 3:2 card is about 450 pt. In the app: 3:2.
+    @ViewBuilder private var heroFrame: some View {
+        if let width {
+            Color.clear.frame(width: width, height: width / 2)
+        } else {
+            Color.clear.aspectRatio(3 / 2, contentMode: .fit)
+        }
     }
 
     @ViewBuilder private func faces(tint: Color) -> some View {
@@ -94,27 +111,8 @@ struct NotificationCardView: View {
         }
     }
 
-    @ViewBuilder private var buttons: some View {
-        if let answered {
-            Label(answered == "GOING" ? "You're going" : "You can't go", systemImage: "checkmark.circle.fill")
-                .font(Typography.button)
-                .foregroundStyle(Palette.accent)
-                .frame(maxWidth: .infinity, minHeight: 50)
-                .transition(.opacity)
-        } else {
-            HStack(spacing: Spacing.small) {
-                Button { onAnswer("GOING") } label: {
-                    Label("Going", systemImage: "checkmark.circle.fill").frame(maxWidth: .infinity)
-                }
-                .glassProminentButtonStyle()
-                Button { onAnswer("NOT_GOING") } label: {
-                    Label("Can't Go", systemImage: "xmark.circle").frame(maxWidth: .infinity)
-                }
-                .glassButtonStyle()
-            }
-            .font(Typography.button)
-            .controlSize(.large)
-        }
+    private var buttons: some View {
+        CardAnswerButtons(answered: answered, onAnswer: onAnswer)
     }
 
     private var dayWords: String {
