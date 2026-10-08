@@ -7,9 +7,9 @@ activity wall.
 
 **Right now it's UI only, on mock data.** Nothing talks to a server: every
 screen goes through the `EventsRepository` and `AccountService` protocols,
-and the only implementations are in-memory mocks. That way the screens
-can be built and tried while the API settles, and the real clients drop in
-later without touching them.
+and the only implementations are in-memory mocks. The models and those
+protocols match the finished API specs, so the real clients drop in later
+without touching a screen.
 
 ## Running it
 
@@ -32,5 +32,6 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the folder map, conventions,
 where state lives, how to add a screen, how the mock works, how the real
 API slots in, and the list of mock-vs-real gaps.
 
-Product decisions: `canopy-events/docs/decisions.md`. API contract:
-`canopy-events/openapi.yaml`.
+Product decisions: `canopy-events/docs/decisions.md`. API contracts:
+`canopy-events/openapi.yaml` (events) and
+`canopy-account-service/openapi.yaml` (sign-in and profile).
