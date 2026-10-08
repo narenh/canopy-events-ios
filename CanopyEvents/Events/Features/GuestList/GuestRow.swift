@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// One person on the guest list, with their plus-ones.
+/// One person on the guest list, with their plus-ones (flagged when the
+/// host has since allowed fewer).
 struct GuestRow: View {
     let guest: Guest
 
@@ -9,11 +10,12 @@ struct GuestRow: View {
     }
 
     private var plusOnes: String? {
-        switch guest.guests {
+        let text: String? = switch guest.guests {
         case 0: nil
         case 1: "+1 guest"
         default: "+\(guest.guests) guests"
         }
+        return guest.guestsOverLimit ? text.map { $0 + ", over the limit" } : text
     }
 }
 

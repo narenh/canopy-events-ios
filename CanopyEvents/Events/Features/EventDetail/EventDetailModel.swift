@@ -20,7 +20,7 @@ final class EventDetailModel {
     func load(from repository: any EventsRepository) async {
         do {
             async let event = repository.event(id: eventId)
-            async let guestList = repository.guestList(eventId: eventId)
+            async let guestList = repository.guestList(eventId: eventId, status: .going, page: .first)
             async let posts = repository.wallPosts(eventId: eventId)
             self.event = try await event
             self.guestList = try await guestList
@@ -35,7 +35,7 @@ final class EventDetailModel {
         isSaving = true
         defer { isSaving = false }
         do {
-            event = try await repository.setRSVP(eventId: eventId, status: status, guests: guests)
+            event = try await repository.setRSVP(eventId: eventId, status: status, guests: guests).event
             await load(from: repository)
         } catch {
             errorMessage = error.localizedDescription

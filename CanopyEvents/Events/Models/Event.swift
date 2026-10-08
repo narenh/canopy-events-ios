@@ -1,13 +1,10 @@
 import Foundation
 
-/// An event, as the signed-in person sees it. Matches the API's `Event`
-/// schema; `viewer`, `counts` and `friendsGoing` are worked out by the
-/// server for whoever is asking.
-///
-/// `capacity`, `spotsLeft`, `plusOnesAllowed` and `coverImageUrl` are
-/// planned (v1 steps 2 and 4) but not in the API spec yet, so their names
-/// are our best guess. See ARCHITECTURE.md, "Mock vs real".
+/// An event, as the signed-in person sees it (the API's `Event`), in the
+/// spec's field order. `counts`, `spotsLeft`, `viewer` and `friendsGoing`
+/// are worked out by the server for whoever is asking.
 nonisolated struct Event: Codable, Hashable, Identifiable {
+    /// 12 characters of base62. Changes if the creator makes a new link.
     var id: String
     /// The link to share: `https://events.canopysf.com/e/<id>`.
     var url: URL
@@ -18,10 +15,19 @@ nonisolated struct Event: Codable, Hashable, Identifiable {
     /// IANA time zone, e.g. "America/Los_Angeles". Show times in it.
     var timeZone: String
     var locationName: String?
+    /// Nil when signed out or removed (see `locationAddressHidden`).
     var locationAddress: String?
     /// True when there's an address you'd see once signed in.
     var locationAddressHidden: Bool
     var guestListVisibility: GuestListVisibility
+    /// Plus-ones each answer may bring, 0 to 10.
+    var guestsAllowed: Int
+    /// The most people going, plus-ones included; nil for no cap.
+    var capacity: Int?
+    /// `capacity` minus `counts.total.going`, never below 0; nil with no cap.
+    var spotsLeft: Int?
+    /// A public JPEG; changes with every upload, so cache it by URL.
+    var coverImageUrl: URL?
     var status: EventStatus
     var cancelledAt: Date?
     var createdAt: Date
@@ -29,16 +35,8 @@ nonisolated struct Event: Codable, Hashable, Identifiable {
     var hosts: [Host]
     var counts: RSVPCounts
     var viewer: Viewer?
-    /// Only on a single event (not in lists).
+    /// Only on a single event (not in lists), and only when signed in.
     var friendsGoing: FriendsGoing?
-
-    /// Maximum going + their plus-ones; nil means no limit.
-    var capacity: Int?
-    /// Spots still open; nil when there's no capacity.
-    var spotsLeft: Int?
-    /// How many plus-ones each RSVP may bring (0 = none).
-    var plusOnesAllowed: Int
-    var coverImageUrl: URL?
 }
 
 extension Event {
@@ -55,6 +53,9 @@ extension Event {
 
     var myStatus: RSVPStatus? { viewer?.rsvp?.status }
 
-    /// Whether you can answer right now (hosts don't RSVP to their own event).
-    var canRSVP: Bool { !isCancelled && !isOver && !(viewer?.isHost ?? false) }
+    /// Whether you can answer right now (hosts don't RSVP to their own
+    /// event, and a host may have removed you).
+    var canRSVP: Bool {
+        !isCancelled && !isOver && !(viewer?.isHost ?? false) && myStatus != .removed
+    }
 }

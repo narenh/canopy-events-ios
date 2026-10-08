@@ -34,6 +34,7 @@ extension MockEventsRepository {
         await pause()
         var record = try record(id)
         guard record.isHost(currentUser.id) else { throw APIError.hostsOnly }
+        guard record.event.hosts.first?.person.id == currentUser.id else { throw APIError.creatorOnly }
         record.event.status = .cancelled
         record.event.cancelledAt = .now
         save(record)
@@ -54,7 +55,7 @@ extension MockEventsRepository {
         event.locationAddress = draft.locationAddress.isEmpty ? nil : draft.locationAddress
         event.guestListVisibility = draft.guestListVisibility
         event.capacity = draft.capacity
-        event.plusOnesAllowed = draft.plusOnesAllowed
+        event.guestsAllowed = draft.guestsAllowed
         event.updatedAt = .now
     }
 }

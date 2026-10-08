@@ -21,10 +21,15 @@ struct YourRSVPSection: View {
                     .foregroundStyle(Palette.muted)
             } else {
                 AnswerButtons(current: event.myStatus, isDisabled: isSaving, onAnswer: answer)
-                if let guests = event.viewer?.rsvp?.guests, guests > 0 {
-                    Text("Bringing \(guests) \(guests == 1 ? "guest" : "guests")")
+                if let rsvp = event.viewer?.rsvp, rsvp.guests > 0 {
+                    Text("Bringing \(rsvp.guests) \(rsvp.guests == 1 ? "guest" : "guests")")
                         .font(.subheadline)
                         .foregroundStyle(Palette.muted)
+                    if rsvp.guestsOverLimit {
+                        Text("The host now allows \(event.guestsAllowed) per RSVP. Your answer stands; a change has to fit.")
+                            .font(.subheadline)
+                            .foregroundStyle(.orange)
+                    }
                 }
                 if event.myStatus == .waitlisted {
                     WaitlistNotice(isOnWaitlist: true)
@@ -38,7 +43,7 @@ struct YourRSVPSection: View {
 
     /// Going or maybe to an event that allows plus-ones asks how many.
     private func answer(_ status: RSVPStatus) {
-        if status != .notGoing && event.plusOnesAllowed > 0 {
+        if status != .notGoing && event.guestsAllowed > 0 {
             onAnswerWithGuests(status)
         } else {
             onAnswer(status)

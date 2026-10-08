@@ -19,8 +19,8 @@ final class InviteFriendsModel {
 
     func load(from repository: any EventsRepository) async {
         do {
-            async let friends = repository.friends()
-            async let guestList = repository.guestList(eventId: eventId)
+            async let friends = repository.allFriends()
+            async let guestList = repository.wholeGuestList(eventId: eventId)
             self.friends = try await friends
             alreadyOnList = Set(try await guestList.guests.map(\.person.id))
             hasLoaded = true

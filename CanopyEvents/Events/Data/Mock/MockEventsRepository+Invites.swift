@@ -16,7 +16,7 @@ extension MockEventsRepository {
             } else if record.guest(id) != nil {
                 result.skipped.append(SkippedInvite(personId: id, reason: "already_on_list"))
             } else if let person = knownPerson(id) {
-                record.guests.append(Guest(person: person, status: .invited, guests: 0, respondedAt: nil))
+                record.guests.append(Guest(person: person, status: .invited, guests: 0, guestsOverLimit: false, respondedAt: nil))
                 record.invitedIds.insert(id)
                 result.invited.append(person)
             } else {

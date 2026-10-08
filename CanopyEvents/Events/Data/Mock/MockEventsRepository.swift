@@ -57,9 +57,11 @@ final class MockEventsRepository: EventsRepository {
         )
     }
 
-    func friends() async throws -> [Friend] {
+    func friends(page: PageRequest) async throws -> FriendList {
         await pause()
-        return MockRules.friends(of: currentUser.person, in: records)
+        let all = MockRules.friends(of: currentUser.person, in: records)
+        let (friends, next) = try MockPaging.page(all, page)
+        return FriendList(friends: friends, nextCursor: next)
     }
 
     func notifications() async throws -> [InboxNotification] {
@@ -75,14 +77,13 @@ final class MockEventsRepository: EventsRepository {
 
     // MARK: Events
 
-    func events(_ list: EventListKind) async throws -> [Event] {
+    func events(_ list: EventListKind, page: PageRequest) async throws -> EventList {
         await pause()
-        let events = records
+        let all = records
             .filter { MockRules.record($0, isIn: list, for: currentUser.person) }
-            .map(resolved)
-        return list == .past
-            ? events.sorted { $0.startsAt > $1.startsAt }
-            : events.sorted { $0.startsAt < $1.startsAt }
+            .sorted { list == .past ? $0.event.startsAt > $1.event.startsAt : $0.event.startsAt < $1.event.startsAt }
+        let (page, next) = try MockPaging.page(all, page)
+        return EventList(events: page.map { resolved($0, withFriends: false) }, nextCursor: next)
     }
 
     func event(id: Event.ID) async throws -> Event {
@@ -104,9 +105,12 @@ final class MockEventsRepository: EventsRepository {
         records[index] = record
     }
 
-    /// The record turned into the event `currentUser` sees.
-    func resolved(_ record: MockEventRecord) -> Event {
+    /// The record turned into the event `currentUser` sees. Lists leave
+    /// out `friendsGoing`; a single event has it.
+    func resolved(_ record: MockEventRecord, withFriends: Bool = true) -> Event {
         let friendIds = Set(MockRules.friends(of: currentUser.person, in: records).map(\.id))
-        return MockRules.event(record, for: currentUser.person, friendIds: friendIds)
+        var event = MockRules.event(record, for: currentUser.person, friendIds: friendIds)
+        if !withFriends { event.friendsGoing = nil }
+        return event
     }
 }

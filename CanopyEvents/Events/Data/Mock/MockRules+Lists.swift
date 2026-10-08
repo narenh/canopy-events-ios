@@ -1,7 +1,7 @@
 import Foundation
 
 extension MockRules {
-    /// Whether an event belongs in one of `me`'s four event lists.
+    /// Whether an event belongs in one of `me`'s five event lists.
     static func record(_ record: MockEventRecord, isIn list: EventListKind, for me: Person) -> Bool {
         let event = record.event
         let status = record.guest(me.id)?.status
@@ -15,7 +15,7 @@ extension MockRules {
         case .past:
             return event.isOver && (record.isHost(me.id) || status == .going || status == .maybe)
         case .declined:
-            return status == .notGoing && !event.isOver
+            return status == .notGoing && !event.isOver && !event.isCancelled
         }
     }
 

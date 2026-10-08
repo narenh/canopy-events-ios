@@ -15,7 +15,7 @@ struct EventEditorGuestsSection: View {
                     in: 1...500
                 )
             }
-            Stepper(plusOnesTitle, value: $model.draft.plusOnesAllowed, in: 0...5)
+            Stepper(plusOnesTitle, value: $model.draft.guestsAllowed, in: 0...10)
         } header: {
             Text("Guests")
         } footer: {
@@ -32,10 +32,10 @@ struct EventEditorGuestsSection: View {
     }
 
     private var plusOnesTitle: String {
-        switch model.draft.plusOnesAllowed {
+        switch model.draft.guestsAllowed {
         case 0: "No plus-ones"
         case 1: "1 plus-one each"
-        default: "\(model.draft.plusOnesAllowed) plus-ones each"
+        default: "\(model.draft.guestsAllowed) plus-ones each"
         }
     }
 }

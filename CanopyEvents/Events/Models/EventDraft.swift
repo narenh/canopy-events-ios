@@ -1,8 +1,9 @@
 import Foundation
 
 /// The editable fields of an event, used by the create/edit form and sent
-/// to the repository. Mirrors the API's `EventInput` (plus the planned
-/// capacity and plus-ones fields).
+/// to the repository. The API client turns it into an `EventInput` (POST)
+/// or an `EventPatch` with only what changed (PATCH); empty strings
+/// become null.
 nonisolated struct EventDraft: Hashable {
     var title = ""
     var description = ""
@@ -12,8 +13,10 @@ nonisolated struct EventDraft: Hashable {
     var locationName = ""
     var locationAddress = ""
     var guestListVisibility = GuestListVisibility.everyone
+    /// Plus-ones each answer may bring, 0 to 10.
+    var guestsAllowed = 0
+    /// The most people going, plus-ones included, 1 to 10,000; nil for no cap.
     var capacity: Int?
-    var plusOnesAllowed = 0
 
     var isValid: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -42,8 +45,8 @@ extension EventDraft {
             locationName: event.locationName ?? "",
             locationAddress: event.locationAddress ?? "",
             guestListVisibility: event.guestListVisibility,
-            capacity: event.capacity,
-            plusOnesAllowed: event.plusOnesAllowed
+            guestsAllowed: event.guestsAllowed,
+            capacity: event.capacity
         )
     }
 }
