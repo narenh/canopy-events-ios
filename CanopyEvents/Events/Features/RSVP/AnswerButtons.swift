@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Going / Maybe / Can't go as three glass buttons, with your current
+/// Going / Maybe / Can't Go as three glass buttons, with your current
 /// answer filled in. Used on invite rows and the event page.
 struct AnswerButtons: View {
     /// Your answer now, if any. Its button is drawn prominent.
@@ -9,7 +9,9 @@ struct AnswerButtons: View {
     let onAnswer: (RSVPStatus) -> Void
 
     var body: some View {
-        HStack(spacing: Spacing.small) {
+        // Going takes half the row, Maybe and Can't Go a quarter each (the
+        // web's widths): going is the answer to reach for.
+        WeightedHStack(weights: RSVPStatus.answers.map { $0 == .going ? 2 : 1 }, spacing: Spacing.small) {
             ForEach(RSVPStatus.answers, id: \.self) { status in
                 button(for: status)
             }
