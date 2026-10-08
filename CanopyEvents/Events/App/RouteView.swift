@@ -22,3 +22,10 @@ struct RouteView: View {
         }
     }
 }
+
+#Preview {
+    NavigationStack {
+        RouteView(route: .declinedEvents)
+    }
+    .mockEnvironment()
+}

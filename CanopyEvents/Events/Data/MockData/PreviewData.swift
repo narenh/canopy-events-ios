@@ -22,8 +22,4 @@ enum PreviewData {
     static var friends: [Friend] {
         MockRules.friends(of: MockPeople.maya.person, in: MockEvents.all)
     }
-
-    static var notifications: [InboxNotification] {
-        MockNotifications.inbox(for: MockPeople.maya.id)
-    }
 }
