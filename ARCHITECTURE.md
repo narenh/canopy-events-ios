@@ -512,16 +512,11 @@ decisions are in canopy-events' `docs/decision-log.md`):
   merged with the generated one. People without a photo get their
   initials drawn as the avatar. Karl Marx and Marxism 101 are in the
   mock for the test notification.
-- **Internal tools show in debug builds and TestFlight, never in App
-  Store builds.** TestFlight builds are Release builds, so `#if DEBUG`
-  can't tell them apart; `BuildEnvironment.isInternal()` asks StoreKit 2
-  (`AppTransaction.shared`, verified, environment `.sandbox` or `.xcode`;
-  debug builds are always internal), once at launch, and
-  `AppSession.showsDebugTools` keeps the answer. An unverifiable
-  transaction counts as the App Store (hidden). Profile's section is
-  labelled "Debug (TestFlight only)". Everything it calls (the test
-  notification, Karl Marx and Marxism 101) is compiled into every build;
-  only launch arguments stay debug-only.
+- **Profile's Debug section shows in every build** (the owner's call:
+  the app is in active development, so no gating). Gate it before the
+  App Store, not before. Everything it calls (the test notification,
+  Karl Marx and Marxism 101) is compiled into every build; only launch
+  arguments stay debug-only.
 - **The home screen name is "Events"** (the owner's call;
   `INFOPLIST_KEY_CFBundleDisplayName`). The bundle id and product name
   are unchanged.

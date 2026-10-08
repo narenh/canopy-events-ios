@@ -41,10 +41,10 @@ struct ProfileForm: View {
             }
             .glassRowBackground()
 
-            if session.showsDebugTools {
-                ProfileDebugSection()
-                    .glassRowBackground()
-            }
+            // Always shown while the app is in development. Gate it before
+            // the App Store, not before.
+            ProfileDebugSection()
+                .glassRowBackground()
 
             Section {
                 Button("Sign out", role: .destructive) {
