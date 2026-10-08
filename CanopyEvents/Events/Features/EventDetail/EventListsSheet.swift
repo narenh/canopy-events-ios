@@ -4,41 +4,32 @@ import SwiftUI
 /// event, each with Take off (its owner, or the creator), then your other
 /// lists, each with Add (asked first when it has people on it, since it
 /// invites them), and a name field to make one, which goes on at once.
-/// Changes save straight away.
 struct EventListsSheet: View {
-    @State var event: Event
     /// Called with the event after each change, so the page can redraw.
     let onChange: (Event) -> Void
 
     @Environment(\.eventsRepository) private var repository
     @Environment(\.dismiss) private var dismiss
-    @State private var myLists: [OwnedList]?
-    @State private var newName = ""
-    @State private var notice: String?
+    @State private var model: EventListsModel
     @State private var adding: OwnedList?
     @State private var takingOff: HostList?
-    @State private var isWorking = false
-    @State private var errorMessage: String?
 
-    private var onEvent: [HostList] { event.hostLists ?? [] }
-    private var others: [OwnedList] { (myLists ?? []).filter { list in !onEvent.contains { $0.id == list.id } } }
-    private var isOpen: Bool { EventPhase(event: event).isOpen }
+    init(event: Event, onChange: @escaping (Event) -> Void) {
+        self.onChange = onChange
+        _model = State(initialValue: EventListsModel(event: event))
+    }
 
     var body: some View {
         NavigationStack {
             List {
-                if let notice {
-                    Text(notice)
-                        .foregroundStyle(Palette.link)
-                        .listRowBackground(Color.clear)
+                if let notice = model.notice {
+                    Text(notice).foregroundStyle(Palette.link).listRowBackground(Color.clear)
                 }
                 Section("On this event") {
-                    if onEvent.isEmpty {
-                        Text("No lists on this event yet.").foregroundStyle(.secondary)
-                    }
-                    ForEach(onEvent) { list in
+                    if model.onEvent.isEmpty { Text("No lists on this event yet.").foregroundStyle(.secondary) }
+                    ForEach(model.onEvent) { list in
                         EventListRow(name: list.name, detail: detail(for: list)) {
-                            if list.isYours || event.viewer?.isCreator == true {
+                            if list.isYours || model.event.viewer?.isCreator == true {
                                 Button("Take off") { takingOff = list }
                                     .buttonStyle(.borderless)
                                     .accessibilityLabel("Take \(list.name) off")
@@ -47,56 +38,55 @@ struct EventListsSheet: View {
                     }
                 }
                 .glassRowBackground()
-                if isOpen {
-                    Section("Your lists") {
-                        if myLists == nil {
-                            ProgressView()
-                        } else if others.isEmpty && onEvent.allSatisfy({ !$0.isYours }) {
-                            Text("You don't have any lists yet.").foregroundStyle(.secondary)
-                        }
-                        ForEach(others) { list in
-                            EventListRow(name: list.name, detail: InvitePicker.count(list.memberCount)) {
-                                Button("Add") {
-                                    if list.memberCount > 0 { adding = list } else { attach(list) }
-                                }
-                                    .buttonStyle(.borderless)
-                                    .accessibilityLabel("Add \(list.name)")
-                            }
-                        }
-                        HStack {
-                            TextField("Name a new list", text: $newName)
-                                .accessibilityLabel("New list name")
-                                .onSubmit(create)
-                            Button("Create", action: create)
-                                .buttonStyle(.borderless)
-                                .disabled(newName.trimmingCharacters(in: .whitespaces).isEmpty)
-                        }
-                    }
-                    .glassRowBackground()
-                }
+                if model.isOpen { yourLists.glassRowBackground() }
             }
             .glassList()
-            .disabled(isWorking)
+            .disabled(model.isWorking)
             .navigationTitle("Lists")
             .inlineNavigationTitle()
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", role: .confirm) { dismiss() }
-                }
+                ToolbarItem(placement: .confirmationAction) { Button("Done", role: .confirm) { dismiss() } }
             }
-            .task { myLists = (try? await repository.lists()) ?? [] }
-            .errorAlert($errorMessage)
+            .task { await model.load(from: repository) }
+            .errorAlert($model.errorMessage)
             .confirmationDialog(adding.map { "Put \($0.name) on this event?" } ?? "", isPresented: isAdding,
                                 titleVisibility: .visible, presenting: adding) { list in
-                Button("Add") { attach(list) }
+                Button("Add") { change { await model.attach(list, using: repository) } }
             } message: { _ in
                 Text("Everyone on it is invited now, and anyone who joins later too.")
             }
             .confirmationDialog(takingOff.map { "Take \($0.name) off this event?" } ?? "", isPresented: isTakingOff,
                                 titleVisibility: .visible, presenting: takingOff) { list in
-                Button("Take off", role: .destructive) { detach(list) }
+                Button("Take off", role: .destructive) { change { await model.detach(list, using: repository) } }
             } message: { _ in
                 Text("Nobody's invitation changes; people who join later won't be invited to this one.")
+            }
+        }
+    }
+
+    private var yourLists: some View {
+        Section("Your lists") {
+            if model.myLists == nil {
+                ProgressView()
+            } else if model.others.isEmpty && model.onEvent.allSatisfy({ !$0.isYours }) {
+                Text("You don't have any lists yet.").foregroundStyle(.secondary)
+            }
+            ForEach(model.others) { list in
+                EventListRow(name: list.name, detail: InvitePicker.count(list.memberCount)) {
+                    Button("Add") {
+                        if list.memberCount > 0 { adding = list } else { change { await model.attach(list, using: repository) } }
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel("Add \(list.name)")
+                }
+            }
+            HStack {
+                TextField("Name a new list", text: $model.newName)
+                    .accessibilityLabel("New list name")
+                    .onSubmit(create)
+                Button("Create", action: create)
+                    .buttonStyle(.borderless)
+                    .disabled(!model.canCreate)
             }
         }
     }
@@ -105,49 +95,17 @@ struct EventListsSheet: View {
         list.isYours ? "Your list · \(InvitePicker.count(list.memberCount ?? 0))" : "\(list.owner.fullName)'s list"
     }
 
-    private func attach(_ list: OwnedList) {
-        run {
-            let attached = try await repository.attachList(eventId: event.id, listId: list.id)
-            notice = switch attached.invitedCount {
-            case 0: "\(list.name) is on this event."
-            case 1: "Invited 1 from \(list.name)."
-            default: "Invited \(attached.invitedCount) from \(list.name)."
-            }
-            return attached.event
-        }
-    }
-
-    private func detach(_ list: HostList) {
-        run {
-            notice = nil
-            return try await repository.detachList(eventId: event.id, listId: list.id)
-        }
-    }
-
-    /// Makes a list and puts it on at once (it has nobody on it to invite).
     private func create() {
-        let name = newName
-        guard !name.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        run {
-            let list = try await repository.createList(name: name)
-            newName = ""
-            myLists?.append(list)
-            notice = "\(list.name) is on this event."
-            return try await repository.attachList(eventId: event.id, listId: list.id).event
-        }
+        guard model.canCreate else { return }
+        change { await model.create(using: repository) }
     }
 
-    private func run(_ change: @escaping () async throws -> Event) {
+    /// Runs a change; the page redraws, and VoiceOver hears the notice.
+    private func change(_ run: @escaping () async -> Event?) {
         Task {
-            isWorking = true
-            defer { isWorking = false }
-            do {
-                event = try await change()
-                onChange(event)
-                if let notice { AccessibilityNotification.Announcement(notice).post() }
-            } catch {
-                errorMessage = error.localizedDescription
-            }
+            guard let event = await run() else { return }
+            onChange(event)
+            if let notice = model.notice { AccessibilityNotification.Announcement(notice).post() }
         }
     }
 
