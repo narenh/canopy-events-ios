@@ -1,11 +1,11 @@
 import Foundation
 
-/// Creating, editing and cancelling events.
+/// Creating, editing, cancelling and un-cancelling events, and covers.
 extension MockEventsRepository {
     func createEvent(_ draft: EventDraft) async throws -> Event {
         await pause()
         guard currentUser.emailVerified else { throw APIError.emailUnverified }
-        let id = String((0..<12).map { _ in "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".randomElement()! })
+        let id = newEventId()
         var event = MockEvents.event(
             id: id, title: draft.title, days: 0, hour: 0, hours: nil,
             locationName: nil, locationAddress: nil, hosts: [MockEvents.host(currentUser.person)]
@@ -50,12 +50,51 @@ extension MockEventsRepository {
         await pause()
         var record = try record(id)
         guard record.isHost(currentUser.id) else { throw APIError.hostsOnly }
-        guard record.event.hosts.first?.person.id == currentUser.id else { throw APIError.creatorOnly }
+        guard record.isCreator(currentUser.id) else { throw APIError.creatorOnly }
         record.event.status = .cancelled
         record.event.cancelledAt = .now
         save(record)
         addWallEntry(eventId: id, type: .cancelled, person: currentUser.person)
         notifyEveryoneComing(record, .eventCancelled)
+        return resolved(record)
+    }
+
+    func uncancelEvent(id: Event.ID) async throws -> Event {
+        await pause()
+        var record = try record(id)
+        guard record.isHost(currentUser.id) else { throw APIError.hostsOnly }
+        guard record.isCreator(currentUser.id) else { throw APIError.creatorOnly }
+        record.event.status = .active
+        record.event.cancelledAt = nil
+        let promoted = MockRules.promoteWaitlist(&record)
+        save(record)
+        addWallEntry(eventId: id, type: .uncancelled, person: currentUser.person)
+        notifyEveryoneComing(record, .eventUncancelled)
+        for person in promoted {
+            addWallEntry(eventId: id, type: .offWaitlist, person: person)
+            backend.notify(person.id, .waitlistPromoted, about: record.event, from: nil)
+        }
+        return resolved(record)
+    }
+
+    /// Mock: the bytes aren't kept; the cover becomes a random placeholder.
+    func setCover(eventId: Event.ID, imageData: Data) async throws -> Event {
+        await pause()
+        var record = try record(eventId)
+        guard record.isHost(currentUser.id) else { throw APIError.hostsOnly }
+        guard !imageData.isEmpty else { throw APIError(message: "That isn't an image.", reason: .badImage) }
+        guard imageData.count <= 15_000_000 else { throw APIError(message: "Covers are up to 15 MB.", reason: .tooLarge) }
+        record.event.coverImageUrl = MockEvents.coverUrl(seed: UUID().uuidString)
+        save(record)
+        return resolved(record)
+    }
+
+    func deleteCover(eventId: Event.ID) async throws -> Event {
+        await pause()
+        var record = try record(eventId)
+        guard record.isHost(currentUser.id) else { throw APIError.hostsOnly }
+        record.event.coverImageUrl = nil
+        save(record)
         return resolved(record)
     }
 

@@ -1,3 +1,5 @@
+import Foundation
+
 /// Everything the app asks of the Canopy Events API, one method per
 /// endpoint in its openapi.yaml. Screens only ever talk to this protocol,
 /// through `@Environment(\.eventsRepository)`.
@@ -39,8 +41,15 @@ protocol EventsRepository: AnyObject, Sendable {
     func createEvent(_ draft: EventDraft) async throws -> Event
     /// `PATCH /api/v1/events/{id}`
     func updateEvent(id: Event.ID, with draft: EventDraft) async throws -> Event
-    /// `PATCH /api/v1/events/{id}` with `status: cancelled`
+    /// `PATCH /api/v1/events/{id}` with `status: cancelled` (the creator only).
     func cancelEvent(id: Event.ID) async throws -> Event
+    /// `PATCH /api/v1/events/{id}` with `status: active`: back on (the creator only).
+    func uncancelEvent(id: Event.ID) async throws -> Event
+    /// `PUT /api/v1/events/{id}/cover`, the image's bytes as multipart
+    /// `cover` (JPEG, PNG, WebP or HEIC, up to 15 MB). Hosts only.
+    func setCover(eventId: Event.ID, imageData: Data) async throws -> Event
+    /// `DELETE /api/v1/events/{id}/cover`. Hosts only.
+    func deleteCover(eventId: Event.ID) async throws -> Event
 
     // MARK: Guests
 
@@ -56,6 +65,28 @@ protocol EventsRepository: AnyObject, Sendable {
     func withdrawRSVP(eventId: Event.ID) async throws -> Event
     /// `POST /api/v1/events/{id}/invites` (hosts only)
     func invite(eventId: Event.ID, personIds: [Person.ID]) async throws -> InviteResult
+    /// `DELETE /api/v1/events/{id}/invites/{personId}`: only while they
+    /// haven't answered (hosts only).
+    func uninvite(eventId: Event.ID, personId: Person.ID) async throws
+    /// `GET /api/v1/people/lookup`: the person, or nil with no hint why.
+    /// Verified people only.
+    func lookUpPerson(_ lookup: PersonLookup) async throws -> Person?
+
+    // MARK: Hosts and moderation
+
+    /// `POST /api/v1/events/{id}/cohosts` (the creator only). Answers the
+    /// event with them in `hosts`.
+    func addCohost(eventId: Event.ID, personId: Person.ID) async throws -> Event
+    /// `DELETE /api/v1/events/{id}/cohosts/{personId}`: the creator takes a
+    /// co-host off, or a co-host steps down. They're left invited.
+    func removeCohost(eventId: Event.ID, personId: Person.ID) async throws -> Event
+    /// `PUT /api/v1/events/{id}/removed/{personId}` (hosts). Nobody is told.
+    func removeGuest(eventId: Event.ID, personId: Person.ID) async throws
+    /// `DELETE /api/v1/events/{id}/removed/{personId}`: they're left invited.
+    func restoreGuest(eventId: Event.ID, personId: Person.ID) async throws
+    /// `POST /api/v1/events/{id}/new-link` (the creator only). The event
+    /// comes back under a new id; the old one is gone at once.
+    func makeNewLink(eventId: Event.ID) async throws -> Event
 
     // MARK: Wall
 

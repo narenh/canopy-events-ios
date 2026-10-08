@@ -1,7 +1,7 @@
 import Foundation
 
 /// What the mock "server" stores for one event: the event's own fields
-/// plus everyone's RSVPs. `MockRules` turns a record into the `Event`
+/// plus everyone's RSVPs (and who a host removed). `MockRules` turns a record into the `Event`
 /// and `GuestList` a particular person is allowed to see, the way the
 /// real server will.
 struct MockEventRecord {
@@ -17,6 +17,10 @@ struct MockEventRecord {
 
     func isHost(_ personId: Person.ID) -> Bool {
         event.hosts.contains { $0.person.id == personId }
+    }
+
+    func isCreator(_ personId: Person.ID) -> Bool {
+        event.hosts.contains { $0.person.id == personId && $0.role == .creator }
     }
 
     func guest(_ personId: Person.ID) -> Guest? {

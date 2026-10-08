@@ -16,6 +16,9 @@ struct YourRSVPSection: View {
             if event.isCancelled {
                 Text("This event was cancelled.")
                     .foregroundStyle(Palette.danger)
+            } else if event.myStatus == .removed {
+                Text("A host took you off this event.")
+                    .foregroundStyle(Palette.muted)
             } else if event.isOver {
                 Text(event.myStatus.map { "You said \($0.title.lowercased())." } ?? "This event is over.")
                     .foregroundStyle(Palette.muted)

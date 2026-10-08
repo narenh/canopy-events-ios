@@ -83,6 +83,16 @@ final class MockEventsRepository: EventsRepository {
         return record
     }
 
+    /// A new 12-character base62 event id.
+    func newEventId() -> Event.ID {
+        String((0..<12).map { _ in "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".randomElement()! })
+    }
+
+    /// Anyone the mock world knows: the sample people and every account.
+    func knownPerson(_ id: Person.ID) -> Person? {
+        MockPeople.everyone.first { $0.id == id } ?? backend.account(id: id)?.person
+    }
+
     /// Replaces a stored record with a changed copy.
     func save(_ record: MockEventRecord) {
         guard let index = records.firstIndex(where: { $0.id == record.id }) else { return }
