@@ -164,10 +164,11 @@ rule, the app ports it and a test pins it to the web's own output.
 - **The hero** (`EventHeroView`): the cover, or the generated art
   (`CoverArt`, the web's `coverArt` number for number), in a 3:2 frame
   edge to edge on a phone. Its top 2:1 is clear, with the how-soon pill
-  (`RelativePill`, the web's `relativeWhen`) low on the left; the web's
-  nine-stop fade (`heroFade`) runs into the theme's base, and the last
-  6% melts into the mesh. Pulled down, the picture stays put and the
-  fade, title and the rest slide over it (`pinnedWhilePulled`). The title starts on the band (the last sixth
+  (`RelativePill`, the web's `relativeWhen`) low on the left; then the
+  picture fades itself out into the dark mesh with a mask (`heroFade`,
+  the web's nine stops as transparency, nothing drawn over the photo).
+  Pulled down, the picture stays put and the title and the rest slide
+  over it (`pinnedWhilePulled`). The title starts on the band (the last sixth
   of the width), then the big date and time (`EventHeadView`). From a
   700 pt wide screen the page is a 680 pt column and the hero has 18 pt
   top corners.
@@ -297,6 +298,8 @@ Set in the scheme's "Arguments Passed On Launch", or with
   `MockEvents+Upcoming.swift`, e.g. `4fQ9xKpL2mZa`).
 - `-mockNewEvent YES`: open the new-event editor.
 - `-mockEdit YES` with `-mockEvent <id>`: open that event's editor.
+- `-mockPush guests|wall` with `-mockEvent <id>`: that event's guest list
+  or wall; `-mockPush past|declined`: those lists.
 
 ## How the real API will slot in
 
@@ -426,13 +429,29 @@ decisions are in canopy-events' `docs/decision-log.md`):
   (the owner's call, after a stretch-and-zoom was tried and dropped).
   While the page or editor is pulled down past its top, the hero's
   picture (cover, generated art, or the editor's with its buttons)
-  keeps its place and size, pinned to the top; the fade, pill, title
-  and everything after rubber-band down as usual and are drawn over it.
-  The fade is its own layer (`HeroFade`) that travels with the content,
-  and the picture melts into the mesh across its band (the last
-  quarter), so no line shows where it ends. Scrolling up moves it all
-  together, with no parallax. Checked in the simulator by shifting the
-  page as a pull would (there's no Simulator app here to drag in).
+  keeps its place and size, pinned to the top; the pill, title and
+  everything after rubber-band down as usual and are drawn over it.
+  Scrolling up moves it all together, with no parallax. Checked in the
+  simulator by shifting the page as a pull would (there's no Simulator
+  app here to drag in).
+- **The cover fades itself out; nothing is drawn over it** (the owner's
+  call, replacing a dark gradient layer that travelled with the title
+  and smeared a dark band across the photo when pulled down). The mesh
+  is always dark, so the photo (or generated art) is masked from opaque
+  to transparent over the web's fade band and the background shows
+  through; its transparent foot stays with it when pinned. The title,
+  the when and the pill keep soft shadows for legibility.
+- **Glass everywhere, no solid grey.** Every card-like surface uses the
+  event page's glass: lists of events are glass cards (`EventCardLink`)
+  with glass links on top (`ListLink`), the guest list's groups are
+  glass cards, and `List`/`Form` sections (profile, sign-in, the wall)
+  get glass rows (`glassRowBackground()`) over the mesh. Sheets keep the
+  system sheet background, with their lists' backgrounds hidden
+  (`glassList()`) and glass rows. The guest list and wall use inline
+  titles (they're second-level screens).
+- **The home screen name is "Events"** (the owner's call;
+  `INFOPLIST_KEY_CFBundleDisplayName`). The bundle id and product name
+  are unchanged.
 - **"View all" opens the existing guest list screen** rather than
   expanding in place (the web's `<details>`), the iOS way; the host's
   remove and restore tools are still to come there.

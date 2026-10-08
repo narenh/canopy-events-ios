@@ -23,6 +23,7 @@ struct GuestListView: View {
             }
         }
         .navigationTitle("Guest list")
+        .inlineNavigationTitle()
         .task { await model.load(from: repository) }
         .refreshable { await model.load(from: repository) }
         .errorAlert($model.errorMessage)
@@ -30,17 +31,23 @@ struct GuestListView: View {
     }
 
     private func list(_ guestList: GuestList) -> some View {
-        List {
-            ForEach(GuestListModel.sectionOrder) { status in
-                let guests = guestList.guests(with: status)
-                if !guests.isEmpty {
-                    Section {
-                        ForEach(guests) { GuestRow(guest: $0) }
-                    } header: {
-                        SectionHeader(title: status.title, count: guests.count)
+        ScrollView {
+            LazyVStack(spacing: Spacing.large) {
+                ForEach(GuestListModel.sectionOrder) { status in
+                    let guests = guestList.guests(with: status)
+                    if !guests.isEmpty {
+                        VStack(alignment: .leading, spacing: Spacing.medium) {
+                            SectionHeader(title: status.title, count: guests.count)
+                            ForEach(guests) { guest in
+                                if guest.id != guests.first?.id { Divider() }
+                                GuestRow(guest: guest)
+                            }
+                        }
+                        .glassCard()
                     }
                 }
             }
+            .padding(Spacing.large)
         }
         .overlay {
             if guestList.guests.isEmpty {

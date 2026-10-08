@@ -10,11 +10,7 @@ struct InvitesView: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: Spacing.large) {
-                NavigationLink(value: Route.declinedEvents) {
-                    Label("Declined", systemImage: "xmark.circle")
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .glassButtonStyle()
+                ListLink(title: "Declined", systemImage: "xmark.circle", route: .declinedEvents)
 
                 ForEach(model.events) { event in
                     InviteCard(event: event) { status in

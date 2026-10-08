@@ -26,6 +26,7 @@ struct RelativePill: View {
             .padding(.vertical, Spacing.xSmall)
             .background(background, in: .rect(cornerRadius: 8))
             .overlay { RoundedRectangle(cornerRadius: 8).strokeBorder(border, lineWidth: 1) }
+            .shadow(color: .black.opacity(0.35), radius: 6, y: 2)
     }
 }
 

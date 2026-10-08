@@ -22,6 +22,7 @@ struct EmailCodeSignInView: View {
             } footer: {
                 Text("Mock accounts: maya@example.com (verified), sam@example.com (quick).")
             }
+            .glassRowBackground()
             if codeSent {
                 Section {
                     CodeField(code: $code)
@@ -30,6 +31,7 @@ struct EmailCodeSignInView: View {
                 } footer: {
                     Text("Mock: no email is sent. Any six digits work.")
                 }
+                .glassRowBackground()
             }
             Section {
                 Button(codeSent ? "Sign in" : "Send code") {
@@ -37,6 +39,7 @@ struct EmailCodeSignInView: View {
                 }
                 .disabled(isWorking || (codeSent ? code.count != 6 : !email.contains("@")))
             }
+            .glassRowBackground()
         }
         .navigationTitle("Sign in with a code")
         .errorAlert($errorMessage)

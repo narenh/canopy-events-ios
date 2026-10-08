@@ -19,11 +19,14 @@ struct VerifyEmailSheet: View {
                 } footer: {
                     Text("Mock: no email is sent. Any six digits work.")
                 }
+                .glassRowBackground()
                 Section {
                     Button("Send a new code") { Task { await sendCode() } }
                         .disabled(isWorking)
                 }
+                .glassRowBackground()
             }
+            .glassList()
             .navigationTitle("Verify your email")
             .inlineNavigationTitle()
             .toolbar {

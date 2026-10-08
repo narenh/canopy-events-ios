@@ -34,12 +34,15 @@ struct RSVPSheet: View {
                     } footer: {
                         Text("The host allows up to \(event.guestsAllowed) per RSVP.")
                     }
+                    .glassRowBackground()
                 }
 
                 if status == .going && event.isFull && event.myStatus != .going {
                     WaitlistNotice(isOnWaitlist: event.myStatus == .waitlisted)
+                        .glassRowBackground()
                 }
             }
+            .glassList()
             .navigationTitle(event.title)
             .inlineNavigationTitle()
             .toolbar {

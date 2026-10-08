@@ -29,6 +29,7 @@ struct QuickSignUpView: View {
             } footer: {
                 Text("Hosts and guests see your name as \(previewName). Your email is never shown to anyone.")
             }
+            .glassRowBackground()
             Section {
                 Button {
                     Task { await signUp() }
@@ -37,6 +38,7 @@ struct QuickSignUpView: View {
                 }
                 .disabled(!isValid || isWorking)
             }
+            .glassRowBackground()
         }
         .navigationTitle("Quick sign-up")
         .errorAlert($errorMessage)

@@ -1,12 +1,12 @@
 import PhotosUI
 import SwiftUI
 
-/// The editor's cover, drawn as the event page's hero (3:2, the same
-/// fade), with a dashed line where the clear 2:1 ends, so the host sees
+/// The editor's cover, drawn as the event page's hero (3:2, fading itself
+/// out the same way), with a dashed line where the clear 2:1 ends, so the host sees
 /// what stays clear. A camera button (add or change) and a × (remove) sit
 /// top right as 48 pt dark glass circles. Nothing uploads until Save.
-/// Pulled down, the picture (with its buttons) stays put and the fade and
-/// the fields slide down over it, as on the page.
+/// Pulled down, the picture (with its buttons) stays put and the fields
+/// slide down over it, as on the page.
 struct EditorHeroView: View {
     @Bindable var model: EventEditorModel
     var isInset = false
@@ -18,7 +18,7 @@ struct EditorHeroView: View {
     var body: some View {
         picture
             .aspectRatio(3 / 2, contentMode: .fit)
-            .heroMelt(from: 0.75)
+            .heroFade()
             .overlay {
                 if model.hasCover {
                     GeometryReader { proxy in
@@ -33,7 +33,6 @@ struct EditorHeroView: View {
             .overlay(alignment: .topTrailing) { buttons }
             .clipShape(.rect(topLeadingRadius: isInset ? 18 : 0, topTrailingRadius: isInset ? 18 : 0))
             .pinnedWhilePulled(overscroll)
-            .overlay { HeroFade(theme: model.draft.theme) }
             .onChange(of: item) {
                 guard let item else { return }
                 Task {

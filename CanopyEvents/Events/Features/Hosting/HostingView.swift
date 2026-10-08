@@ -7,19 +7,13 @@ struct HostingView: View {
     @State private var model = EventListModel(.hosting)
 
     var body: some View {
-        List {
-            Section {
-                NavigationLink(value: Route.pastHostedEvents) {
-                    Label("Past", systemImage: "clock.arrow.circlepath")
-                }
+        ScrollView {
+            LazyVStack(spacing: Spacing.medium) {
+                ListLink(title: "Past", systemImage: "clock.arrow.circlepath", route: .pastHostedEvents)
+                    .padding(.bottom, Spacing.small)
+                ForEach(model.events) { EventCardLink(event: $0) }
             }
-            Section {
-                ForEach(model.events) { event in
-                    NavigationLink(value: Route.event(event.id)) {
-                        EventCard(event: event)
-                    }
-                }
-            }
+            .padding(Spacing.large)
         }
         .overlay {
             if !model.hasLoaded {
