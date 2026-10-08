@@ -23,6 +23,7 @@ final class MockEventsRepository: EventsRepository {
     }
 
     /// You, as the backend has you now (verifying your email changes it).
+    /// `me()` refuses unknown ids, so the Maya fallback is never shown.
     var currentUser: Me {
         backend.account(id: personId) ?? MockPeople.maya
     }
@@ -45,6 +46,9 @@ final class MockEventsRepository: EventsRepository {
 
     func me() async throws -> MeEnvelope {
         await pause()
+        guard backend.account(id: personId) != nil else {
+            throw APIError(message: "Sign in first.", reason: "sign_in_required")
+        }
         let verifyUrl = URL(string: "https://account.canopysf.com/profile?verify=1")
         return MeEnvelope(
             person: currentUser,
