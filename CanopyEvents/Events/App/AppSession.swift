@@ -45,8 +45,21 @@ final class AppSession {
         try await accounts.sendSignInCode(to: email)
     }
 
-    func signIn(email: String, code: String) async throws {
-        try await signIn(with: try await accounts.signIn(email: email, code: code))
+    /// Checks the emailed code: the email is proven, and the answer says
+    /// whether it has an account (then `signInWithNewPasskey()`) or not
+    /// (then `signUp(firstName:lastName:venmo:)`).
+    func checkSignInCode(_ code: String) async throws -> EmailState {
+        try await accounts.checkSignInCode(code)
+    }
+
+    /// After a proven email with an account: a passkey for this phone.
+    func signInWithNewPasskey() async throws {
+        try await signIn(with: try await accounts.signInWithNewPasskey())
+    }
+
+    /// After a proven email with no account: a new, verified one.
+    func signUp(firstName: String, lastName: String, venmo: String?) async throws {
+        try await signIn(with: try await accounts.signUp(firstName: firstName, lastName: lastName, venmo: venmo))
     }
 
     func quickSignUp(firstName: String, lastName: String, email: String) async throws {
@@ -76,12 +89,13 @@ final class AppSession {
 
     func sendVerificationCode() async throws {
         guard let token else { return }
-        try await accounts.sendVerificationCode(for: token)
+        let alreadyVerified = try await accounts.sendVerificationCode(for: token)
+        if alreadyVerified { try await refresh() }
     }
 
     func verifyEmail(code: String) async throws {
         guard let token else { return }
-        try await accounts.verifyEmail(code: code, for: token)
+        _ = try await accounts.verifyEmail(code: code, for: token)
         account = try await repository.me()
     }
 
