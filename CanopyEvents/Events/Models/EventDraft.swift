@@ -17,6 +17,14 @@ nonisolated struct EventDraft: Hashable {
     var guestsAllowed = 0
     /// The most people going, plus-ones included, 1 to 10,000; nil for no cap.
     var capacity: Int?
+    /// The page's colour (see `Event.themeHue`); nil for Canopy green.
+    var themeHue: Int?
+    var themeGrayscale = false
+
+    var theme: EventTheme {
+        get { EventTheme(hue: themeHue, grayscale: themeGrayscale) }
+        set { (themeHue, themeGrayscale) = newValue.apiFields(keepingHue: themeHue) }
+    }
 
     var isValid: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -46,7 +54,9 @@ extension EventDraft {
             locationAddress: event.locationAddress ?? "",
             guestListVisibility: event.guestListVisibility,
             guestsAllowed: event.guestsAllowed,
-            capacity: event.capacity
+            capacity: event.capacity,
+            themeHue: event.themeHue,
+            themeGrayscale: event.themeGrayscale
         )
     }
 }

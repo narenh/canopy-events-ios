@@ -12,11 +12,11 @@ extension MockEvents {
         return [
             MockEventRecord(
                 event: event(id: dumplingId, title: "Dumpling night", days: -9, hour: 19, locationName: "Ana's place",
-                             locationAddress: "1 Market St, San Francisco", hosts: [host(p.ana)], cover: "dumplings"),
+                             locationAddress: "1 Market St, San Francisco", hosts: [host(p.ana)], cover: cover("dumplings", hue: 35), theme: .hue(35)),
                 guests: [guest(maya, .going), guest(p.ben, .going), guest(p.chloe, .going), guest(p.kofi, .going), guest(p.hana, .maybe)]),
             MockEventRecord(
                 event: event(id: bonfireId, title: "Beach bonfire", description: "Fire pit 6. S'mores provided.", days: -30, hour: 18, hours: 4,
-                             locationName: "Ocean Beach", locationAddress: "Great Hwy, fire pit 6, San Francisco", hosts: [host(maya)], cover: "bonfire"),
+                             locationName: "Ocean Beach", locationAddress: "Great Hwy, fire pit 6, San Francisco", hosts: [host(maya)], cover: cover("bonfire", hue: 20)),
                 guests: [guest(p.ana, .going), guest(p.ben, .going), guest(p.diego, .going), guest(p.elif, .going),
                          guest(p.jules, .going), guest(p.gus, .notGoing)]),
             MockEventRecord(

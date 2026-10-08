@@ -8,7 +8,7 @@ struct CoverImagePickerPlaceholder: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.small) {
-            CoverImage(url: currentUrl)
+            CoverPicture(eventId: "", images: [], fullSizeUrl: currentUrl)
                 .frame(height: 140)
                 .clipShape(.rect(cornerRadius: Radius.small))
             Button("Choose a cover image", systemImage: "photo") {}

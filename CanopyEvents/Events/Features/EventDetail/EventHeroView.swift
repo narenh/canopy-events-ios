@@ -5,7 +5,7 @@ struct EventHeroView: View {
     let event: Event
 
     var body: some View {
-        CoverImage(url: event.coverImageUrl)
+        CoverPicture(event: event)
             .frame(height: 280)
             .frame(maxWidth: .infinity)
             .overlay {

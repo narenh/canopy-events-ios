@@ -9,9 +9,9 @@ enum MockRules {
     /// `viewer.rsvp.status` `removed`.
     static func event(_ record: MockEventRecord, for me: Person, friendIds: Set<Person.ID>) -> Event {
         var event = record.event
-        event.counts = counts(record)
-        event.spotsLeft = event.capacity.map { max(0, $0 - event.counts.total.going) }
         let viewer = viewer(record, for: me)
+        event.counts = counts(record, forHost: viewer.isHost)
+        event.spotsLeft = event.capacity.map { max(0, $0 - event.counts.total.going) }
         event.viewer = viewer
 
         if viewer.rsvp?.status == .removed {
@@ -50,12 +50,12 @@ enum MockRules {
     }
 
     /// People per status, their plus-ones, and the two together. Removed
-    /// people aren't counted.
-    static func counts(_ record: MockEventRecord) -> RSVPCounts {
+    /// people aren't counted, and only hosts get the invited count.
+    static func counts(_ record: MockEventRecord, forHost: Bool) -> RSVPCounts {
         var counts = RSVPCounts()
         for guest in record.guests {
             switch guest.status {
-            case .invited: counts.invited += 1
+            case .invited: counts.invited? += 1
             case .going: counts.going += 1; counts.guests.going += guest.guests
             case .maybe: counts.maybe += 1; counts.guests.maybe += guest.guests
             case .notGoing: counts.notGoing += 1
@@ -63,6 +63,7 @@ enum MockRules {
             case .removed: break
             }
         }
+        if !forHost { counts.invited = nil }
         counts.total = GuestCounts(
             going: counts.going + counts.guests.going,
             maybe: counts.maybe + counts.guests.maybe,

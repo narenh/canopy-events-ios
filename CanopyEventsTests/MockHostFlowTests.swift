@@ -69,4 +69,22 @@ struct MockHostFlowTests {
         #expect(try await repository.lookUpPerson(.instagram("@Maya.Chen"))?.id == MockPeople.maya.id)
         #expect(try await repository.lookUpPerson(.instagram("maya")) == nil)
     }
+
+    @Test func onlyTheCreatorDeletesAndHostingStaysTrue() async throws {
+        try await session.signInWithPasskey()
+        let repository = session.repository
+        try await repository.deleteEvent(id: MockEvents.gameNightId)
+        try await repository.deleteEvent(id: MockEvents.birthdayId)
+        let error = await #expect(throws: APIError.self) { try await repository.event(id: MockEvents.gameNightId) }
+        #expect(error?.reason == .eventNotFound)
+        #expect(try await repository.allEvents(.hosting).isEmpty)
+        #expect(try await repository.me().hasHosted)
+        #expect(try await repository.wall(eventId: MockEvents.rooftopId, page: .first).wallVisible)
+    }
+
+    @Test func onlyHostsSeeTheInvitedCount() async throws {
+        try await session.signInWithPasskey()
+        #expect(try await session.repository.event(id: MockEvents.birthdayId).counts.invited == 2)
+        #expect(try await session.repository.event(id: MockEvents.rooftopId).counts.invited == nil)
+    }
 }

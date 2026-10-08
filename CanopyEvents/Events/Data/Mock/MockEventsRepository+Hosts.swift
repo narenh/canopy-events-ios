@@ -20,6 +20,7 @@ extension MockEventsRepository {
         record.guests.removeAll { $0.person.id == cohostId }
         record.invitedIds.remove(cohostId)
         record.event.hosts.append(Host(person: person, role: .cohost))
+        backend.hostedPeople.insert(cohostId)
         let promoted = MockRules.promoteWaitlist(&record)
         save(record)
         removeGoingEntries(eventId: eventId, personId: cohostId)

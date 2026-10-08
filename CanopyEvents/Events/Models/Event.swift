@@ -26,8 +26,24 @@ nonisolated struct Event: Codable, Hashable, Identifiable {
     var capacity: Int?
     /// `capacity` minus `counts.total.going`, never below 0; nil with no cap.
     var spotsLeft: Int?
-    /// A public JPEG; changes with every upload, so cache it by URL.
+    /// The full-size cover (up to 1600 px), a public JPEG, for link
+    /// previews; changes with every upload. To draw it, use `coverImages`.
     var coverImageUrl: URL?
+    /// Every size of the cover, narrowest first, the last at
+    /// `coverImageUrl`. Empty with no cover (and briefly for an old one:
+    /// use `coverImageUrl` then).
+    var coverImages: [CoverImage]
+    /// The page's colour as a hue, 0–359; nil for Canopy green. Ignored
+    /// while `themeGrayscale` is true. Use `theme`.
+    var themeHue: Int?
+    /// No colour at all: a neutral grey page.
+    var themeGrayscale: Bool
+    /// The hue that matches the cover photo, a suggestion for `themeHue`
+    /// (an upload never changes the theme). Nil with no cover, for a grey
+    /// photo, or for a cover from before this existed.
+    var coverHue: Int?
+    /// The cover is essentially grey, so its match is `themeGrayscale`.
+    var coverGrayscale: Bool
     var status: EventStatus
     var cancelledAt: Date?
     var createdAt: Date
@@ -41,6 +57,17 @@ nonisolated struct Event: Codable, Hashable, Identifiable {
 
 extension Event {
     var isCancelled: Bool { status == .cancelled }
+
+    /// The event's colour.
+    var theme: EventTheme { EventTheme(hue: themeHue, grayscale: themeGrayscale) }
+
+    /// The colour that matches the cover, or nil when it isn't known.
+    var coverTheme: EventTheme? {
+        if coverGrayscale { return .grayscale }
+        return coverHue.map { .hue($0) }
+    }
+
+    var hasCover: Bool { coverImageUrl != nil }
 
     /// The server treats an event without an end as over 6 hours after it starts.
     var effectiveEnd: Date { endsAt ?? startsAt.addingTimeInterval(6 * 60 * 60) }

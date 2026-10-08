@@ -7,7 +7,7 @@ struct EventCard: View {
 
     var body: some View {
         HStack(spacing: Spacing.medium) {
-            CoverImage(url: event.coverImageUrl)
+            CoverPicture(event: event)
                 .frame(width: 64, height: 64)
                 .clipShape(.rect(cornerRadius: Radius.small))
 

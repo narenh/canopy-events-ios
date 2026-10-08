@@ -21,6 +21,8 @@ struct APIDecodingTests {
         #expect(event.viewer?.role == nil && event.hosts.first?.role == .creator)
         #expect(event.friendsGoing?.people.first?.shortName == "Ben O")
         #expect(event.startsAt == Date(timeIntervalSince1970: 1_793_500_200))
+        #expect(event.coverImages.count == 4 && event.coverImages.last?.url == event.coverImageUrl)
+        #expect(event.theme == .canopyGreen && event.coverTheme == .hue(24))
     }
 
     @Test func rsvpResult() throws {
@@ -36,6 +38,7 @@ struct APIDecodingTests {
     @Test func guestList() throws {
         let list = try decode(GuestList.self, APISamples.guestList)
         #expect(list.guests.first?.status == .going && list.nextCursor == nil)
+        #expect(list.counts.invited == nil)
     }
 
     @Test func wallKeepsUnknownTypesOut() throws {
@@ -51,6 +54,7 @@ struct APIDecodingTests {
         let item = try #require(list.notifications.first)
         #expect(item.type == .rsvp && item.count == 4 && item.details?.status == .going)
         #expect(item.event?.id == "4fQ9xKpL2mZa" && list.unreadCount == 1)
+        #expect(item.event?.themeHue == 300 && item.event?.coverImages == [])
     }
 
     @Test func inviteResult() throws {

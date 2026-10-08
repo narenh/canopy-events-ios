@@ -18,8 +18,10 @@ enum MockEvents {
         days: Int, hour: Int, minute: Int = 0, hours: Double? = 3,
         timeZone: String = pacific, locationName: String?, locationAddress: String?,
         visibility: GuestListVisibility = .everyone, hosts: [Host],
-        capacity: Int? = nil, guestsAllowed: Int = 0, cover: String? = nil, cancelled: Bool = false
+        capacity: Int? = nil, guestsAllowed: Int = 0, cover: MockCover? = nil, theme: EventTheme = .canopyGreen,
+        cancelled: Bool = false
     ) -> Event {
+        let colour = theme.apiFields()
         let start = MockDate.at(days: days, hour: hour, minute: minute, timeZone: timeZone)
         let created = start.addingTimeInterval(-14 * 24 * 60 * 60)
         return Event(
@@ -30,7 +32,9 @@ enum MockEvents {
             timeZone: timeZone, locationName: locationName, locationAddress: locationAddress,
             locationAddressHidden: false, guestListVisibility: visibility,
             guestsAllowed: guestsAllowed, capacity: capacity, spotsLeft: nil,
-            coverImageUrl: cover.flatMap(coverUrl(seed:)),
+            coverImageUrl: cover?.images.last?.url, coverImages: cover?.images ?? [],
+            themeHue: colour.themeHue, themeGrayscale: colour.themeGrayscale,
+            coverHue: cover?.hue, coverGrayscale: cover?.isGrey ?? false,
             status: cancelled ? .cancelled : .active,
             cancelledAt: cancelled ? MockDate.ago(minutes: 300) : nil,
             createdAt: created, updatedAt: created,
@@ -38,9 +42,19 @@ enum MockEvents {
         )
     }
 
-    /// A placeholder cover from picsum.photos (a green gradient offline).
-    static func coverUrl(seed: String) -> URL? {
-        URL(string: "https://picsum.photos/seed/canopy-\(seed)/1200/800")
+    /// A sample cover: picsum.photos placeholders at the API's sizes (the
+    /// generated art shows offline), with the colour said to match it.
+    static func cover(_ seed: String, hue: Int?) -> MockCover {
+        MockCover(
+            images: [400, 800, 1200, 1600].map { width in
+                let height = width * 2 / 3
+                return CoverImage(
+                    width: width, height: height,
+                    url: URL(string: "https://picsum.photos/seed/canopy-\(seed)/\(width)/\(height)")!
+                )
+            },
+            hue: hue
+        )
     }
 
     static func host(_ person: Person) -> Host { Host(person: person, role: .creator) }

@@ -10,6 +10,9 @@ final class MockBackend {
     /// Each event's wall, by event id, in the order entries were made.
     var wall: [Event.ID: [WallEntry]]
     var inboxes: [Person.ID: [InboxNotification]]
+    /// Everyone who has ever hosted or co-hosted (`hasHosted` stays true
+    /// once it is, even after an event is deleted or they step down).
+    var hostedPeople: Set<Person.ID>
     /// Push tokens, by whose they are (up to 10 each).
     var devices: [Person.ID: [String]] = [:]
     private let delay: Duration
@@ -21,6 +24,7 @@ final class MockBackend {
         self.accounts = [MockPeople.maya, MockPeople.sam]
         self.records = MockEvents.all
         self.wall = MockWall.entries
+        self.hostedPeople = Set(MockEvents.all.flatMap { $0.event.hosts.map(\.person.id) })
         self.inboxes = [
             MockPeople.maya.id: MockNotifications.inbox(for: MockPeople.maya.id),
             MockPeople.sam.id: MockNotifications.inbox(for: MockPeople.sam.id),

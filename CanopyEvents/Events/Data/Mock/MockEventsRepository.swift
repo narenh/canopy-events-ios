@@ -48,7 +48,7 @@ final class MockEventsRepository: EventsRepository {
         return MeEnvelope(
             person: currentUser,
             verifyUrl: currentUser.emailVerified ? nil : verifyUrl,
-            hasHosted: records.contains { $0.isHost(personId) }
+            hasHosted: backend.hostedPeople.contains(personId)
         )
     }
 
