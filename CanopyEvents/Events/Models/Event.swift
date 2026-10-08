@@ -55,7 +55,7 @@ nonisolated struct Event: Codable, Hashable, Identifiable {
     var friendsGoing: FriendsGoing?
 }
 
-extension Event {
+nonisolated extension Event {
     var isCancelled: Bool { status == .cancelled }
 
     /// The event's colour.

@@ -1,28 +1,34 @@
 import SwiftUI
 
-/// One event in a list: cover thumbnail, title, when and where, and a tag
-/// for your part in it (hosting, your RSVP, or cancelled).
+/// One event in a list, after the web's: the cover (or its generated
+/// art) as a 3:2 thumbnail, then a bold accent line saying when ("SAT,
+/// OCT 10 · 7:30 PM"), the title, where, and a tag for your part in it.
 struct EventCard: View {
     let event: Event
+
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
         HStack(spacing: Spacing.medium) {
             CoverPicture(event: event)
-                .frame(width: 64, height: 64)
-                .clipShape(.rect(cornerRadius: Radius.small))
+                .frame(width: sizeClass == .regular ? 168 : 116)
+                .aspectRatio(3 / 2, contentMode: .fit)
+                .clipShape(.rect(cornerRadius: 12))
+                .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(.white.opacity(0.22), lineWidth: 1) }
 
             VStack(alignment: .leading, spacing: Spacing.xSmall) {
+                Text(EventDateFormatter.rowLine(for: event).uppercased())
+                    .font(Typography.listWhen)
+                    .tracking(0.6)
+                    .foregroundStyle(Palette.link)
                 Text(event.title)
-                    .font(Typography.cardTitle)
+                    .font(Typography.listTitle)
                     .strikethrough(event.isCancelled)
                     .lineLimit(2)
-                Text("\(EventDateFormatter.day(for: event)) · \(EventDateFormatter.startTime(for: event))")
-                    .font(.subheadline)
-                    .foregroundStyle(Palette.muted)
                 if let place = event.locationName {
                     Text(place)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Palette.muted)
                         .lineLimit(1)
                 }
                 tag
@@ -36,7 +42,7 @@ struct EventCard: View {
         if event.isCancelled {
             TagLabel(title: "Cancelled", systemImage: "xmark.octagon", tint: Palette.danger)
         } else if event.viewer?.isHost == true {
-            TagLabel(title: "Hosting", systemImage: "star.fill")
+            TagLabel(title: event.viewer?.role == .cohost ? "Co-hosting" : "Hosting", systemImage: "star.fill")
         } else if let status = event.myStatus {
             RSVPStatusBadge(status: status)
         }

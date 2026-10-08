@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Going / Maybe / Can't go as three glass buttons, with your current
-/// answer highlighted. Used on invite rows and the event page.
+/// answer filled in. Used on invite rows and the event page.
 struct AnswerButtons: View {
     /// Your answer now, if any. Its button is drawn prominent.
     let current: RSVPStatus?
@@ -22,9 +22,9 @@ struct AnswerButtons: View {
         let button = Button {
             onAnswer(status)
         } label: {
-            Label(status.title, systemImage: status.systemImage)
-                .labelStyle(.titleAndIcon)
-                .font(.subheadline.weight(.semibold))
+            // Words only, like the web: they fit three across at large sizes.
+            Text(status.title)
+                .font(.body.weight(.semibold))
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
                 .frame(maxWidth: .infinity)
