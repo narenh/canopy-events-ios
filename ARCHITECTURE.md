@@ -166,7 +166,8 @@ rule, the app ports it and a test pins it to the web's own output.
   edge to edge on a phone. Its top 2:1 is clear, with the how-soon pill
   (`RelativePill`, the web's `relativeWhen`) low on the left; the web's
   nine-stop fade (`heroFade`) runs into the theme's base, and the last
-  6% melts into the mesh. The title starts on the band (the last sixth
+  6% melts into the mesh. Pulled down, the picture stays put and the
+  fade, title and the rest slide over it (`pinnedWhilePulled`). The title starts on the band (the last sixth
   of the width), then the big date and time (`EventHeadView`). From a
   700 pt wide screen the page is a 680 pt column and the hero has 18 pt
   top corners.
@@ -421,6 +422,17 @@ decisions are in canopy-events' `docs/decision-log.md`):
   top left, 2 top right, 5 middle, 4 lower left, 3 low right) but not
   pixel-identical. The generated cover art likewise uses a linear and
   two elliptical gradients whose sizes only approximate CSS's.
+- **Pull-down: the image stays put, and the content slides over it**
+  (the owner's call, after a stretch-and-zoom was tried and dropped).
+  While the page or editor is pulled down past its top, the hero's
+  picture (cover, generated art, or the editor's with its buttons)
+  keeps its place and size, pinned to the top; the fade, pill, title
+  and everything after rubber-band down as usual and are drawn over it.
+  The fade is its own layer (`HeroFade`) that travels with the content,
+  and the picture melts into the mesh across its band (the last
+  quarter), so no line shows where it ends. Scrolling up moves it all
+  together, with no parallax. Checked in the simulator by shifting the
+  page as a pull would (there's no Simulator app here to drag in).
 - **"View all" opens the existing guest list screen** rather than
   expanding in place (the web's `<details>`), the iOS way; the host's
   remove and restore tools are still to come there.

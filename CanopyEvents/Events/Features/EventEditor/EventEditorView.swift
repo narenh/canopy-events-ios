@@ -16,6 +16,7 @@ struct EventEditorView: View {
     @State private var model: EventEditorModel
     @State private var isWide = false
     @State private var heroWidth: CGFloat = 0
+    @State private var overscroll: CGFloat = 0
     @FocusState private var titleFocused: Bool
 
     /// Pass nil to make a new event.
@@ -28,7 +29,7 @@ struct EventEditorView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 0) {
-                    EditorHeroView(model: model, isInset: isWide)
+                    EditorHeroView(model: model, isInset: isWide, overscroll: overscroll)
                         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { heroWidth = $0 }
                     VStack(alignment: .leading, spacing: Spacing.xLarge) {
                         titleField
@@ -49,6 +50,7 @@ struct EventEditorView: View {
                 .padding(.bottom, Spacing.xLarge)
             }
             .dismissesKeyboardOnScroll()
+            .trackingOverscroll($overscroll)
             .onGeometryChange(for: Bool.self) { $0.size.width >= 700 } action: { isWide = $0 }
             .safeAreaInset(edge: .bottom) { saveBar }
             .accessibilityLabel(model.isNew ? "New Event" : "Edit Event")

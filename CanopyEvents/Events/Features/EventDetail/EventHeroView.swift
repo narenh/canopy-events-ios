@@ -4,17 +4,23 @@ import SwiftUI
 /// art) in a 3:2 frame. Its top 2:1 shows the picture clearly, with the
 /// how-soon pill low on the left; the band below (the last sixth of the
 /// width) has faded into the theme's base colour, and the title starts on
-/// it (`EventHeadView`). The fade eases in with the web's stops, and the
-/// last 6% melts into the mesh.
+/// it (`EventHeadView`). Pulled down, the picture stays put and the fade,
+/// pill and title slide down over it.
 struct EventHeroView: View {
     let event: Event
     /// Rounded top corners: in the iPad column, not edge to edge.
     var isInset = false
+    /// How far the page is pulled down past its top: the picture stays
+    /// there while the rest moves (`pinnedWhilePulled`).
+    var overscroll: CGFloat = 0
 
     var body: some View {
         CoverPicture(event: event)
             .aspectRatio(3 / 2, contentMode: .fit)
-            .heroFade(event.theme)
+            .heroMelt(from: 0.75)
+            .clipShape(.rect(topLeadingRadius: isInset ? 18 : 0, topTrailingRadius: isInset ? 18 : 0))
+            .pinnedWhilePulled(overscroll)
+            .overlay { HeroFade(theme: event.theme) }
             .overlay(alignment: .bottomLeading) {
                 // Low on the left inside the 2:1: 10 pt above the band.
                 GeometryReader { proxy in
@@ -24,7 +30,6 @@ struct EventHeroView: View {
                         .padding(.bottom, proxy.size.height / 4 + 10)
                 }
             }
-            .clipShape(.rect(topLeadingRadius: isInset ? 18 : 0, topTrailingRadius: isInset ? 18 : 0))
             .accessibilityHidden(true)
     }
 }
@@ -35,6 +40,10 @@ struct EventHeroView: View {
             EventHeroView(event: PreviewData.event(MockEvents.rooftopId))
             EventHeroView(event: PreviewData.event(MockEvents.gameNightId))
             EventHeroView(event: PreviewData.event(MockEvents.karaokeId), isInset: true)
+            // As if pulled down 120 pt: the fade and pill have come down
+            // 120 pt over the picture, which hasn't moved.
+            EventHeroView(event: PreviewData.event(MockEvents.rooftopId), overscroll: 120)
+                .padding(.top, 120)
         }
     }
     .canopyScreen()
