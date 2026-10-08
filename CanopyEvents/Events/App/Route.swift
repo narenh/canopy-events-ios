@@ -10,4 +10,8 @@ enum Route: Hashable {
     case pastEvents
     /// Past events you hosted.
     case pastHostedEvents
+    /// One of your lists, with who's on it.
+    case ownList(OwnedList.ID)
+    /// Someone's list link, `/l/<code>`: join it.
+    case listLink(String)
 }

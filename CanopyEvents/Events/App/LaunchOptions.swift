@@ -14,11 +14,14 @@ enum LaunchOptions {
     static var openEventId: String? { value(for: "mockEvent") }
     /// What the Events tab opens with: `-mockEvent <id>`, then
     /// `-mockPush guests|wall` for that event's screen, or `-mockPush
-    /// past` alone.
+    /// past|list|listLink` alone (Maya's Drag Race, Ana's Dumpling crew's
+    /// join screen).
     static var startPath: [Route] {
         let event = openEventId
         switch value(for: "mockPush") {
         case "past": return [.pastEvents]
+        case "list": return [.ownList(MockLists.dragRaceId)]
+        case "listLink": return [.listLink(MockLists.dumplingCrewCode)]
         case "guests": return event.map { [.event($0), .guestList($0)] } ?? []
         case "wall": return event.map { [.event($0), .wall($0)] } ?? []
         default: return event.map { [.event($0)] } ?? []
@@ -26,6 +29,8 @@ enum LaunchOptions {
     }
     /// `YES`, with `-mockEvent`, opens that event's editor too.
     static var editsOpenEvent: Bool { value(for: "mockEdit") == "YES" }
+    /// `YES`, with `-mockEvent`, opens that event's invite sheet too.
+    static var invitesOpenEvent: Bool { value(for: "mockInvite") == "YES" }
     /// `YES` sends the test notification (Adam Smith's invite) 5 seconds
     /// after signing in, once notifications are allowed.
     static var sendsTestNotification: Bool { value(for: "mockTestNotification") == "YES" }

@@ -47,6 +47,20 @@ extension View {
         #endif
     }
 
+    /// A search field that's always showing under the title (in the
+    /// toolbar on the Mac), with no capitals or autocorrect: for names,
+    /// numbers and @usernames.
+    func alwaysShownSearch(text: Binding<String>, prompt: String) -> some View {
+        #if os(macOS)
+        searchable(text: text, prompt: Text(prompt))
+            .autocorrectionDisabled()
+        #else
+        searchable(text: text, placement: .navigationBarDrawer(displayMode: .always), prompt: Text(prompt))
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+        #endif
+    }
+
     /// Scrolling puts the keyboard away (there's no keyboard to hide on
     /// visionOS or the Mac).
     func dismissesKeyboardOnScroll() -> some View {

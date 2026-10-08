@@ -15,6 +15,10 @@ struct EventDetailView: View {
     @State private var isEditing = false
     @State private var isInviting = false
     @State private var isManagingCohosts = false
+    @State private var isManagingLists = false
+    @State private var showsListQR = false
+    /// A list from "Get invited next time", while asking first.
+    @State private var joining: JoinableList?
     @State private var pendingAction: HostAction?
     @State private var confirmsLeave = false
     /// Wider than a phone: the page becomes a column and the hero is inset.
@@ -26,6 +30,7 @@ struct EventDetailView: View {
     init(eventId: Event.ID) {
         _model = State(initialValue: EventDetailModel(eventId: eventId))
         _isEditing = State(initialValue: LaunchOptions.editsOpenEvent && LaunchOptions.openEventId == eventId)
+        _isInviting = State(initialValue: LaunchOptions.invitesOpenEvent && LaunchOptions.openEventId == eventId)
     }
 
     var body: some View {
@@ -84,12 +89,29 @@ struct EventDetailView: View {
             }
         }
         .sheet(isPresented: $isInviting) {
-            InviteFriendsSheet(eventId: event.id) {
-                Task { await model.load(from: repository) }
+            InviteSheet(event: event, me: session.me?.id) { count in
+                Task { await model.invited(count, using: repository) }
             }
+            .eventAccent(event.accent)
         }
         .sheet(isPresented: $isManagingCohosts) {
             CohostsSheet(event: event) { model.update($0) }
+        }
+        .sheet(isPresented: $isManagingLists) {
+            EventListsSheet(event: event) { model.update($0) }
+                .eventAccent(event.accent)
+        }
+        .sheet(isPresented: $showsListQR) {
+            ListQRSheet(lists: (event.hostLists ?? []).map(ListQRItem.init))
+        }
+        .confirmationDialog(joining.map { "Join \($0.owner.firstName)'s \($0.name)?" } ?? "", isPresented: isConfirmingJoin,
+                            titleVisibility: .visible, presenting: joining) { list in
+            Button("Join") { Task { await model.joinList(list, using: repository) } }
+        } message: { list in
+            Text("\(list.owner.firstName) will be able to invite you to events.")
+        }
+        .onChange(of: model.hostNotice) { _, notice in
+            if let notice { AccessibilityNotification.Announcement(notice).post() }
         }
         .confirmationDialog(pendingAction?.title ?? "", isPresented: isConfirming, titleVisibility: .visible,
                             presenting: pendingAction) { action in
@@ -113,7 +135,8 @@ struct EventDetailView: View {
             HostControlsSection(
                 event: event, notice: model.hostNotice,
                 onInvite: { isInviting = true }, onEdit: { isEditing = true },
-                onCohosts: { isManagingCohosts = true }, onAction: { pendingAction = $0 }
+                onCohosts: { isManagingCohosts = true }, onLists: { isManagingLists = true },
+                onShowListQR: { showsListQR = true }, onAction: { pendingAction = $0 }
             )
         } else {
             YourRSVPSection(
@@ -123,6 +146,10 @@ struct EventDetailView: View {
                 onAnswerWithGuests: { answeringWithGuests = $0 },
                 menu: guestMenu(for: event)
             )
+            if event.joinableList != nil || model.joinedList != nil {
+                JoinListSection(list: model.joinedList == nil ? event.joinableList : nil, joined: model.joinedList,
+                                isJoining: model.isSaving) { joining = $0 }
+            }
         }
         if event.myStatus != .removed {
             AttendingSection(event: event, guestList: model.guestList)
@@ -141,7 +168,11 @@ struct EventDetailView: View {
         )
     }
 
-    private var isConfirming: Binding<Bool> {
+    private var isConfirmingJoin: Binding<Bool> {
+        Binding(get: { joining != nil }, set: { if !$0 { joining = nil } })
+    }
+
+        private var isConfirming: Binding<Bool> {
         Binding(get: { pendingAction != nil }, set: { if !$0 { pendingAction = nil } })
     }
 
@@ -152,7 +183,7 @@ struct EventDetailView: View {
     }
 }
 
-#Preview("Going, plus-ones allowed") {
+#Preview("Going, plus-ones allowed, a list to join") {
     NavigationStack { EventDetailView(eventId: MockEvents.rooftopId) }
         .mockEnvironment()
 }
@@ -164,6 +195,11 @@ struct EventDetailView: View {
 
 #Preview("Long title, grey") {
     NavigationStack { EventDetailView(eventId: MockEvents.galleryId) }
+        .mockEnvironment()
+}
+
+#Preview("Hosting, a list on it") {
+    NavigationStack { EventDetailView(eventId: MockEvents.dragFinaleId) }
         .mockEnvironment()
 }
 

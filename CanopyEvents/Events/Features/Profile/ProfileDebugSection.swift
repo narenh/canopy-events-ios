@@ -5,7 +5,8 @@ import SwiftUI
 /// you to Throw Eggs at Karl) 5 seconds out, so you can lock the phone and
 /// see it, with Going and Can't Go, and long-press it for the card; or
 /// look at that card here. Also `-mockTestNotification YES` and
-/// `-mockCard YES` (debug, handled by `MainTabView`).
+/// `-mockCard YES` (debug, handled by `MainTabView`). "Open a list link"
+/// opens Ana's Dumpling crew's join screen.
 struct ProfileDebugSection: View {
     @Environment(\.eventsRepository) private var repository
     @State private var status: String?
@@ -18,6 +19,10 @@ struct ProfileDebugSection: View {
             }
             Button("Show the notification's card", systemImage: "rectangle.portrait.on.rectangle.portrait") {
                 Task { card = try? await NotificationCard.load(MockEvents.eggsId, from: repository) }
+            }
+            // Ana's Dumpling crew, as its link `/l/<code>` would open it.
+            NavigationLink(value: Route.listLink(MockLists.dumplingCrewCode)) {
+                Label("Open a list link", systemImage: "list.bullet.rectangle")
             }
             if let status {
                 Text(status)

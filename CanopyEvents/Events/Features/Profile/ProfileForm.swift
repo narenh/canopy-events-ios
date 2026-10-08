@@ -13,6 +13,9 @@ struct ProfileForm: View {
             }
             .listRowBackground(Color.clear)
 
+            // Lists come first: they're shown at a door, not just set up once.
+            YourListsSections()
+
             Section("Name") {
                 TextField("First name", text: $model.draft.firstName)
                     .textContentType(.givenName)

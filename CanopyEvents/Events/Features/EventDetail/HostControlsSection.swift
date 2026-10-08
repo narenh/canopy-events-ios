@@ -2,8 +2,9 @@ import SwiftUI
 
 /// What hosts see instead of the RSVP buttons: "Share link" and "Invite"
 /// side by side (while the event is on), then "Edit" with a ⋯ menu. The
-/// creator's menu: Co-hosts…, Make a new link…, Cancel or Bring back
-/// event, and Delete event… last. A co-host's: Step down.
+/// creator's menu: Co-hosts…, Lists…, Show list QR (once a list is on),
+/// Make a new link…, Cancel or Bring back event, and Delete event… last.
+/// A co-host's: Lists…, Show list QR, Step down.
 struct HostControlsSection: View {
     let event: Event
     /// A line to show after something was done ("New link made...").
@@ -11,6 +12,10 @@ struct HostControlsSection: View {
     let onInvite: () -> Void
     let onEdit: () -> Void
     let onCohosts: () -> Void
+    /// "Lists…": put your lists on the event, or take them off.
+    var onLists: () -> Void = {}
+    /// "Show list QR": the lists on the event as big QR codes.
+    var onShowListQR: () -> Void = {}
     let onAction: (HostAction) -> Void
 
     @Environment(\.eventAccent) private var accent
@@ -65,6 +70,7 @@ struct HostControlsSection: View {
     @ViewBuilder private var menuItems: some View {
         if isCreator {
             Button("Co-hosts…", systemImage: "person.2", action: onCohosts)
+            listItems
             if phase.isOpen {
                 Button("Make a new link…", systemImage: "link") { onAction(.newLink) }
             }
@@ -77,7 +83,15 @@ struct HostControlsSection: View {
                 Button("Delete event…", systemImage: "trash", role: .destructive) { onAction(.delete) }
             }
         } else {
+            listItems
             Button("Step down as co-host", systemImage: "person.badge.minus", role: .destructive) { onAction(.stepDown) }
+        }
+    }
+
+    @ViewBuilder private var listItems: some View {
+        Button("Lists…", systemImage: "list.bullet", action: onLists)
+        if !(event.hostLists ?? []).isEmpty {
+            Button("Show list QR", systemImage: "qrcode", action: onShowListQR)
         }
     }
 

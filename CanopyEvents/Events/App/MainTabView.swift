@@ -46,6 +46,7 @@ struct MainTabView: View {
                 NavigationStack {
                     ProfileView()
                         .verifyEmailBanner()
+                        .navigationDestination(for: Route.self) { RouteView(route: $0) }
                 }
             }
             if session.isHost {

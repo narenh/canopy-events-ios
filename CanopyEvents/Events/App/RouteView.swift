@@ -18,6 +18,8 @@ struct RouteView: View {
         case .wall(let id): WallView(eventId: id)
         case .pastEvents: PastEventsView(showsHosted: false)
         case .pastHostedEvents: PastEventsView(showsHosted: true)
+        case .ownList(let id): OwnListView(listId: id)
+        case .listLink(let code): ListLinkView(code: code)
         }
     }
 }

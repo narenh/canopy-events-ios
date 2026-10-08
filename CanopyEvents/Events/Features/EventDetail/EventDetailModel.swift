@@ -19,6 +19,8 @@ final class EventDetailModel {
     private(set) var hostNotice: String?
     /// Hosts whose invitations you've opted out of (the guest menu).
     private(set) var optedOut: Set<Person.ID> = []
+    /// After joining a list from "Get invited next time".
+    private(set) var joinedList: ListJoined?
     var errorMessage: String?
 
     init(eventId: Event.ID) {
@@ -117,8 +119,29 @@ final class EventDetailModel {
         }
     }
 
-    /// After a change made elsewhere (the co-hosts sheet).
+    /// After a change made elsewhere (the co-hosts and lists sheets).
     func update(_ event: Event) {
         self.event = event
+    }
+
+    /// After the invite sheet sends: "Invited 7 people.", then a reload.
+    func invited(_ count: Int, using repository: any EventsRepository) async {
+        hostNotice = count > 0 ? InvitePicker.invitedNotice(count) : nil
+        await load(from: repository)
+    }
+
+    // MARK: Lists
+
+    /// "Get invited next time": joins the list, which invites you to its
+    /// other events still to come.
+    func joinList(_ list: JoinableList, using repository: any EventsRepository) async {
+        isSaving = true
+        defer { isSaving = false }
+        do {
+            joinedList = try await repository.joinList(code: list.code)
+            await load(from: repository)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 }
