@@ -9,12 +9,24 @@ struct YourRSVPSection: View {
     let onAnswer: (RSVPStatus) -> Void
     /// Open the RSVP sheet, preset to this answer, to choose plus-ones.
     let onAnswerWithGuests: (RSVPStatus) -> Void
+    /// The ⋯ beside the heading, for a guest on the event; nil for none.
+    var menu: GuestMenu?
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
-            Text(heading)
-                .font(Typography.cardHeading)
-                .accessibilityAddTraits(.isHeader)
+            HStack {
+                Text(heading)
+                    .font(Typography.cardHeading)
+                    .accessibilityAddTraits(.isHeader)
+                if event.viewer?.muted == true {
+                    Image(systemName: "bell.slash")
+                        .font(.subheadline)
+                        .foregroundStyle(Palette.muted)
+                        .accessibilityLabel("Muted")
+                }
+                Spacer()
+                if let menu { menu }
+            }
             if event.isCancelled {
                 Text("This event was cancelled.")
                     .foregroundStyle(Palette.danger)
@@ -49,7 +61,7 @@ struct YourRSVPSection: View {
 
     private var heading: String {
         if event.isCancelled || event.isOver || event.myStatus == .removed { return "Your RSVP" }
-        return event.myStatus == .invited ? "RSVP" : "Are you going?"
+        return "RSVP"
     }
 
     /// Going or maybe to an event that allows plus-ones asks how many.

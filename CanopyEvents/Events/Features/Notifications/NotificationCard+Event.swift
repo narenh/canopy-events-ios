@@ -9,7 +9,7 @@ extension NotificationCard {
             eventId: event.id, title: event.title, startsAt: event.startsAt, endsAt: event.endsAt,
             timeZone: event.timeZone, locationName: event.locationName,
             coverUrl: CoverSize.url(in: event.coverImages, fallback: event.coverImageUrl, frameWidth: 400, scale: 2),
-            themeHue: event.themeHue, themeGrayscale: event.themeGrayscale,
+            themeHue: event.themeHue, themeGrayscale: event.themeGrayscale, accentHue: event.accentHue,
             going: event.counts.going, maybe: event.counts.maybe,
             faces: people.prefix(6).map { CardFace(name: $0.fullName, photoUrl: $0.photoUrl) }
         )

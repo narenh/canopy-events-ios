@@ -15,11 +15,13 @@ nonisolated struct APIError: Error, Codable, Hashable, LocalizedError {
     var verify: URL?
     /// The account service's `email_has_account`: the email that has one.
     var email: String?
+    /// With a refusal about one of an event's `details`: which one (from 0).
+    var index: Int?
 
     var errorDescription: String? { message }
 
     enum CodingKeys: String, CodingKey {
         case message = "error"
-        case reason, signIn, quickSignUp, verify, email
+        case reason, signIn, quickSignUp, verify, email, index
     }
 }

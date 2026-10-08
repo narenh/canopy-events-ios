@@ -1,7 +1,9 @@
 import Foundation
 
-/// Hosts inviting people by id (each invitee gets an inbox entry), and
-/// taking an invitation back.
+/// Hosts inviting people by id (each invitee gets an inbox entry, and
+/// becomes a friend both ways), and taking an invitation back. Someone
+/// who opted out of the host's invitations is skipped as `not_found`,
+/// deliberately the same as no account.
 extension MockEventsRepository {
     func invite(eventId: Event.ID, personIds: [Person.ID]) async throws -> InviteResult {
         await pause()
@@ -18,7 +20,7 @@ extension MockEventsRepository {
                 result.skipped.append(SkippedInvite(personId: id, reason: .removed))
             } else if record.guest(id) != nil {
                 result.skipped.append(SkippedInvite(personId: id, reason: .alreadyOnList))
-            } else if let person = knownPerson(id) {
+            } else if let person = knownPerson(id), !backend.inviteOptouts[id, default: []].contains(personId) {
                 record.guests.append(Guest(person: person, status: .invited, guests: 0, guestsOverLimit: false, respondedAt: nil))
                 record.invitedIds.insert(id)
                 result.invited.append(person)
@@ -29,6 +31,8 @@ extension MockEventsRepository {
         save(record)
         for person in result.invited {
             backend.notify(person.id, .invited, about: record.event, from: currentUser.person)
+            backend.befriend(personId, person.id, source: .invite)
+            backend.befriend(person.id, personId, source: .invite)
         }
         return result
     }

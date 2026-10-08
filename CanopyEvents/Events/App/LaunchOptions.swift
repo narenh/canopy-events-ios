@@ -14,12 +14,11 @@ enum LaunchOptions {
     static var openEventId: String? { value(for: "mockEvent") }
     /// What the Events tab opens with: `-mockEvent <id>`, then
     /// `-mockPush guests|wall` for that event's screen, or `-mockPush
-    /// past|declined` alone.
+    /// past` alone.
     static var startPath: [Route] {
         let event = openEventId
         switch value(for: "mockPush") {
         case "past": return [.pastEvents]
-        case "declined": return [.declinedEvents]
         case "guests": return event.map { [.event($0), .guestList($0)] } ?? []
         case "wall": return event.map { [.event($0), .wall($0)] } ?? []
         default: return event.map { [.event($0)] } ?? []
@@ -33,6 +32,8 @@ enum LaunchOptions {
     /// `YES` shows the expanded notification's card (Profile's Debug
     /// section has it too).
     static var showsNotificationCard: Bool { value(for: "mockCard") == "YES" }
+    /// `YES` doesn't ask for notification permission (for screenshots).
+    static var skipsPermission: Bool { value(for: "mockNoPermission") == "YES" }
     /// `YES` opens the new-event editor on launch.
     static var opensNewEvent: Bool { value(for: "mockNewEvent") == "YES" }
 

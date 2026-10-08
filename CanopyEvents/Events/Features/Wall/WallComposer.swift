@@ -15,7 +15,7 @@ struct WallComposer: View {
                 .glassSurface(cornerRadius: Radius.medium)
             Button("Post", systemImage: "arrow.up", action: onPost)
                 .labelStyle(.iconOnly)
-                .glassProminentButtonStyle()
+                .accentProminentButtonStyle()
                 .buttonBorderShape(.circle)
                 .disabled(!canPost)
         }

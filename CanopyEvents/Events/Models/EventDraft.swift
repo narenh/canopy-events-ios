@@ -17,14 +17,24 @@ nonisolated struct EventDraft: Hashable {
     var guestsAllowed = 0
     /// The most people going, plus-ones included, 1 to 10,000; nil for no cap.
     var capacity: Int?
-    /// The page's colour (see `Event.themeHue`); nil for Canopy green.
+    /// The page's color (see `Event.themeHue`); nil for Canopy green.
     var themeHue: Int?
     var themeGrayscale = false
+    /// A grey event's accent hue; nil is white (and always nil unless grey).
+    var accentHue: Int?
+    /// The extra fields, in order.
+    var details: [EventDetailInput] = []
 
     var theme: EventTheme {
         get { EventTheme(hue: themeHue, grayscale: themeGrayscale) }
-        set { (themeHue, themeGrayscale) = newValue.apiFields(keepingHue: themeHue) }
+        set {
+            (themeHue, themeGrayscale) = newValue.apiFields(keepingHue: themeHue)
+            if !themeGrayscale { accentHue = nil }
+        }
     }
+
+    /// The accent the event will have.
+    var accent: AccentColors { AccentColors(theme: theme, accentHue: accentHue) }
 
     var isValid: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -56,7 +66,9 @@ extension EventDraft {
             guestsAllowed: event.guestsAllowed,
             capacity: event.capacity,
             themeHue: event.themeHue,
-            themeGrayscale: event.themeGrayscale
+            themeGrayscale: event.themeGrayscale,
+            accentHue: event.accentHue,
+            details: event.shownDetails.map(EventDetailInput.init)
         )
     }
 }

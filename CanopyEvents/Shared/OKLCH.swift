@@ -5,7 +5,7 @@ import Foundation
 /// (`oklchToLinear`, `oklchToRgb`, `rgbToOklch`) so both draw the same
 /// bytes. `L` is 0–1, `C` chroma, `h` the hue in degrees.
 nonisolated enum OKLCH {
-    /// Linear-light sRGB for an OKLCH colour; may fall outside 0–1.
+    /// Linear-light sRGB for an OKLCH color; may fall outside 0–1.
     static func linearSRGB(L: Double, C: Double, h: Double) -> (Double, Double, Double) {
         let a = C * cos(h * .pi / 180)
         let b = C * sin(h * .pi / 180)
@@ -19,7 +19,7 @@ nonisolated enum OKLCH {
         )
     }
 
-    /// The colour as sRGB bytes. One outside sRGB has its chroma lowered
+    /// The color as sRGB bytes. One outside sRGB has its chroma lowered
     /// (L and hue kept) until it fits, as docs/api.md says.
     static func rgb(L: Double, C: Double, h: Double) -> RGB {
         func fits(_ c: Double) -> Bool {
@@ -40,7 +40,7 @@ nonisolated enum OKLCH {
         return RGB(byte(r), byte(g), byte(b))
     }
 
-    /// An sRGB colour as (L, C, h), h in 0..<360.
+    /// An sRGB color as (L, C, h), h in 0..<360.
     static func components(of rgb: RGB) -> (L: Double, C: Double, h: Double) {
         let (A, B, L) = lab(linear(rgb.red), linear(rgb.green), linear(rgb.blue))
         let hue = (atan2(B, A) * 180 / .pi + 360).truncatingRemainder(dividingBy: 360)

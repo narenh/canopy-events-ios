@@ -8,7 +8,7 @@ struct AvatarRow: View {
     /// Everyone the row stands for (people going or maybe), which can be
     /// more than `people`: "+N" counts the rest.
     let total: Int
-    /// The initials' circle colour (the event's brightest glow).
+    /// The initials' circle color (the event's brightest glow).
     var tint: Color = Palette.glowBright
 
     @ScaledMetric(relativeTo: .title) private var size: CGFloat = 56

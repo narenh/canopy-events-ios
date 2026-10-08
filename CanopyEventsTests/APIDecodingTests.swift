@@ -22,7 +22,11 @@ struct APIDecodingTests {
         #expect(event.friendsGoing?.people.first?.shortName == "Ben O")
         #expect(event.startsAt == Date(timeIntervalSince1970: 1_793_500_200))
         #expect(event.coverImages.count == 4 && event.coverImages.last?.url == event.coverImageUrl)
-        #expect(event.theme == .canopyGreen && event.coverTheme == .hue(24))
+        #expect(event.theme == .canopyGreen && event.coverTheme == .hue(24) && event.accentHue == nil)
+        #expect(event.details.map(\.type) == [.link, .dressCode, .parking, .phone, .unknown])
+        #expect(event.shownDetails.count == 4 && event.viewer?.muted == false)
+        #expect(event.details[0].linkText == "Playlist" && event.details[1].heading == "Dress code")
+        #expect(event.details[3].url?.absoluteString == "tel:4155550142")
     }
 
     @Test func rsvpResult() throws {
@@ -71,7 +75,23 @@ struct APIDecodingTests {
     @Test func accountService() throws {
         let state = try decode(EmailState.self, APISamples.emailState)
         #expect(state.state == .existing && state.unverified == false)
-        let me = try decode(Me.self, APISamples.accountPerson)
-        #expect(me.findable == true && me.photoUrl != nil)
+        let profile = try decode(AccountProfile.self, APISamples.accountPerson)
+        #expect(profile.findable && profile.photoUrl != nil && profile.phone == "+14155551234" && !profile.isAdmin)
+        #expect(profile.me.id == profile.id)
+    }
+
+    @Test func friendsAndTheirLinks() throws {
+        let list = try decode(FriendList.self, APISamples.friends)
+        #expect(list.friends.map(\.source) == [.sharedEvents, .added])
+        #expect(list.friends[1].eventsInCommon == 0 && list.friends[1].lastTogetherAt == nil)
+        #expect(try decode(FriendLink.self, APISamples.friendLink).code == "7Hq2mXc9LpRt")
+        #expect(try decode(FriendLinkOwner.self, APISamples.friendLinkOwner).viewer?.isFriend == true)
+    }
+
+    @Test func settingsOptoutsAndDetailErrors() throws {
+        #expect(try decode(Settings.self, APISamples.settings).calendarInvites)
+        #expect(try decode(InviteOptouts.self, APISamples.optouts).hosts.first?.shortName == "Ben O")
+        let error = try decode(APIError.self, APISamples.detailError)
+        #expect(error.reason == .badDetailURL && error.index == 1)
     }
 }

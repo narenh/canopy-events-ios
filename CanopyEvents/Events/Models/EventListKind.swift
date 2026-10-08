@@ -1,6 +1,8 @@
 /// The lists of "my events", one per API endpoint
 /// (`/api/v1/me/events/<rawValue>`).
 nonisolated enum EventListKind: String, Codable, Hashable, CaseIterable, Identifiable {
+    /// Hosting, upcoming and invitations together, each event once.
+    case all
     /// Events you host that aren't over, cancelled ones included.
     case hosting
     /// Going, maybe or waitlisted, not over; cancelled ones stay.
@@ -16,6 +18,7 @@ nonisolated enum EventListKind: String, Codable, Hashable, CaseIterable, Identif
 
     var title: String {
         switch self {
+        case .all: "All"
         case .upcoming: "Upcoming"
         case .invitations: "Invites"
         case .hosting: "Hosting"

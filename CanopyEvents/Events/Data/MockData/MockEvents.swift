@@ -19,9 +19,9 @@ enum MockEvents {
         timeZone: String = pacific, locationName: String?, locationAddress: String?,
         visibility: GuestListVisibility = .everyone, hosts: [Host],
         capacity: Int? = nil, guestsAllowed: Int = 0, cover: MockCover? = nil, theme: EventTheme = .canopyGreen,
-        cancelled: Bool = false
+        accentHue: Int? = nil, details: [EventDetail] = [], cancelled: Bool = false
     ) -> Event {
-        let colour = theme.apiFields()
+        let color = theme.apiFields()
         let start = MockDate.at(days: days, hour: hour, minute: minute, timeZone: timeZone)
         let created = start.addingTimeInterval(-14 * 24 * 60 * 60)
         return Event(
@@ -30,10 +30,11 @@ enum MockEvents {
             title: title, description: description,
             startsAt: start, endsAt: hours.map { start.addingTimeInterval($0 * 60 * 60) },
             timeZone: timeZone, locationName: locationName, locationAddress: locationAddress,
-            locationAddressHidden: false, guestListVisibility: visibility,
+            locationAddressHidden: false, details: details, hiddenDetails: 0, guestListVisibility: visibility,
             guestsAllowed: guestsAllowed, capacity: capacity, spotsLeft: nil,
             coverImageUrl: cover?.images.last?.url, coverImages: cover?.images ?? [],
-            themeHue: colour.themeHue, themeGrayscale: colour.themeGrayscale,
+            themeHue: color.themeHue, themeGrayscale: color.themeGrayscale,
+            accentHue: color.themeGrayscale ? accentHue : nil,
             coverHue: cover?.hue, coverGrayscale: cover?.isGrey ?? false,
             status: cancelled ? .cancelled : .active,
             cancelledAt: cancelled ? MockDate.ago(minutes: 300) : nil,
@@ -43,7 +44,7 @@ enum MockEvents {
     }
 
     /// A sample cover: picsum.photos placeholders at the API's sizes (the
-    /// generated art shows offline), with the colour said to match it.
+    /// generated art shows offline), with the color said to match it.
     static func cover(_ seed: String, hue: Int?) -> MockCover {
         MockCover(
             images: [400, 800, 1200, 1600].map { width in

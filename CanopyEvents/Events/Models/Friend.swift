@@ -1,13 +1,15 @@
 import Foundation
 
-/// Someone you've been at an event with (the API's `Friend`): both of you
-/// hosting or going, on an event that started and wasn't cancelled.
-/// There are no friend requests.
+/// Someone in your friends list (the API's `Friend`). One way, like
+/// following: being in yours doesn't put you in theirs, and only you see
+/// your list.
 nonisolated struct Friend: Codable, Hashable, Identifiable {
     var person: Person
+    var source: FriendSource
+    /// 0 for someone you only added (or linked, or invited).
     var eventsInCommon: Int
-    /// When the latest of those events started.
-    var lastTogetherAt: Date
+    /// When the latest event you were both at started; nil with none.
+    var lastTogetherAt: Date?
 
     var id: Person.ID { person.id }
 }

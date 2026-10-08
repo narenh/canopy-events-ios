@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// An sRGB colour as three bytes, the way the web writes its theme
-/// colours (`#03120c`), so the app's colours can be checked against the
+/// An sRGB color as three bytes, the way the web writes its theme
+/// colors (`#03120c`), so the app's colors can be checked against the
 /// web's to the byte.
 nonisolated struct RGB: Hashable, Sendable {
     var red: Int

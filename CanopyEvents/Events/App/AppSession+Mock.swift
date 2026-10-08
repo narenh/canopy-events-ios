@@ -4,7 +4,7 @@ extension AppSession {
     /// The fully mocked session the app runs on today: a mock auth service
     /// and mock repositories sharing one in-memory backend, signed out.
     /// `extraAccounts` are added to the backend's seed (previews use it).
-    static func mock(delay: Duration = .milliseconds(350), extraAccounts: [Me] = []) -> AppSession {
+    static func mock(delay: Duration = .milliseconds(350), extraAccounts: [AccountProfile] = []) -> AppSession {
         let backend = MockBackend(delay: delay)
         extraAccounts.forEach(backend.save)
         return AppSession(

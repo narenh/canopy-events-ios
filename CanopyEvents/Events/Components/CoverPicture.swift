@@ -42,7 +42,7 @@ struct CoverPicture: View {
 }
 
 extension CoverPicture {
-    /// The event's own cover and colours.
+    /// The event's own cover and colors.
     init(event: Event) {
         self.init(eventId: event.id, images: event.coverImages, fullSizeUrl: event.coverImageUrl, theme: event.theme)
     }

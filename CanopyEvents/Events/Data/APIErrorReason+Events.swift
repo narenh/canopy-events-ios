@@ -29,6 +29,25 @@ nonisolated extension APIErrorReason {
     static let badInstagram = Self(rawValue: "bad_instagram")
     static let badCursor = Self(rawValue: "bad_cursor")
     static let badLimit = Self(rawValue: "bad_limit")
+    static let badThemeHue = Self(rawValue: "bad_theme_hue")
+    static let badThemeGrayscale = Self(rawValue: "bad_theme_grayscale")
+    static let badAccentHue = Self(rawValue: "bad_accent_hue")
+    static let accentNeedsGrayscale = Self(rawValue: "accent_needs_grayscale")
+    static let badDetails = Self(rawValue: "bad_details")
+    static let tooManyDetails = Self(rawValue: "too_many_details")
+    /// With `index`: which detail.
+    static let badDetail = Self(rawValue: "bad_detail")
+    static let badDetailType = Self(rawValue: "bad_detail_type")
+    static let badDetailLabel = Self(rawValue: "bad_detail_label")
+    static let badDetailValue = Self(rawValue: "bad_detail_value")
+    static let badDetailURL = Self(rawValue: "bad_detail_url")
+    static let badDetailPhone = Self(rawValue: "bad_detail_phone")
+    static let detailTooLong = Self(rawValue: "detail_too_long")
+    static let badSettings = Self(rawValue: "bad_settings")
+    static let unknownSetting = Self(rawValue: "unknown_setting")
+    static let badCalendarInvites = Self(rawValue: "bad_calendar_invites")
+    /// Any route, for a request that can't be read at all.
+    static let badRequest = Self(rawValue: "bad_request")
 
     // MARK: 401 and 403
 
@@ -50,6 +69,8 @@ nonisolated extension APIErrorReason {
     static let entryNotFound = Self(rawValue: "entry_not_found")
     static let notRemoved = Self(rawValue: "not_removed")
     static let notFound = Self(rawValue: "not_found")
+    static let notAFriend = Self(rawValue: "not_a_friend")
+    static let friendLinkNotFound = Self(rawValue: "friend_link_not_found")
 
     // MARK: 409: not in this event's state, so redraw from the event
 
@@ -62,6 +83,12 @@ nonisolated extension APIErrorReason {
     static let noRoom = Self(rawValue: "no_room")
     static let removed = Self(rawValue: "removed")
     static let isHost = Self(rawValue: "is_host")
+    /// Muting or leaving an event you aren't on.
+    static let notOnEvent = Self(rawValue: "not_on_event")
+    /// Adding, linking or opting out of yourself.
+    static let isYou = Self(rawValue: "is_you")
+    /// Accepting your own friend link.
+    static let ownLink = Self(rawValue: "own_link")
 
     // MARK: Everything else
 

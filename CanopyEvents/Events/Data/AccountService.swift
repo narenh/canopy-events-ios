@@ -32,10 +32,13 @@ protocol AccountService: AnyObject, Sendable {
     /// `me/verify/start`: email a code that proves your address. Returns
     /// true if there was nothing to prove (already verified).
     func sendVerificationCode(for token: AuthToken) async throws -> Bool
+    /// `GET /me`: you, with your own contact details (the events API
+    /// doesn't have them).
+    func profile(for token: AuthToken) async throws -> AccountProfile
     /// `me/verify/check`: prove the email with that code. Returns you, verified.
-    func verifyEmail(code: String, for token: AuthToken) async throws -> Me
+    func verifyEmail(code: String, for token: AuthToken) async throws -> AccountProfile
     /// `PATCH /me`: save your own profile. Returns you as saved.
-    func updateProfile(_ profile: ProfileDraft, for token: AuthToken) async throws -> Me
+    func updateProfile(_ profile: ProfileDraft, for token: AuthToken) async throws -> AccountProfile
     /// `POST /signout`. Forget the token whatever happens.
     func signOut(_ token: AuthToken) async
 }

@@ -5,14 +5,18 @@ import SwiftUI
 struct AnswerButtons: View {
     /// Your answer now, if any. Its button is drawn prominent.
     let current: RSVPStatus?
+    /// Which to offer: all three on the event page; Going and Can't Go on
+    /// an invitation card; just Going on a declined one.
+    var answers = RSVPStatus.answers
     var isDisabled = false
     let onAnswer: (RSVPStatus) -> Void
 
     var body: some View {
         // Going takes half the row, Maybe and Can't Go a quarter each (the
         // web's widths): going is the answer to reach for.
-        WeightedHStack(weights: RSVPStatus.answers.map { $0 == .going ? 2 : 1 }, spacing: Spacing.small) {
-            ForEach(RSVPStatus.answers, id: \.self) { status in
+        // With fewer than three, they share the row evenly.
+        WeightedHStack(weights: answers.map { $0 == .going && answers.count == 3 ? 2 : 1 }, spacing: Spacing.small) {
+            ForEach(answers, id: \.self) { status in
                 button(for: status)
             }
         }
@@ -32,7 +36,7 @@ struct AnswerButtons: View {
                 .frame(maxWidth: .infinity)
         }
         if isCurrent {
-            button.glassProminentButtonStyle()
+            button.accentProminentButtonStyle()
         } else {
             button.glassButtonStyle()
         }

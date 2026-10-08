@@ -34,7 +34,7 @@ extension PersonRow where Accessory == EmptyView {
         PersonRow(person: MockPeople.ana, detail: "Host")
         PersonRow(person: MockPeople.ben)
         PersonRow(person: MockPeople.hana, detail: "+2 guests") {
-            RSVPStatusBadge(status: .going)
+            StatusBadge(kind: .status(.going))
         }
     }
     .canopyScreen()

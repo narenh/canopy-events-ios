@@ -3,13 +3,13 @@ import Foundation
 /// Ready-made values for `#Preview`s, as Maya (or whoever you pass) would
 /// see them. Synchronous, so previews don't need to load anything.
 enum PreviewData {
-    static func event(_ id: Event.ID = MockEvents.rooftopId, as me: Me = MockPeople.maya) -> Event {
+    static func event(_ id: Event.ID = MockEvents.rooftopId, as me: AccountProfile = MockPeople.maya) -> Event {
         let repository = MockEventsRepository(signedInAs: me)
         guard let record = try? repository.record(id) else { fatalError("No mock event \(id)") }
         return repository.resolved(record)
     }
 
-    static func guestList(_ id: Event.ID = MockEvents.rooftopId, as me: Me = MockPeople.maya) -> GuestList {
+    static func guestList(_ id: Event.ID = MockEvents.rooftopId, as me: AccountProfile = MockPeople.maya) -> GuestList {
         let repository = MockEventsRepository(signedInAs: me)
         guard let record = try? repository.record(id) else { fatalError("No mock event \(id)") }
         return MockRules.guestList(record, for: me.person)

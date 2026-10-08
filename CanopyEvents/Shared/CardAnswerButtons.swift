@@ -21,7 +21,7 @@ struct CardAnswerButtons: View {
                 Button { onAnswer("GOING") } label: {
                     Label("Going", systemImage: "checkmark.circle.fill").frame(maxWidth: .infinity)
                 }
-                .glassProminentButtonStyle()
+                .accentProminentButtonStyle()
                 Button { onAnswer("NOT_GOING") } label: {
                     Label("Can't Go", systemImage: "xmark.circle").frame(maxWidth: .infinity)
                 }

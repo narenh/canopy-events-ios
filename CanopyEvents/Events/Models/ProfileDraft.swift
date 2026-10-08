@@ -18,12 +18,12 @@ nonisolated struct ProfileDraft: Hashable {
 }
 
 extension ProfileDraft {
-    init(me: Me) {
+    init(profile: AccountProfile) {
         self.init(
-            firstName: me.firstName, lastName: me.lastName,
-            phone: me.phone ?? "", instagram: me.instagram ?? "",
-            venmo: me.venmo ?? "", cashapp: me.cashapp ?? "",
-            findable: me.findable ?? true
+            firstName: profile.firstName, lastName: profile.lastName,
+            phone: profile.phone ?? "", instagram: profile.instagram ?? "",
+            venmo: profile.venmo ?? "", cashapp: profile.cashapp ?? "",
+            findable: profile.findable
         )
     }
 }

@@ -1,22 +1,15 @@
 import Foundation
 
-/// You, the signed-in person, with your own contact details (the events
-/// API's `Me`). Only ever comes from `GET /api/v1/me`. The account
-/// service's own `person` decodes into this too (its extra `isAdmin` is
-/// ignored, and its `email` and `findable` are never null).
+/// You, as the events API has you (`GET /api/v1/me`'s `person`, the API's
+/// `Me`): no email, phone, Instagram, Venmo or Cash App, not even your
+/// own (events never shows them). Those come from the Canopy Account
+/// service (`AccountProfile`, through `AccountService`).
 nonisolated struct Me: Codable, Hashable, Identifiable {
     var id: String
-    var email: String?
     var firstName: String
     var lastName: String
     var shortName: String
     var photoUrl: URL?
-    /// E.164, e.g. "+14155551234".
-    var phone: String?
-    /// Without the @.
-    var instagram: String?
-    var venmo: String?
-    var cashapp: String?
     /// False for a quick account whose email isn't proven yet.
     /// While false, show the verify banner (it can't be dismissed).
     var emailVerified: Bool

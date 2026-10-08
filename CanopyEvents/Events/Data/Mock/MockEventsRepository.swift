@@ -4,8 +4,9 @@ import Foundation
 /// shared in-memory `MockBackend`. It applies the server's rules through
 /// `MockRules`, so visibility, counts and the waitlist behave for real.
 ///
-/// The rest is in the extensions next to this file: `+Hosting`, `+Guests`,
-/// `+Invites`, `+Wall` and `+Notifications`.
+/// The rest is in the extensions next to this file: `+Hosting`, `+Covers`,
+/// `+Guests`, `+GuestMenu`, `+Invites`, `+Hosts`, `+Moderation`, `+Wall`,
+/// `+Notifications`, `+People`, `+Friends` and `+Settings`.
 final class MockEventsRepository: EventsRepository {
     let backend: MockBackend
     let personId: Person.ID
@@ -16,7 +17,7 @@ final class MockEventsRepository: EventsRepository {
     }
 
     /// A repository with its own fresh backend, for previews and defaults.
-    convenience init(signedInAs me: Me = MockPeople.maya, delay: Duration = .milliseconds(350)) {
+    convenience init(signedInAs me: AccountProfile = MockPeople.maya, delay: Duration = .milliseconds(350)) {
         let backend = MockBackend(delay: delay)
         backend.save(me)
         self.init(backend: backend, personId: me.id)
@@ -24,7 +25,7 @@ final class MockEventsRepository: EventsRepository {
 
     /// You, as the backend has you now (verifying your email changes it).
     /// `me()` refuses unknown ids, so the Maya fallback is never shown.
-    var currentUser: Me {
+    var currentUser: AccountProfile {
         backend.account(id: personId) ?? MockPeople.maya
     }
 
@@ -46,17 +47,10 @@ final class MockEventsRepository: EventsRepository {
         }
         let verifyUrl = URL(string: "https://account.canopysf.com/profile?verify=1")
         return MeEnvelope(
-            person: currentUser,
+            person: currentUser.me,
             verifyUrl: currentUser.emailVerified ? nil : verifyUrl,
             hasHosted: backend.hostedPeople.contains(personId)
         )
-    }
-
-    func friends(page: PageRequest) async throws -> FriendList {
-        await pause()
-        let all = MockRules.friends(of: currentUser.person, in: records)
-        let (friends, next) = try MockPaging.page(all, page)
-        return FriendList(friends: friends, nextCursor: next)
     }
 
     // MARK: Events
@@ -90,7 +84,7 @@ final class MockEventsRepository: EventsRepository {
 
     /// Anyone the mock world knows: the sample people and every account.
     func knownPerson(_ id: Person.ID) -> Person? {
-        MockPeople.everyone.first { $0.id == id } ?? backend.account(id: id)?.person
+        backend.person(id)
     }
 
     /// Replaces a stored record with a changed copy.
@@ -102,7 +96,7 @@ final class MockEventsRepository: EventsRepository {
     /// The record turned into the event `currentUser` sees. Lists leave
     /// out `friendsGoing`; a single event has it.
     func resolved(_ record: MockEventRecord, withFriends: Bool = true) -> Event {
-        let friendIds = Set(MockRules.friends(of: currentUser.person, in: records).map(\.id))
+        let friendIds = Set(backend.friends(of: currentUser.person).map(\.id))
         var event = MockRules.event(record, for: currentUser.person, friendIds: friendIds)
         if !withFriends { event.friendsGoing = nil }
         return event

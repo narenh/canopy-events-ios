@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import CanopyEvents
 
-/// The app's event colours against the web's, to the byte. The expected
+/// The app's event colors against the web's, to the byte. The expected
 /// values come from canopy-events' `public/ui.js` (`themeColors`,
 /// `turnHex`, `coverArt`, `hueFromPixels`), run in node; if the web's
 /// maths changes, regenerate them there.
@@ -44,7 +44,7 @@ struct ThemeColorTests {
         #expect(bytes(ThemeColors.turn(RGB(hex: "#145c3e"), to: .canopyGreen)) == [0x14, 0x5c, 0x3e])
     }
 
-    @Test func outOfGamutColoursLoseChromaNotLightness() {
+    @Test func outOfGamutColorsLoseChromaNotLightness() {
         let wild = OKLCH.rgb(L: 0.6, C: 0.4, h: 140)
         let (L, _, _) = OKLCH.components(of: wild)
         #expect(abs(L - 0.6) < 0.01)
@@ -74,26 +74,54 @@ struct ThemeColorTests {
         #expect(PhotoHue.hue(ofRGBA: photo { x, y in x < 4 && y < 20 ? [220, 30, 30] : [120, 120, 120] }) == nil)
     }
 
-    @Test func theSliderHasAGreyEndThenTheWheel() {
-        #expect(ThemeSliderScale.value(for: .grayscale) == 15)
-        #expect(ThemeSliderScale.value(for: .canopyGreen) == 191)
-        #expect(ThemeSliderScale.value(for: .hue(10)) == 40)
-        #expect(ThemeSliderScale.theme(at: 29) == .grayscale)
-        #expect(ThemeSliderScale.theme(at: 30) == .hue(0))
-        #expect(ThemeSliderScale.theme(at: 389) == .hue(359))
+    /// Both sliders, against the web's sliderOf / keyOfSlider /
+    /// accentSliderOf / accentOfSlider (SLIDER_GREY 12).
+    @Test func theSlidersHaveAShortGreyOrWhiteEndThenTheWheel() {
+        #expect(ThemeSliderScale.value(for: .grayscale) == 6)
+        #expect(ThemeSliderScale.value(for: .canopyGreen) == 173)
+        #expect(ThemeSliderScale.value(for: .hue(10)) == 22)
+        #expect(ThemeSliderScale.theme(at: 11) == .grayscale)
+        #expect(ThemeSliderScale.theme(at: 12) == .hue(0))
+        #expect(ThemeSliderScale.theme(at: 371) == .hue(359))
+        #expect(AccentSliderScale.value(for: nil) == 6 && AccentSliderScale.value(for: 10) == 22)
+        #expect(AccentSliderScale.accentHue(at: 11) == nil && AccentSliderScale.accentHue(at: 12) == 0)
     }
 
-    /// The accent trio, against the web's `turnHex` of #2ec44f, #03190a and
-    /// #b6f5c3 (events 0189355, run in node).
-    @Test(arguments: [
-        (EventTheme.hue(0), ["#f867c0", "#220b16", "#ffd5e8"]), (.hue(60), ["#ff772b", "#220d02", "#ffdac7"]),
-        (.hue(90), ["#db9500", "#1d1100", "#ffdea7"]), (.hue(193), ["#00bfa5", "#001916", "#99f8e8"]),
-        (.hue(240), ["#00b5e5", "#001622", "#c0eaff"]), (.hue(300), ["#9d94ff", "#141025", "#e1dfff"]),
-        (.grayscale, ["#a4a4a4", "#141414", "#e3e3e3"]), (.canopyGreen, ["#2ec44f", "#03190a", "#b6f5c3"]),
-        (.hue(161), ["#2ec44f", "#03190a", "#b6f5c3"]),
-    ])
-    func theAccentFollowsTheEvent(theme: EventTheme, hexes: [String]) {
-        let colors = ThemeColors(theme)
-        #expect([colors.accent, colors.onAccent, colors.accentText].map(bytes) == hexes.map { bytes(RGB(hex: $0)) })
+    /// The accent trio, against the web's `accentColors` (events 1755f46,
+    /// public/ui.js `accentTrio`, run in node): each hue's own accent.
+    static let webAccents: [(Int, [String])] = [
+        (0, ["#ed458a", "#220b13", "#ffd6e1"]),
+        (15, ["#f04162", "#230b0d", "#ffd8d9"]),
+        (30, ["#f14634", "#240b08", "#ffd9d2"]),
+        (45, ["#fe6a00", "#230d04", "#ffdac9"]),
+        (60, ["#fc8e00", "#210e01", "#ffdbbf"]),
+        (90, ["#e6b700", "#1b1300", "#fbe19a"]),
+        (120, ["#afce00", "#111601", "#daeda6"]),
+        (161, ["#00e097", "#00190d", "#abf7cf"]),
+        (180, ["#00dbc1", "#001914", "#9bf8e5"]),
+        (193, ["#00d9d6", "#001818", "#95f7f4"]),
+        (220, ["#00d2fe", "#00171f", "#b6edff"]),
+        (250, ["#0095fe", "#041526", "#cee6ff"]),
+        (270, ["#5c7bff", "#0c1227", "#d8e2ff"]),
+        (300, ["#a264f6", "#170f24", "#e7dcff"]),
+        (330, ["#e060d8", "#1e0c1d", "#ffd2fa"]),
+        (359, ["#ec468c", "#220b13", "#ffd6e2"]),
+    ]
+
+    @Test(arguments: 0..<16)
+    func eachHueHasItsOwnAccent(row: Int) {
+        let (hue, hexes) = Self.webAccents[row]
+        let trio = AccentColors(theme: .hue(hue), accentHue: nil)
+        #expect([trio.accent, trio.onAccent, trio.text].map(bytes) == hexes.map { bytes(RGB(hex: $0)) })
+        #expect(AccentColors(theme: .grayscale, accentHue: hue) == trio)
+        #expect(AccentColors.contrast(trio.accent, trio.onAccent) >= 4.99)
+    }
+
+    @Test func greenIsUnchangedAndGreyIsWhite() {
+        let green = AccentColors(theme: .canopyGreen, accentHue: nil)
+        #expect([green.accent, green.onAccent, green.text].map(bytes) == [[0x2e, 0xc4, 0x4f], [0x03, 0x19, 0x0a], [0xb6, 0xf5, 0xc3]])
+        let white = AccentColors(theme: .grayscale, accentHue: nil)
+        #expect([white.accent, white.onAccent, white.text].map(bytes) == [[255, 255, 255], [14, 14, 14], [255, 255, 255]])
+        #expect(white.isWhite && !green.isWhite)
     }
 }

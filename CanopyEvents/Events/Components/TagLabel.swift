@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// A small coloured capsule like "Hosting" or "Cancelled".
+/// A small colored capsule like "Hosting" or "Cancelled".
 struct TagLabel: View {
     let title: String
     var systemImage: String?

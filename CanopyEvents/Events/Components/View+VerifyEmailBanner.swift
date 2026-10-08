@@ -17,7 +17,7 @@ private struct VerifyEmailBannerInset: ViewModifier {
     func body(content: Content) -> some View {
         content.safeAreaInset(edge: .top, spacing: 0) {
             if session.needsVerification {
-                VerifyEmailBanner(email: session.me?.email)
+                VerifyEmailBanner(email: session.profile?.email)
             }
         }
     }

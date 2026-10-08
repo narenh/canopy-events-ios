@@ -15,7 +15,7 @@ struct VerifyEmailSheet: View {
                 Section {
                     CodeField(code: $code)
                 } header: {
-                    Text("Enter the code we sent to \(session.me?.email ?? "your email")")
+                    Text("Enter the code we sent to \(session.profile?.email ?? "your email")")
                 } footer: {
                     Text("Mock: no email is sent. Any six digits work.")
                 }

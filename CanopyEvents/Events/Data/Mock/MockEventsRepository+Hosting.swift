@@ -11,7 +11,7 @@ extension MockEventsRepository {
             locationName: nil, locationAddress: nil, hosts: [MockEvents.host(currentUser.person)]
         )
         event.createdAt = .now
-        apply(draft, to: &event)
+        try apply(draft, to: &event)
         records.append(MockEventRecord(event: event, guests: []))
         backend.hostedPeople.insert(personId)
         return resolved(try record(id))
@@ -22,7 +22,7 @@ extension MockEventsRepository {
         var record = try record(id)
         guard record.isHost(currentUser.id) else { throw APIError.hostsOnly }
         let old = record.event
-        apply(draft, to: &record.event)
+        try apply(draft, to: &record.event)
         let promoted = MockRules.promoteWaitlist(&record)
         save(record)
         let event = record.event
@@ -89,7 +89,11 @@ extension MockEventsRepository {
         }
     }
 
-    private func apply(_ draft: EventDraft, to event: inout Event) {
+    private func apply(_ draft: EventDraft, to event: inout Event) throws {
+        if draft.accentHue != nil && !draft.themeGrayscale {
+            throw APIError(message: "Only a grey event has its own accent.", reason: .accentNeedsGrayscale)
+        }
+        event.details = try MockDetails.checked(draft.details)
         event.title = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
         event.description = draft.description.isEmpty ? nil : draft.description
         event.startsAt = draft.startsAt
@@ -102,6 +106,7 @@ extension MockEventsRepository {
         event.guestsAllowed = draft.guestsAllowed
         event.themeHue = draft.themeHue
         event.themeGrayscale = draft.themeGrayscale
+        event.accentHue = draft.themeGrayscale ? draft.accentHue : nil
         event.updatedAt = .now
     }
 }

@@ -27,6 +27,9 @@ extension APIError {
     static let isCreator = APIError(message: "You already host this event.", reason: .isCreator)
     static let isHost = APIError(message: "Hosts can't be removed.", reason: .isHost)
     static let tooManyCohosts = APIError(message: "An event can have at most 10 co-hosts.", reason: .tooManyCohosts)
+    static let isHostOwnEvent = APIError(message: "Hosts don't mute or leave their own event.", reason: .isHost)
+    static let notOnEvent = APIError(message: "You aren't on this event.", reason: .notOnEvent)
+    static let isYou = APIError(message: "That's you.", reason: .isYou)
     static let oneOf = APIError(message: "Look up by a phone number or an Instagram handle.", reason: .oneOf)
     static let emailUnverified = APIError(
         message: "Verify your email first.", reason: .emailUnverified,

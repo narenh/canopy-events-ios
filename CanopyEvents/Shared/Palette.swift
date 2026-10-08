@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Canopy's colours: a rainforest canopy at night. Carried over from the
+/// Canopy's colors: a rainforest canopy at night. Carried over from the
 /// account service's `account.css`, where each was contrast-checked
 /// against glass cards over the brightest glow.
 ///

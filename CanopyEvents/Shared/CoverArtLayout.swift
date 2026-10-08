@@ -1,9 +1,9 @@
 /// The generated picture for an event with no cover: soft glows in
-/// Canopy greens on a dark base, placed and coloured by the event's id
+/// Canopy greens on a dark base, placed and colored by the event's id
 /// (so an event always looks the same), turned to its theme. A port of
 /// the web's `coverArt`, number for number.
 nonisolated struct CoverArtLayout: Hashable {
-    /// The dark end of the wash, the wash's colour, and the two glows.
+    /// The dark end of the wash, the wash's color, and the two glows.
     var dark: RGB
     var wash: RGB
     var glow1: RGB

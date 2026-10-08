@@ -17,8 +17,15 @@ struct InviteFriendRow: View {
 
     private var detail: String {
         if isAlreadyInvited { return "Already on the list" }
+        guard friend.eventsInCommon > 0, let last = friend.lastTogetherAt else {
+            switch friend.source {
+            case .link: return "Friends by link"
+            case .invite: return "Invited"
+            default: return "Added"
+            }
+        }
         let together = friend.eventsInCommon == 1 ? "1 event together" : "\(friend.eventsInCommon) events together"
-        return "\(together) · last \(RelativeTime.string(for: friend.lastTogetherAt))"
+        return "\(together) · last \(RelativeTime.string(for: last))"
     }
 }
 

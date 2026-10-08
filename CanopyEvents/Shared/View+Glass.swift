@@ -14,7 +14,7 @@ extension View {
         #endif
     }
 
-    /// The main action on a screen: tinted glass in the accent colour.
+    /// The main action on a screen: tinted glass in the accent color.
     func glassProminentButtonStyle() -> some View {
         #if os(visionOS)
         buttonStyle(.borderedProminent)
@@ -24,7 +24,7 @@ extension View {
     }
 
     /// A secondary action: clear glass, with white words (an explicit
-    /// `.tint()`, like an event's accent, would otherwise colour them; a
+    /// `.tint()`, like an event's accent, would otherwise color them; a
     /// `foregroundStyle` on the label still wins).
     func glassButtonStyle() -> some View {
         #if os(visionOS)

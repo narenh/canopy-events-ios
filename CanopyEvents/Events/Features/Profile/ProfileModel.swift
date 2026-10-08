@@ -10,9 +10,9 @@ final class ProfileModel {
     private(set) var isSaving = false
     var errorMessage: String?
 
-    init(me: Me) {
-        draft = ProfileDraft(me: me)
-        saved = ProfileDraft(me: me)
+    init(profile: AccountProfile) {
+        draft = ProfileDraft(profile: profile)
+        saved = ProfileDraft(profile: profile)
     }
 
     var hasChanges: Bool { draft != saved }
