@@ -16,6 +16,7 @@ struct RootView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .task { await session.resolveBuildEnvironment() }
         .task { await signInFromLaunchOptions() }
         // Back from the background: things may have changed meanwhile
         // (an invite answered from a notification).

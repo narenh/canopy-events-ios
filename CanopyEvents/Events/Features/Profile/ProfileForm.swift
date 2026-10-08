@@ -41,10 +41,10 @@ struct ProfileForm: View {
             }
             .glassRowBackground()
 
-            #if DEBUG
-            ProfileDebugSection()
-                .glassRowBackground()
-            #endif
+            if session.showsDebugTools {
+                ProfileDebugSection()
+                    .glassRowBackground()
+            }
 
             Section {
                 Button("Sign out", role: .destructive) {

@@ -339,7 +339,8 @@ Set in the scheme's "Arguments Passed On Launch", or with
 - `-mockEdit YES` with `-mockEvent <id>`: open that event's editor.
 - `-mockTestNotification YES`: send the test notification (Karl Marx
   inviting you to Marxism 101) 5 seconds after signing in, once
-  notifications are allowed. Profile's Debug section has the same button.
+  notifications are allowed. Profile's "Debug (TestFlight only)" section
+  has the same button, in debug builds and TestFlight.
 - `-mockPush guests|wall` with `-mockEvent <id>`: that event's guest list
   or wall; `-mockPush past|declined`: those lists.
 
@@ -511,6 +512,16 @@ decisions are in canopy-events' `docs/decision-log.md`):
   merged with the generated one. People without a photo get their
   initials drawn as the avatar. Karl Marx and Marxism 101 are in the
   mock for the test notification.
+- **Internal tools show in debug builds and TestFlight, never in App
+  Store builds.** TestFlight builds are Release builds, so `#if DEBUG`
+  can't tell them apart; `BuildEnvironment.isInternal()` asks StoreKit 2
+  (`AppTransaction.shared`, verified, environment `.sandbox` or `.xcode`;
+  debug builds are always internal), once at launch, and
+  `AppSession.showsDebugTools` keeps the answer. An unverifiable
+  transaction counts as the App Store (hidden). Profile's section is
+  labelled "Debug (TestFlight only)". Everything it calls (the test
+  notification, Karl Marx and Marxism 101) is compiled into every build;
+  only launch arguments stay debug-only.
 - **The home screen name is "Events"** (the owner's call;
   `INFOPLIST_KEY_CFBundleDisplayName`). The bundle id and product name
   are unchanged.
