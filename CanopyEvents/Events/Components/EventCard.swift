@@ -67,12 +67,12 @@ struct EventCard: View {
 }
 
 #Preview {
-    List {
-        EventCard(event: PreviewData.event(MockEvents.rooftopId))
-        EventCard(event: PreviewData.event(MockEvents.birthdayId))
-        EventCard(event: PreviewData.event(MockEvents.supperClubId))
-        EventCard(event: PreviewData.event(MockEvents.karaokeId))
-        EventCard(event: PreviewData.event(MockEvents.galleryId))
+    ScrollView {
+        VStack {
+            ForEach([MockEvents.rooftopId, MockEvents.birthdayId, MockEvents.supperClubId, MockEvents.karaokeId,
+                     MockEvents.galleryId], id: \.self) { EventCard(event: PreviewData.event($0)).glassCard() }
+        }
+        .padding()
     }
     .canopyScreen()
     .preferredColorScheme(.dark)

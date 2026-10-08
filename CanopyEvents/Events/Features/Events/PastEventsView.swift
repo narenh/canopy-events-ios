@@ -14,10 +14,11 @@ struct PastEventsView: View {
     }
 
     var body: some View {
-        List(events) { event in
-            NavigationLink(value: Route.event(event.id)) {
-                EventCard(event: event)
+        ScrollView {
+            LazyVStack(spacing: Spacing.medium) {
+                ForEach(events) { EventCardLink(event: $0) }
             }
+            .padding(Spacing.large)
         }
         .overlay {
             if !model.hasLoaded {

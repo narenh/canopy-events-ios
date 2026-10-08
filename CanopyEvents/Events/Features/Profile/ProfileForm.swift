@@ -19,6 +19,7 @@ struct ProfileForm: View {
                 TextField("Last name", text: $model.draft.lastName)
                     .textContentType(.familyName)
             }
+            .glassRowBackground()
 
             Section {
                 TextField("Phone", text: $model.draft.phone)
@@ -31,18 +32,21 @@ struct ProfileForm: View {
             } footer: {
                 Text("Only you see these. Canopy never shows your contact details to anyone else.")
             }
+            .glassRowBackground()
 
             Section {
                 Toggle("Let people who know your phone or Instagram find you", isOn: $model.draft.findable)
             } footer: {
                 Text("Hosts who already have your number or handle can invite you. Nobody can browse or search for you.")
             }
+            .glassRowBackground()
 
             Section {
                 Button("Sign out", role: .destructive) {
                     Task { await session.signOut() }
                 }
             }
+            .glassRowBackground()
         }
         .navigationTitle("Profile")
         .toolbar {

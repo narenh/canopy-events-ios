@@ -40,7 +40,9 @@ struct TimeZoneSearchSheet: View {
                     .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
+                .glassRowBackground()
             }
+            .glassList()
             .overlay {
                 if !zones.isEmpty && matches.isEmpty {
                     ContentUnavailableView.search(text: query)

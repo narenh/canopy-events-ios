@@ -15,6 +15,7 @@ struct WallView: View {
     var body: some View {
         List(model.entries) { entry in
             WallEntryRow(entry: entry)
+                .glassRowBackground()
                 .swipeActions {
                     if entry.canDelete {
                         Button("Delete", systemImage: "trash", role: .destructive) {
@@ -44,6 +45,7 @@ struct WallView: View {
             }
         }
         .navigationTitle("Wall")
+        .inlineNavigationTitle()
         .task { await model.load(from: repository) }
         .refreshable { await model.load(from: repository) }
         .errorAlert($model.errorMessage)

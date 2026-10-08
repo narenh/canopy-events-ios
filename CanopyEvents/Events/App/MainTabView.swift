@@ -8,7 +8,7 @@ import SwiftUI
 struct MainTabView: View {
     @Environment(AppSession.self) private var session
     @State private var selection = LaunchOptions.startTab ?? .events
-    @State private var eventsPath: [Route] = LaunchOptions.openEventId.map { [.event($0)] } ?? []
+    @State private var eventsPath: [Route] = LaunchOptions.startPath
     @State private var invitesPath: [Route] = []
     @State private var hostingPath: [Route] = []
     @State private var isCreatingEvent = LaunchOptions.opensNewEvent

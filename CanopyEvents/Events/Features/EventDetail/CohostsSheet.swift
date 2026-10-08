@@ -33,6 +33,7 @@ struct CohostsSheet: View {
                         }
                     }
                 }
+                .glassRowBackground()
                 Section("Make a friend a co-host") {
                     ForEach(candidates) { friend in
                         PersonRow(person: friend.person) {
@@ -41,7 +42,9 @@ struct CohostsSheet: View {
                         }
                     }
                 }
+                .glassRowBackground()
             }
+            .glassList()
             .disabled(isWorking)
             .navigationTitle("Co-hosts")
             .inlineNavigationTitle()

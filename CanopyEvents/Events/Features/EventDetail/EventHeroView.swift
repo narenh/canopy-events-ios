@@ -3,9 +3,10 @@ import SwiftUI
 /// The top of the event page, the web's hero: the cover (or the generated
 /// art) in a 3:2 frame. Its top 2:1 shows the picture clearly, with the
 /// how-soon pill low on the left; the band below (the last sixth of the
-/// width) has faded into the theme's base colour, and the title starts on
-/// it (`EventHeadView`). Pulled down, the picture stays put and the fade,
-/// pill and title slide down over it.
+/// width) is where the picture has faded itself out into the page (a mask,
+/// nothing drawn over it), and the title starts on it (`EventHeadView`).
+/// Pulled down, the picture stays put and the pill, title and the rest
+/// slide down over it.
 struct EventHeroView: View {
     let event: Event
     /// Rounded top corners: in the iPad column, not edge to edge.
@@ -17,10 +18,9 @@ struct EventHeroView: View {
     var body: some View {
         CoverPicture(event: event)
             .aspectRatio(3 / 2, contentMode: .fit)
-            .heroMelt(from: 0.75)
+            .heroFade()
             .clipShape(.rect(topLeadingRadius: isInset ? 18 : 0, topTrailingRadius: isInset ? 18 : 0))
             .pinnedWhilePulled(overscroll)
-            .overlay { HeroFade(theme: event.theme) }
             .overlay(alignment: .bottomLeading) {
                 // Low on the left inside the 2:1: 10 pt above the band.
                 GeometryReader { proxy in
@@ -40,8 +40,8 @@ struct EventHeroView: View {
             EventHeroView(event: PreviewData.event(MockEvents.rooftopId))
             EventHeroView(event: PreviewData.event(MockEvents.gameNightId))
             EventHeroView(event: PreviewData.event(MockEvents.karaokeId), isInset: true)
-            // As if pulled down 120 pt: the fade and pill have come down
-            // 120 pt over the picture, which hasn't moved.
+            // As if pulled down 120 pt: the pill has come down 120 pt over
+            // the picture, which hasn't moved.
             EventHeroView(event: PreviewData.event(MockEvents.rooftopId), overscroll: 120)
                 .padding(.top, 120)
         }

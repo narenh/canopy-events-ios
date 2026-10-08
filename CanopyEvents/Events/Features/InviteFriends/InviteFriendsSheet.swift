@@ -28,7 +28,9 @@ struct InviteFriendsSheet: View {
                     )
                 }
                 .buttonStyle(.plain)
+                .glassRowBackground()
             }
+            .glassList()
             .overlay { emptyState }
             .navigationTitle("Invite friends")
             .inlineNavigationTitle()

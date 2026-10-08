@@ -29,6 +29,7 @@ struct EventHeadView: View {
                 }
             }
             .foregroundStyle(.white)
+            .shadow(color: base.color(opacity: 0.6), radius: 5, y: 1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
