@@ -1,9 +1,9 @@
-#if DEBUG
 import SwiftUI
 
-/// Debug builds only: send the test notification (Karl Marx inviting you
-/// to Marxism 101) 5 seconds out, so you can lock the phone and see it,
-/// with Going and Can't Go. Also `-mockTestNotification YES`.
+/// Internal builds only (debug and TestFlight, never the App Store; see
+/// `BuildEnvironment`): send the test notification (Karl Marx inviting
+/// you to Marxism 101) 5 seconds out, so you can lock the phone and see
+/// it, with Going and Can't Go. Also `-mockTestNotification YES` (debug).
 struct ProfileDebugSection: View {
     @State private var status: String?
 
@@ -18,7 +18,7 @@ struct ProfileDebugSection: View {
                     .foregroundStyle(Palette.muted)
             }
         } header: {
-            Text("Debug")
+            Text("Debug (TestFlight only)")
         }
     }
 
@@ -35,4 +35,3 @@ struct ProfileDebugSection: View {
         }
     }
 }
-#endif
