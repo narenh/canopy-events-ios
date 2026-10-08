@@ -18,7 +18,7 @@ struct EventEditorGuestsSection: View {
                 .labelsHidden()
             }
             Stepper(value: $model.draft.guestsAllowed, in: 0...10) {
-                LabeledContent("Plus-ones per guest", value: model.draft.guestsAllowed == 0 ? "None" : "\(model.draft.guestsAllowed)")
+                LabeledContent("+1s", value: model.draft.guestsAllowed == 0 ? "None" : "\(model.draft.guestsAllowed)")
             }
             Toggle("Capacity", isOn: hasCapacity)
             if let capacity = model.draft.capacity {

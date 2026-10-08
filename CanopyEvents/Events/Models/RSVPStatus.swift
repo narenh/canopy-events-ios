@@ -24,7 +24,7 @@ nonisolated enum RSVPStatus: String, Codable, Hashable, CaseIterable, Identifiab
         case .invited: "Invited"
         case .going: "Going"
         case .maybe: "Maybe"
-        case .notGoing: "Can't go"
+        case .notGoing: "Can't Go"
         case .waitlisted: "Waitlisted"
         case .removed: "Removed"
         }
