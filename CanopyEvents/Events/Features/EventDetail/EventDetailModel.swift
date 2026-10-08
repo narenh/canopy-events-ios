@@ -1,14 +1,16 @@
 import Foundation
 import Observation
 
-/// Loads one event with its guest list and latest wall posts, and
+/// Loads one event with its going guests and latest wall entries, and
 /// answers it. The event page and its sections read from this.
 @Observable
 final class EventDetailModel {
     let eventId: Event.ID
     private(set) var event: Event?
     private(set) var guestList: GuestList?
-    private(set) var latestPosts: [WallPost] = []
+    private(set) var latestEntries: [WallEntry] = []
+    /// False while you can't see the wall.
+    private(set) var wallVisible = true
     private(set) var isSaving = false
     var errorMessage: String?
 
@@ -21,10 +23,12 @@ final class EventDetailModel {
         do {
             async let event = repository.event(id: eventId)
             async let guestList = repository.guestList(eventId: eventId, status: .going, page: .first)
-            async let posts = repository.wallPosts(eventId: eventId)
+            async let wall = repository.wall(eventId: eventId, page: PageRequest(limit: 3))
             self.event = try await event
             self.guestList = try await guestList
-            self.latestPosts = Array(try await posts.prefix(2))
+            let latest = try await wall
+            self.latestEntries = Array(latest.entries.filter(\.isKnown).prefix(2))
+            self.wallVisible = latest.wallVisible
         } catch {
             errorMessage = error.localizedDescription
         }

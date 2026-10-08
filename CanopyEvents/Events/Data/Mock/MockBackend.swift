@@ -1,22 +1,24 @@
 import Foundation
 
 /// The mock "server": every account, event, wall post and inbox, in
-/// memory. One instance is shared by `MockAuthService` and every
+/// memory. One instance is shared by `MockAccountService` and every
 /// `MockEventsRepository`, so a change made as one person (an invite, an
 /// RSVP) is there when someone else signs in, until the app quits.
 final class MockBackend {
     var accounts: [Me]
     var records: [MockEventRecord]
-    var posts: [WallPost]
+    /// Each event's wall, by event id, in the order entries were made.
+    var wall: [Event.ID: [WallEntry]]
     var inboxes: [Person.ID: [InboxNotification]]
     private let delay: Duration
+    private var lastId = MockWall.firstNewId
 
     /// Seeded with the sample data in `MockData/`. `delay` is the fake
     /// network time every call waits; previews pass `.zero`.
     init(delay: Duration = .milliseconds(350)) {
         self.accounts = [MockPeople.maya, MockPeople.sam]
         self.records = MockEvents.all
-        self.posts = MockWallPosts.all
+        self.wall = MockWall.entries
         self.inboxes = [
             MockPeople.maya.id: MockNotifications.inbox(for: MockPeople.maya.id),
             MockPeople.sam.id: MockNotifications.inbox(for: MockPeople.sam.id),
@@ -27,6 +29,12 @@ final class MockBackend {
     /// The artificial network delay. Every mock call awaits it first.
     func pause() async {
         try? await Task.sleep(for: delay)
+    }
+
+    /// A new numeric id, for wall entries and notifications (the API's are digits).
+    func nextId() -> String {
+        lastId += 1
+        return String(lastId)
     }
 
     func account(id: Person.ID) -> Me? {

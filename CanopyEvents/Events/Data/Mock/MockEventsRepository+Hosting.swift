@@ -20,13 +20,20 @@ extension MockEventsRepository {
         await pause()
         var record = try record(id)
         guard record.isHost(currentUser.id) else { throw APIError.hostsOnly }
-        let oldStart = record.event.startsAt
+        let old = record.event
         apply(draft, to: &record.event)
-        MockRules.promoteWaitlist(&record)
+        let promoted = MockRules.promoteWaitlist(&record)
         save(record)
-        if record.event.startsAt != oldStart {
-            addAutomaticPost(eventId: id, kind: .update, body: "Time changed")
+        let event = record.event
+        if (event.startsAt, event.endsAt, event.timeZone) != (old.startsAt, old.endsAt, old.timeZone) {
+            addWallEntry(eventId: id, type: .timeChanged, person: currentUser.person, details: WallEntryDetails(
+                startsAt: event.startsAt, endsAt: event.endsAt, timeZone: event.timeZone))
         }
+        if (event.locationName, event.locationAddress) != (old.locationName, old.locationAddress) {
+            addWallEntry(eventId: id, type: .placeChanged, person: currentUser.person, details: WallEntryDetails(
+                locationName: event.locationName, locationAddress: event.locationAddress))
+        }
+        promoted.forEach { addWallEntry(eventId: id, type: .offWaitlist, person: $0) }
         return resolved(record)
     }
 
@@ -38,7 +45,7 @@ extension MockEventsRepository {
         record.event.status = .cancelled
         record.event.cancelledAt = .now
         save(record)
-        addAutomaticPost(eventId: id, kind: .update, body: "Event cancelled")
+        addWallEntry(eventId: id, type: .cancelled, person: currentUser.person)
         for guest in record.guests where [.going, .maybe, .waitlisted].contains(guest.status) {
             backend.notify(guest.person.id, .eventCancelled, about: record.event, from: currentUser.person)
         }

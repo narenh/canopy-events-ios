@@ -48,8 +48,10 @@ protocol EventsRepository: AnyObject, Sendable {
 
     // MARK: Wall
 
-    /// The event's activity wall, newest first.
-    func wallPosts(eventId: Event.ID) async throws -> [WallPost]
-    func addWallPost(eventId: Event.ID, body: String) async throws -> WallPost
-    func deleteWallPost(id: WallPost.ID, eventId: Event.ID) async throws
+    /// `GET /api/v1/events/{id}/wall`, newest first.
+    func wall(eventId: Event.ID, page: PageRequest) async throws -> Wall
+    /// `POST /api/v1/events/{id}/wall` with `{text}`. Answers the new entry.
+    func postToWall(eventId: Event.ID, text: String) async throws -> WallEntry
+    /// `DELETE /api/v1/events/{id}/wall/{entryId}`
+    func deleteWallEntry(id: WallEntry.ID, eventId: Event.ID) async throws
 }

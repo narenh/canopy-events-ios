@@ -62,9 +62,12 @@ extension MockEventsRepository {
     /// The server's side effects of an answer changing: the wall's "is
     /// going" entries and the hosts' inbox.
     private func afterAnswer(_ record: MockEventRecord, old: RSVPStatus?, new: RSVPStatus?, promoted: [Person]) {
-        if new == .going && old != .going {
-            addAutomaticPost(eventId: record.id, kind: .rsvp, body: "\(currentUser.shortName) is going")
+        if new != .going {
+            removeGoingEntries(eventId: record.id, personId: personId)
+        } else if old != .going {
+            addWallEntry(eventId: record.id, type: .going, person: currentUser.person)
         }
+        promoted.forEach { addWallEntry(eventId: record.id, type: .offWaitlist, person: $0) }
         if let new, new != old {
             for host in record.event.hosts {
                 backend.notify(host.person.id, .newRSVP, about: record.event, from: currentUser.person)

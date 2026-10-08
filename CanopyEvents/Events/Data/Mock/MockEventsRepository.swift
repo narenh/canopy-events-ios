@@ -33,11 +33,6 @@ final class MockEventsRepository: EventsRepository {
         set { backend.records = newValue }
     }
 
-    var posts: [WallPost] {
-        get { backend.posts }
-        set { backend.posts = newValue }
-    }
-
     func pause() async {
         await backend.pause()
     }

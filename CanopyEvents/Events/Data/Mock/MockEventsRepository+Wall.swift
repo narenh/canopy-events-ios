@@ -1,37 +1,67 @@
 import Foundation
 
-/// The activity wall. Hosts can delete any post; authors their own.
+/// The activity wall. Readable by whoever can see the guest list's names;
+/// hosts and going, maybe or waitlisted answers post. Hosts can delete
+/// anything; authors their own posts.
 extension MockEventsRepository {
-    func wallPosts(eventId: Event.ID) async throws -> [WallPost] {
+    func wall(eventId: Event.ID, page: PageRequest) async throws -> Wall {
         await pause()
         let record = try record(eventId)
-        return posts
-            .filter { $0.eventId == eventId }
+        let viewer = MockRules.viewer(record, for: currentUser.person)
+        guard viewer.canSeeGuestList else {
+            return Wall(wallVisible: false, entries: [], canPost: viewer.canPost, nextCursor: nil)
+        }
+        let removed = Set(record.guests.filter { $0.status == .removed }.map(\.person.id))
+        let all = backend.wall[eventId, default: []]
+            .filter { $0.type != .post || !removed.contains($0.person?.id ?? "") }
             .sorted { $0.createdAt > $1.createdAt }
-            .map { post in
-                var post = post
-                post.canDelete = record.isHost(currentUser.id) || (post.kind == .post && post.author?.id == currentUser.id)
-                return post
+            .map { entry in
+                var entry = entry
+                entry.canDelete = viewer.isHost || (entry.type == .post && entry.person?.id == personId)
+                return entry
             }
+        let (entries, next) = try MockPaging.page(all, page)
+        return Wall(wallVisible: true, entries: entries, canPost: viewer.canPost, nextCursor: next)
     }
 
-    func addWallPost(eventId: Event.ID, body: String) async throws -> WallPost {
+    func postToWall(eventId: Event.ID, text: String) async throws -> WallEntry {
         await pause()
-        _ = try record(eventId)
-        let post = WallPost(id: UUID().uuidString, eventId: eventId, kind: .post, author: currentUser.person,
-                            body: body, createdAt: .now, canDelete: true)
-        posts.append(post)
-        return post
+        let record = try record(eventId)
+        guard MockRules.viewer(record, for: currentUser.person).canPost else { throw APIError.answerFirst }
+        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard (1...1000).contains(text.count) else { throw APIError.badText }
+        var entry = addWallEntry(eventId: eventId, type: .post, person: currentUser.person, text: text)
+        entry.canDelete = true
+        return entry
     }
 
-    func deleteWallPost(id: WallPost.ID, eventId: Event.ID) async throws {
+    func deleteWallEntry(id: WallEntry.ID, eventId: Event.ID) async throws {
         await pause()
-        posts.removeAll { $0.id == id && $0.eventId == eventId }
+        let record = try record(eventId)
+        guard let entry = backend.wall[eventId]?.first(where: { $0.id == id }) else { throw APIError.entryNotFound }
+        guard record.isHost(personId) || (entry.type == .post && entry.person?.id == personId) else {
+            throw APIError.notYours
+        }
+        backend.wall[eventId]?.removeAll { $0.id == id }
     }
 
-    /// An automatic entry such as "Maya C is going" or "Time changed".
-    func addAutomaticPost(eventId: Event.ID, kind: WallPostKind, body: String) {
-        posts.append(WallPost(id: UUID().uuidString, eventId: eventId, kind: kind, author: currentUser.person,
-                              body: body, createdAt: .now, canDelete: false))
+    /// One of the server's own entries, or a post. Returns it as stored.
+    @discardableResult
+    func addWallEntry(
+        eventId: Event.ID, type: WallEntryType, person: Person,
+        text: String? = nil, details: WallEntryDetails? = nil
+    ) -> WallEntry {
+        let entry = WallEntry(id: backend.nextId(), type: type, createdAt: .now, person: person,
+                              text: text, details: details, canDelete: false)
+        backend.wall[eventId, default: []].append(entry)
+        return entry
+    }
+
+    /// Someone has at most one going or off-waitlist entry, gone once
+    /// they aren't going.
+    func removeGoingEntries(eventId: Event.ID, personId: Person.ID) {
+        backend.wall[eventId]?.removeAll {
+            ($0.type == .going || $0.type == .offWaitlist) && $0.person?.id == personId
+        }
     }
 }
