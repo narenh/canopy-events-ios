@@ -43,7 +43,7 @@ enum HostAction: Hashable, Identifiable {
             return "It's back on for everyone who answered, and the waitlist fills any open spots."
         case .delete:
             let answered = event.counts.going + event.counts.maybe
-            guard answered > 0, !event.isOver else { return "\(event.title) and its guest list and wall go for good." }
+            guard answered > 0, !event.isOver else { return "\(event.title) and its guest list and updates go for good." }
             return "\(answered) \(answered == 1 ? "person has" : "people have") said going or maybe. Deleting doesn't tell them; cancelling does, and keeps the event to open."
         case .stepDown:
             return "You'll be invited like any guest, and can answer."

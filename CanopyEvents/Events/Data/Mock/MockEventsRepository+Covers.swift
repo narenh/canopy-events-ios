@@ -34,3 +34,32 @@ extension MockEventsRepository {
         return resolved(record)
     }
 }
+
+/// The TMDB backgrounds: choosing one makes it the cover, as an upload.
+extension MockEventsRepository {
+    func backgrounds() async throws -> BackgroundList {
+        await pause()
+        return BackgroundList(enabled: true, backgrounds: MockBackgrounds.all)
+    }
+
+    /// Mock: the cover is TMDB's own sizes (the real server stores a copy).
+    func setCoverBackground(eventId: Event.ID, backgroundId: Background.ID) async throws -> Event {
+        await pause()
+        var record = try record(eventId)
+        guard record.isHost(currentUser.id) else { throw APIError.hostsOnly }
+        guard let background = MockBackgrounds.all.first(where: { $0.id == backgroundId }) else {
+            throw APIError(message: "That background isn't available any more.", reason: .badBackground)
+        }
+        let original = URL(string: background.previewUrl.absoluteString.replacingOccurrences(of: "/w780/", with: "/original/"))!
+        record.event.coverImages = [
+            CoverImage(width: 400, height: 225, url: background.thumbUrl),
+            CoverImage(width: 800, height: 450, url: background.previewUrl),
+            CoverImage(width: 1600, height: 900, url: original),
+        ]
+        record.event.coverImageUrl = original
+        record.event.coverHue = background.hue
+        record.event.coverGrayscale = background.grayscale
+        save(record)
+        return resolved(record)
+    }
+}

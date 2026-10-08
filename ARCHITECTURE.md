@@ -729,6 +729,21 @@ decisions are in canopy-events' `docs/decision-log.md`):
   (`EditorColorSection`).
 - **The Events tab keeps its own lists** (upcoming, with hosting in its
   own tab); `/me/events/all` is in the repository for later.
+- **"Wall" reads "Updates"** in everything people see (the heading, the
+  screen, "Delete this post?" / "Delete this update?", "The host shows
+  updates to people who've answered. Answer to see them."); the API's
+  names (`/wall`, `wall_post`) and the code's `Wall…` types stay. Deleting
+  now asks first, as on the web.
+- **Every event-page card's heading is one size** (`Typography.sectionTitle`:
+  RSVP, Hosting / Co-hosting, Attending, Updates).
+- **Backgrounds (TMDB):** `GET /backgrounds` and `PUT .../cover/background`
+  are in the repository; the mock has 11 of the real manifest's entries
+  (TMDB thumbnail URLs, the server's base64url ids, made-up hues). The
+  editor's hero gets a gallery button beside the camera (only when the set
+  is on); its sheet groups tiles by title, with TMDB's logo (a vector
+  asset from the web's SVG) and credit at the foot. Picking one previews
+  it (the 780 px image) and jumps the color; Save sends it after the
+  event is saved, as a picked photo is.
 - **Not built:** the friends screens and friend links (models, repository
   and mock are done).
 

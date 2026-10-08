@@ -124,4 +124,13 @@ enum APISamples {
     static let settings = #"{"calendarInvites": true}"#
     static let optouts = #"{"hosts": [\#(ben)]}"#
     static let detailError = #"{"error": "a link is a web address, starting http:// or https://", "reason": "bad_detail_url", "index": 1}"#
+
+    /// `GET /api/v1/backgrounds`'s example.
+    static let backgrounds = #"""
+    {"enabled": true, "backgrounds": [
+      {"id": "L2NnRlY3NjF3eE50UHhmVnNFVlNBTTV4RWtjRy5qcGc", "title": "Mean Girls", "year": null,
+       "thumbUrl": "https://image.tmdb.org/t/p/w300/cgFV761wxNtPxfVsEVSAM5xEkcG.jpg",
+       "previewUrl": "https://image.tmdb.org/t/p/w780/cgFV761wxNtPxfVsEVSAM5xEkcG.jpg",
+       "width": 300, "height": 169, "hue": 35, "grayscale": false}]}
+    """#
 }

@@ -94,4 +94,11 @@ struct APIDecodingTests {
         let error = try decode(APIError.self, APISamples.detailError)
         #expect(error.reason == .badDetailURL && error.index == 1)
     }
+
+    @Test func backgrounds() throws {
+        let list = try decode(BackgroundList.self, APISamples.backgrounds)
+        #expect(list.enabled && list.backgrounds.first?.theme == .hue(35) && list.groups.count == 1)
+        // The mock's ids are made the server's way.
+        #expect(MockBackgrounds.all.first?.id == list.backgrounds.first?.id)
+    }
 }
