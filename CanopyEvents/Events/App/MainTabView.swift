@@ -59,7 +59,7 @@ struct MainTabView: View {
         // Signed in: now's the moment to ask about notifications.
         .task {
             if await NotificationPermission.requestIfUndetermined(), LaunchOptions.sendsTestNotification {
-                try? await LocalNotifications.schedule(MockNotifications.karlInvite)
+                try? await LocalNotifications.schedule(MockNotifications.adamInvite)
             }
         }
         .onChange(of: notifications.opening) { _, opening in

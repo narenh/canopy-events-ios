@@ -337,8 +337,8 @@ Set in the scheme's "Arguments Passed On Launch", or with
   `MockEvents+Upcoming.swift`, e.g. `4fQ9xKpL2mZa`).
 - `-mockNewEvent YES`: open the new-event editor.
 - `-mockEdit YES` with `-mockEvent <id>`: open that event's editor.
-- `-mockTestNotification YES`: send the test notification (Karl Marx
-  inviting you to Marxism 101) 5 seconds after signing in, once
+- `-mockTestNotification YES`: send the test notification (Adam Smith
+  inviting you to Throw Eggs at Karl) 5 seconds after signing in, once
   notifications are allowed. Profile's "Debug (TestFlight only)" section
   has the same button, in debug builds and TestFlight.
 - `-mockPush guests|wall` with `-mockEvent <id>`: that event's guest list
@@ -510,12 +510,23 @@ decisions are in canopy-events' `docs/decision-log.md`):
   the capability enabled on the App ID): the entitlement in
   `CanopyEvents.entitlements`, `INSendMessageIntent` in an `Info.plist`
   merged with the generated one. People without a photo get their
-  initials drawn as the avatar. Karl Marx and Marxism 101 are in the
-  mock for the test notification.
+  initials drawn as the avatar. Adam Smith and Throw Eggs at Karl (always
+  the coming 16 October, 7 PM) are in the mock for the test notification.
+- **An invite reads "Adam Smith" over "10/16 · 7p · Throw Eggs at
+  Karl"** (the owner's wording): the sender's name as the title, so it
+  matches the avatar, and the when (`NotificationWhen`, on the event's
+  clock) before the event's title. Exactly two buttons, Going (✓,
+  `checkmark.circle.fill`) and Can't Go (`xmark.circle`), neither styled
+  destructive: there's no Maybe, to discourage maybes.
+- **The cover rides along as an attachment** (the 800 px size, or the
+  generated art in the event's colours). Whether iOS shows it well next
+  to the communication-notification avatar, or the avatar style loses
+  out, still has to be checked on a phone; if it looks wrong, drop
+  `NotificationCoverAttachment` from `LocalNotifications`.
 - **Profile's Debug section shows in every build** (the owner's call:
   the app is in active development, so no gating). Gate it before the
   App Store, not before. Everything it calls (the test notification,
-  Karl Marx and Marxism 101) is compiled into every build; only launch
+  Adam Smith and Throw Eggs at Karl) is compiled into every build; only launch
   arguments stay debug-only.
 - **The home screen name is "Events"** (the owner's call;
   `INFOPLIST_KEY_CFBundleDisplayName`). The bundle id and product name

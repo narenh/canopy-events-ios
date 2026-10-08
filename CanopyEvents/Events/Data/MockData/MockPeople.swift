@@ -45,9 +45,9 @@ enum MockPeople {
     static let lena = person("p-lena", "Lena", "Park", photo: 20)
     /// The host of the test notification's invite. No photo: his avatar
     /// is his initials, drawn for the notification too.
-    static let karl = person("p-karl", "Karl", "Marx")
+    static let adam = person("p-adam", "Adam", "Smith")
 
-    static let everyone = [ana, ben, chloe, diego, elif, farah, gus, hana, isaac, jules, kofi, lena, karl]
+    static let everyone = [ana, ben, chloe, diego, elif, farah, gus, hana, isaac, jules, kofi, lena, adam]
 
     // MARK: Helpers
 

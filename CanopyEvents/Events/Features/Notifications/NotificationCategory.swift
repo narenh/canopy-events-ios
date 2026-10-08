@@ -4,7 +4,8 @@ import UserNotifications
 /// the server sends (docs/push-payloads.md). Registered at launch, before
 /// any notification arrives.
 nonisolated enum NotificationCategory: String, CaseIterable, Sendable {
-    /// "Karl Marx · Invited you to Marxism 101": Going, Can't Go.
+    /// "Adam Smith · 10/16 · 7p · Throw Eggs at Karl": Going, Can't Go.
+    /// Exactly two: there's no Maybe, on purpose.
     case eventInvite = "EVENT_INVITE"
 
     var actions: [NotificationAction] {

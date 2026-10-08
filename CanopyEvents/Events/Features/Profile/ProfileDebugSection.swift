@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// Developer tools, shown in every build while the app is in development:
-/// send the test notification (Karl Marx inviting
-/// you to Marxism 101) 5 seconds out, so you can lock the phone and see
+/// send the test notification (Adam Smith inviting
+/// you to Throw Eggs at Karl) 5 seconds out, so you can lock the phone and see
 /// it, with Going and Can't Go. Also `-mockTestNotification YES` (debug).
 struct ProfileDebugSection: View {
     @State private var status: String?
@@ -28,7 +28,7 @@ struct ProfileDebugSection: View {
             return
         }
         do {
-            try await LocalNotifications.schedule(MockNotifications.karlInvite, after: 5)
+            try await LocalNotifications.schedule(MockNotifications.adamInvite, after: 5)
             status = "Coming in 5 seconds. Lock the phone to see it on the Lock Screen."
         } catch {
             status = "Couldn't schedule it: \(error.localizedDescription)"

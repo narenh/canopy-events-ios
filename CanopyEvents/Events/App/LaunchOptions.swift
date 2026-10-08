@@ -27,7 +27,7 @@ enum LaunchOptions {
     }
     /// `YES`, with `-mockEvent`, opens that event's editor too.
     static var editsOpenEvent: Bool { value(for: "mockEdit") == "YES" }
-    /// `YES` sends the test notification (Karl Marx's invite) 5 seconds
+    /// `YES` sends the test notification (Adam Smith's invite) 5 seconds
     /// after signing in, once notifications are allowed.
     static var sendsTestNotification: Bool { value(for: "mockTestNotification") == "YES" }
     /// `YES` opens the new-event editor on launch.

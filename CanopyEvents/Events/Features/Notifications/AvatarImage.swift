@@ -1,6 +1,4 @@
-import CoreGraphics
 import Foundation
-import ImageIO
 import SwiftUI
 
 /// A person's picture as PNG data, for a notification's sender: their
@@ -26,10 +24,6 @@ enum AvatarImage {
                 .background(Palette.glowBright, in: .circle)
         )
         renderer.scale = 1
-        guard let image = renderer.cgImage else { return nil }
-        let data = NSMutableData()
-        guard let destination = CGImageDestinationCreateWithData(data, "public.png" as CFString, 1, nil) else { return nil }
-        CGImageDestinationAddImage(destination, image, nil)
-        return CGImageDestinationFinalize(destination) ? data as Data : nil
+        return renderer.cgImage?.pngData
     }
 }

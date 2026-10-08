@@ -3,8 +3,8 @@ import UserNotifications
 
 /// Shows an inbox entry as a notification on this device, the way a push
 /// for it will look: worded by `NotificationWording`, with its category's
-/// buttons, its payload, one thread per event, and the actor's photo
-/// (`CommunicationNotificationBuilder`). The mocked app's stand-in for
+/// buttons, its payload, one thread per event, the event's cover as an
+/// attachment, and the actor's photo (`CommunicationNotificationBuilder`). The mocked app's stand-in for
 /// push, and the test notification.
 enum LocalNotifications {
     static func schedule(_ notification: InboxNotification, after seconds: TimeInterval = 5) async throws {
@@ -18,6 +18,9 @@ enum LocalNotifications {
         content.threadIdentifier = "event-\(payload.eventId)"
         if let category = NotificationCategory(type: notification.type) {
             content.categoryIdentifier = category.rawValue
+        }
+        if let event = notification.event, let cover = await NotificationCoverAttachment.make(for: event) {
+            content.attachments = [cover]
         }
         var shown: UNNotificationContent = content
         if let actor = notification.actor {
