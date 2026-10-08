@@ -38,6 +38,7 @@ struct EventDetailView: View {
         }
         .task(id: session.dataVersion) { await model.load(from: repository) }
         .errorAlert($model.errorMessage)
+        .eventAccent(model.event?.theme ?? .canopyGreen)
         .canopyScreen(theme: model.event?.theme ?? .canopyGreen)
     }
 
@@ -74,6 +75,7 @@ struct EventDetailView: View {
             RSVPSheet(event: event, status: status) { status, guests in
                 Task { await model.answer(status, guests: guests, using: repository) }
             }
+            .eventAccent(event.theme)
         }
         .sheet(isPresented: $isEditing) {
             EventEditorView(event: event) { _ in

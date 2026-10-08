@@ -13,6 +13,8 @@ struct HostControlsSection: View {
     let onCohosts: () -> Void
     let onAction: (HostAction) -> Void
 
+    @Environment(\.eventAccent) private var accent
+
     private var phase: EventPhase { EventPhase(event: event) }
     private var isCreator: Bool { event.viewer?.isCreator == true }
 
@@ -31,7 +33,7 @@ struct HostControlsSection: View {
             if let notice {
                 Text(notice)
                     .font(.subheadline)
-                    .foregroundStyle(Palette.link)
+                    .foregroundStyle(accent.text)
             }
             if phase.isOpen {
                 HStack(spacing: Spacing.small) {

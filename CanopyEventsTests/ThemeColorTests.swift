@@ -82,4 +82,18 @@ struct ThemeColorTests {
         #expect(ThemeSliderScale.theme(at: 30) == .hue(0))
         #expect(ThemeSliderScale.theme(at: 389) == .hue(359))
     }
+
+    /// The accent trio, against the web's `turnHex` of #2ec44f, #03190a and
+    /// #b6f5c3 (events 0189355, run in node).
+    @Test(arguments: [
+        (EventTheme.hue(0), ["#f867c0", "#220b16", "#ffd5e8"]), (.hue(60), ["#ff772b", "#220d02", "#ffdac7"]),
+        (.hue(90), ["#db9500", "#1d1100", "#ffdea7"]), (.hue(193), ["#00bfa5", "#001916", "#99f8e8"]),
+        (.hue(240), ["#00b5e5", "#001622", "#c0eaff"]), (.hue(300), ["#9d94ff", "#141025", "#e1dfff"]),
+        (.grayscale, ["#a4a4a4", "#141414", "#e3e3e3"]), (.canopyGreen, ["#2ec44f", "#03190a", "#b6f5c3"]),
+        (.hue(161), ["#2ec44f", "#03190a", "#b6f5c3"]),
+    ])
+    func theAccentFollowsTheEvent(theme: EventTheme, hexes: [String]) {
+        let colors = ThemeColors(theme)
+        #expect([colors.accent, colors.onAccent, colors.accentText].map(bytes) == hexes.map { bytes(RGB(hex: $0)) })
+    }
 }

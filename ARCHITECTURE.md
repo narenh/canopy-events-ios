@@ -164,8 +164,13 @@ rule, the app ports it and a test pins it to the web's own output.
   or grey) gives `ThemeColors`: the mesh's base, five glows and the
   card tint, each worked out in OKLCH as docs/api.md says (`OKLCH`,
   Björn Ottosson's maths, chroma fitted into sRGB). `CanopyBackground`
-  draws them as a 3×3 `MeshGradient`. Only the event page and its
-  editor are themed; buttons and links stay Canopy green everywhere.
+  draws them as a 3×3 `MeshGradient`. Only the event page, its editor
+  and the notification card are themed, and there the accent follows the
+  event too (`.eventAccent(theme)`, read as `@Environment(\.eventAccent)`):
+  Canopy green's accent, the text on it and the link colour, each turned
+  like the mesh (`ThemeColors.accent`, `onAccent`, `accentText`, the
+  web's `themeStyle` since events 0189355). Lists and every other screen
+  stay Canopy green.
 - **The hero** (`EventHeroView`): the cover, or the generated art
   (`CoverArt`, the web's `coverArt` number for number), in a 3:2 frame
   edge to edge on a phone. Its top 2:1 is clear, with the how-soon pill
@@ -495,6 +500,14 @@ decisions are in canopy-events' `docs/decision-log.md`):
   top left, 2 top right, 5 middle, 4 lower left, 3 low right) but not
   pixel-identical. The generated cover art likewise uses a linear and
   two elliptical gradients whose sizes only approximate CSS's.
+- **The accent follows the event** on its page, editor and
+  notification card (the web's change), through the environment, so it
+  can't leak onto the lists. It also sets the tint, so prominent buttons
+  and the selected answer turn; secondary glass buttons keep white words
+  (`glassButtonStyle()` says so), rather than taking the tint. The
+  colours match the web's to the byte (tests at seven hues, grey and
+  green); the web checked dark text on the accent at every hue (at
+  least 6.8:1).
 - **Pull-down: the image stays put, and the content slides over it**
   (the owner's call, after a stretch-and-zoom was tried and dropped).
   While the page or editor is pulled down past its top, the hero's
