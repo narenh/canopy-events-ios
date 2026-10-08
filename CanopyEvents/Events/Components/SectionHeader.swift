@@ -1,14 +1,14 @@
 import SwiftUI
 
-/// A small label above a section of a card-based screen, with an
-/// optional count: "FRIENDS GOING  3".
+/// A label above a group in a list, with an optional count: "Going  3"
+/// (the web's group heading: 15 pt bold, no capitals).
 struct SectionHeader: View {
     let title: String
     var count: Int?
 
     var body: some View {
         HStack(spacing: Spacing.small) {
-            Text(title.uppercased())
+            Text(title)
                 .font(Typography.sectionLabel)
                 .foregroundStyle(Palette.muted)
             if let count {

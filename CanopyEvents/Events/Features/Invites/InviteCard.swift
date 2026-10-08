@@ -16,7 +16,7 @@ struct InviteCard: View {
 
             if let host = event.hosts.first {
                 Text("Invited by \(host.person.shortName)")
-                    .font(.caption)
+                    .font(.subheadline)
                     .foregroundStyle(Palette.muted)
             }
 

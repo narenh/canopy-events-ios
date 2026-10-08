@@ -5,6 +5,7 @@ enum APISamples {
     static let ana = #"{"id": "6f1c2b9e-4d0a-4a53-9a51-2f7e0c1d8b44", "firstName": "Ana", "lastName": "Lima", "shortName": "Ana L", "photoUrl": null}"#
     static let ben = #"{"id": "0b7e5a1f-9c2d-4e8b-8f3a-1d2c3b4a5e6f", "firstName": "Ben", "lastName": "Okafor", "shortName": "Ben O", "photoUrl": null}"#
 
+    /// A host's counts; anyone else gets `"invited": null`.
     static let counts = #"""
     {"going": 4, "maybe": 1, "notGoing": 1, "invited": 3, "waitlisted": 0,
      "guests": {"going": 2, "maybe": 0, "waitlisted": 0},
@@ -18,6 +19,12 @@ enum APISamples {
      "timeZone": "America/Los_Angeles", "locationName": "Ana's place", "locationAddress": "1 Market St, San Francisco",
      "locationAddressHidden": false, "guestListVisibility": "responded", "guestsAllowed": 1, "capacity": 20,
      "spotsLeft": 14, "coverImageUrl": "https://events.canopysf.com/covers/Qm7Zc2pR9xTa.jpg?v=1759870000000",
+     "coverImages": [
+       {"width": 400, "height": 300, "url": "https://events.canopysf.com/covers/Qm7Zc2pR9xTa-400.jpg?v=1759870000000"},
+       {"width": 800, "height": 600, "url": "https://events.canopysf.com/covers/Qm7Zc2pR9xTa-800.jpg?v=1759870000000"},
+       {"width": 1200, "height": 900, "url": "https://events.canopysf.com/covers/Qm7Zc2pR9xTa-1200.jpg?v=1759870000000"},
+       {"width": 1600, "height": 1200, "url": "https://events.canopysf.com/covers/Qm7Zc2pR9xTa.jpg?v=1759870000000"}],
+     "themeHue": null, "themeGrayscale": false, "coverHue": 24, "coverGrayscale": false,
      "status": "active", "cancelledAt": null, "createdAt": "2026-10-07T20:00:00.000Z", "updatedAt": "2026-10-07T20:00:00.000Z",
      "hosts": [{"person": \(ana), "role": "creator"}],
      "counts": \(counts),
@@ -43,7 +50,7 @@ enum APISamples {
     {"guestsVisible": true,
      "guests": [{"person": \(ben), "status": "going", "guests": 1, "guestsOverLimit": false,
                  "respondedAt": "2026-10-08T17:12:00.000Z"}],
-     "counts": {"going": 1, "maybe": 0, "notGoing": 0, "invited": 0, "waitlisted": 0,
+     "counts": {"going": 1, "maybe": 0, "notGoing": 0, "invited": null, "waitlisted": 0,
                 "guests": {"going": 1, "maybe": 0, "waitlisted": 0}, "total": {"going": 2, "maybe": 0, "waitlisted": 0}},
      "nextCursor": null}
     """
@@ -68,7 +75,7 @@ enum APISamples {
        "actor": \(ben),
        "event": {"id": "4fQ9xKpL2mZa", "url": "https://events.canopysf.com/e/4fQ9xKpL2mZa", "title": "Rooftop dinner",
                  "startsAt": "2026-11-01T02:30:00.000Z", "timeZone": "America/Los_Angeles", "status": "active",
-                 "coverImageUrl": null},
+                 "coverImageUrl": null, "coverImages": [], "themeHue": 300, "themeGrayscale": false},
        "details": {"status": "going"}, "count": 4}]}
     """
 

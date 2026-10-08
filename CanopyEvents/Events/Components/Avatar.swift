@@ -1,10 +1,11 @@
 import SwiftUI
 
 /// A person's round photo, with their initials while it loads or when
-/// they have none.
+/// they have none, on `tint` (the event's brightest glow, on its page).
 struct Avatar: View {
     let person: Person
     var size: CGFloat = 40
+    var tint: Color = Palette.glowBright
 
     var body: some View {
         AsyncImage(url: person.photoUrl) { image in
@@ -23,7 +24,7 @@ struct Avatar: View {
             .font(.system(size: size * 0.4, weight: .semibold, design: .rounded))
             .foregroundStyle(Palette.muted)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Palette.glowBright)
+            .background(tint)
     }
 }
 

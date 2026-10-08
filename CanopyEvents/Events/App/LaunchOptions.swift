@@ -12,6 +12,8 @@ enum LaunchOptions {
     static var startTab: AppTab? { value(for: "mockTab").flatMap(AppTab.init(rawValue:)) }
     /// An event id to open on the Events tab, e.g. `4fQ9xKpL2mZa`.
     static var openEventId: String? { value(for: "mockEvent") }
+    /// `YES`, with `-mockEvent`, opens that event's editor too.
+    static var editsOpenEvent: Bool { value(for: "mockEdit") == "YES" }
     /// `YES` opens the new-event editor on launch.
     static var opensNewEvent: Bool { value(for: "mockNewEvent") == "YES" }
 

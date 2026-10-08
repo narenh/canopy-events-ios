@@ -6,7 +6,7 @@ extension MockRules {
     /// removed people only when they ask for `status: .removed`.
     static func guestList(_ record: MockEventRecord, for me: Person, status: RSVPStatus? = nil) -> GuestList {
         let viewer = viewer(record, for: me)
-        let counts = counts(record)
+        let counts = counts(record, forHost: viewer.isHost)
         guard viewer.canSeeGuestList else {
             return GuestList(guestsVisible: false, guests: [], counts: counts, nextCursor: nil)
         }

@@ -11,7 +11,9 @@ struct WallPreviewSection: View {
         NavigationLink(value: Route.wall(eventId)) {
             VStack(alignment: .leading, spacing: Spacing.medium) {
                 HStack {
-                    SectionHeader(title: "Wall")
+                    Text("Wall")
+                        .font(Typography.sectionTitle)
+                        .accessibilityAddTraits(.isHeader)
                     Spacer()
                     Image(systemName: "chevron.right")
                         .foregroundStyle(Palette.muted)

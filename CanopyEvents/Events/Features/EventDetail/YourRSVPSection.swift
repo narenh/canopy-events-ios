@@ -12,7 +12,9 @@ struct YourRSVPSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
-            SectionHeader(title: "Your RSVP")
+            Text(heading)
+                .font(Typography.cardHeading)
+                .accessibilityAddTraits(.isHeader)
             if event.isCancelled {
                 Text("This event was cancelled.")
                     .foregroundStyle(Palette.danger)
@@ -41,7 +43,13 @@ struct YourRSVPSection: View {
                 }
             }
         }
+        .controlSize(.large)
         .glassCard()
+    }
+
+    private var heading: String {
+        if event.isCancelled || event.isOver || event.myStatus == .removed { return "Your RSVP" }
+        return event.myStatus == .invited ? "You're invited. Are you going?" : "Are you going?"
     }
 
     /// Going or maybe to an event that allows plus-ones asks how many.

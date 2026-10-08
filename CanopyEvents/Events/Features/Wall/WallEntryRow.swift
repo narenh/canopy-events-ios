@@ -14,7 +14,7 @@ struct WallEntryRow: View {
                     HStack {
                         Text(author.shortName).font(.subheadline.weight(.semibold))
                         Text(RelativeTime.string(for: entry.createdAt))
-                            .font(.caption)
+                            .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
                     Text(entry.text ?? "")

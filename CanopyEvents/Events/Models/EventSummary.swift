@@ -10,6 +10,10 @@ nonisolated struct EventSummary: Codable, Hashable, Identifiable {
     var timeZone: String
     var status: EventStatus
     var coverImageUrl: URL?
+    /// Every size of the cover (see `Event.coverImages`).
+    var coverImages: [CoverImage]
+    var themeHue: Int?
+    var themeGrayscale: Bool
 }
 
 extension EventSummary {
@@ -17,7 +21,8 @@ extension EventSummary {
     init(event: Event) {
         self.init(
             id: event.id, url: event.url, title: event.title, startsAt: event.startsAt,
-            timeZone: event.timeZone, status: event.status, coverImageUrl: event.coverImageUrl
+            timeZone: event.timeZone, status: event.status, coverImageUrl: event.coverImageUrl,
+            coverImages: event.coverImages, themeHue: event.themeHue, themeGrayscale: event.themeGrayscale
         )
     }
 }

@@ -1,46 +1,44 @@
 import SwiftUI
 
-/// The guest rules part of the event form: capacity, plus-ones, and who
-/// can see the guest list.
+/// The "Guests" card: who sees the guest list, plus-ones per guest, and
+/// capacity. No help text: the labels say what each is.
 struct EventEditorGuestsSection: View {
     @Bindable var model: EventEditorModel
 
     var body: some View {
-        Section {
-            Toggle("Limit spots", isOn: $model.hasCapacity)
+        VStack(alignment: .leading, spacing: Spacing.medium) {
+            Text("Guests").font(Typography.cardHeading)
+            VStack(alignment: .leading, spacing: Spacing.xSmall) {
+                Text("Who sees the guest list").font(.subheadline).foregroundStyle(Palette.muted)
+                Picker("Who sees the guest list", selection: $model.draft.guestListVisibility) {
+                    Text("Everyone with the link").tag(GuestListVisibility.everyone)
+                    Text("Only people who've answered").tag(GuestListVisibility.responded)
+                }
+                .pickerStyle(.menu)
+                .labelsHidden()
+            }
+            Stepper(value: $model.draft.guestsAllowed, in: 0...10) {
+                LabeledContent("Plus-ones per guest", value: model.draft.guestsAllowed == 0 ? "None" : "\(model.draft.guestsAllowed)")
+            }
+            Toggle("Capacity", isOn: hasCapacity)
             if let capacity = model.draft.capacity {
-                Stepper(
-                    "\(capacity) spots",
-                    value: Binding(get: { capacity }, set: { model.draft.capacity = $0 }),
-                    in: 1...500
-                )
+                Stepper(value: Binding(get: { capacity }, set: { model.draft.capacity = $0 }), in: 1...10_000) {
+                    LabeledContent("Spots", value: "\(capacity)")
+                }
             }
-            Stepper(plusOnesTitle, value: $model.draft.guestsAllowed, in: 0...10)
-        } header: {
-            Text("Guests")
-        } footer: {
-            Text("Past the limit, people who say going join a waitlist. Plus-ones count toward it.")
         }
-
-        Section {
-            Picker("Who sees the guest list", selection: $model.draft.guestListVisibility) {
-                ForEach(GuestListVisibility.allCases, id: \.self) { Text($0.title).tag($0) }
-            }
-        } footer: {
-            Text(model.draft.guestListVisibility.explanation + " Everyone always sees the counts.")
-        }
+        .tint(.accentColor)
+        .glassCard()
     }
 
-    private var plusOnesTitle: String {
-        switch model.draft.guestsAllowed {
-        case 0: "No plus-ones"
-        case 1: "1 plus-one each"
-        default: "\(model.draft.guestsAllowed) plus-ones each"
-        }
+    /// Turning a limit on starts at 20.
+    private var hasCapacity: Binding<Bool> {
+        Binding(get: { model.draft.capacity != nil }, set: { model.draft.capacity = $0 ? 20 : nil })
     }
 }
 
 #Preview {
-    Form { EventEditorGuestsSection(model: EventEditorModel(event: nil)) }
-        .preferredColorScheme(.dark)
+    EventEditorGuestsSection(model: EventEditorModel(event: nil))
+        .padding()
+        .canopyScreen()
 }

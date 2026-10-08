@@ -1,17 +1,28 @@
 import SwiftUI
 
-/// The event page: cover and title, when and where, your RSVP (or host
-/// tools), friends going, a peek at the guest list and the wall.
+/// The event page, after the web's: the cover hero edge to edge (in a
+/// column with rounded top corners on iPad), the title and when on its
+/// fade, the place, hosts and description with no card around them, then
+/// your RSVP (or the host's controls), Attending and the wall, all on the
+/// event's own colours.
 struct EventDetailView: View {
     @Environment(\.eventsRepository) private var repository
+    @Environment(AppSession.self) private var session
+    @Environment(\.dismiss) private var dismiss
     @State private var model: EventDetailModel
     /// Set to open the RSVP sheet preset to that answer.
     @State private var answeringWithGuests: RSVPStatus?
     @State private var isEditing = false
     @State private var isInviting = false
+    @State private var isManagingCohosts = false
+    @State private var pendingAction: HostAction?
+    /// Wider than a phone: the page becomes a column and the hero is inset.
+    @State private var isWide = false
+    @State private var heroWidth: CGFloat = 0
 
     init(eventId: Event.ID) {
         _model = State(initialValue: EventDetailModel(eventId: eventId))
+        _isEditing = State(initialValue: LaunchOptions.editsOpenEvent && LaunchOptions.openEventId == eventId)
     }
 
     var body: some View {
@@ -25,37 +36,34 @@ struct EventDetailView: View {
         }
         .task { await model.load(from: repository) }
         .errorAlert($model.errorMessage)
-        .canopyScreen()
+        .canopyScreen(theme: model.event?.theme ?? .canopyGreen)
     }
 
     private func content(for event: Event) -> some View {
         ScrollView {
-            VStack(spacing: Spacing.large) {
-                EventHeroView(event: event)
-                Group {
+            VStack(spacing: 0) {
+                EventHeroView(event: event, isInset: isWide)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { heroWidth = $0 }
+                // The title starts on the band: the last sixth of the width.
+                VStack(alignment: .leading, spacing: Spacing.xLarge) {
+                    EventHeadView(event: event)
                     EventInfoSection(event: event)
-                    if event.viewer?.isHost == true {
-                        HostToolsSection(event: event, onInvite: { isInviting = true }, onEdit: { isEditing = true })
-                    } else {
-                        YourRSVPSection(
-                            event: event,
-                            isSaving: model.isSaving,
-                            onAnswer: { status in Task { await model.answer(status, using: repository) } },
-                            onAnswerWithGuests: { answeringWithGuests = $0 }
-                        )
-                    }
-                    HostsSection(hosts: event.hosts)
-                    if let friendsGoing = event.friendsGoing, friendsGoing.count > 0 {
-                        FriendsGoingSection(friendsGoing: friendsGoing)
-                    }
-                    GuestListPreviewSection(event: event, guestList: model.guestList)
-                    WallPreviewSection(eventId: event.id, entries: model.latestEntries, isVisible: model.wallVisible)
                 }
-                .padding(.horizontal, Spacing.large)
+                .padding(.horizontal, isWide ? Spacing.xLarge : Spacing.large)
+                .padding(.top, -heroWidth / 6)
+                VStack(spacing: Spacing.large) {
+                    sections(for: event)
+                }
+                .padding(.horizontal, isWide ? 0 : Spacing.large)
+                .padding(.top, Spacing.xxLarge)
             }
+            .frame(maxWidth: 680)
+            .frame(maxWidth: .infinity)
+            .padding(.top, isWide ? Spacing.large : 0)
             .padding(.bottom, Spacing.xxLarge)
         }
-        .ignoresSafeArea(edges: .top)
+        .onGeometryChange(for: Bool.self) { $0.size.width >= 700 } action: { isWide = $0 }
+        .ignoresSafeArea(edges: isWide ? [] : .top)
         .toolbar {
             ShareLink(item: event.url, subject: Text(event.title))
         }
@@ -74,6 +82,48 @@ struct EventDetailView: View {
                 Task { await model.load(from: repository) }
             }
         }
+        .sheet(isPresented: $isManagingCohosts) {
+            CohostsSheet(event: event) { model.update($0) }
+        }
+        .confirmationDialog(pendingAction?.title ?? "", isPresented: isConfirming, titleVisibility: .visible,
+                            presenting: pendingAction) { action in
+            Button(action.confirmLabel, role: action.isDestructive ? .destructive : nil) {
+                Task { await run(action) }
+            }
+        } message: { action in
+            Text(action.message(for: event))
+        }
+    }
+
+    @ViewBuilder private func sections(for event: Event) -> some View {
+        if event.viewer?.isHost == true {
+            HostControlsSection(
+                event: event, notice: model.hostNotice,
+                onInvite: { isInviting = true }, onEdit: { isEditing = true },
+                onCohosts: { isManagingCohosts = true }, onAction: { pendingAction = $0 }
+            )
+        } else {
+            YourRSVPSection(
+                event: event,
+                isSaving: model.isSaving,
+                onAnswer: { status in Task { await model.answer(status, using: repository) } },
+                onAnswerWithGuests: { answeringWithGuests = $0 }
+            )
+        }
+        if event.myStatus != .removed {
+            AttendingSection(event: event, guestList: model.guestList)
+            WallPreviewSection(eventId: event.id, entries: model.latestEntries, isVisible: model.wallVisible)
+        }
+    }
+
+    private var isConfirming: Binding<Bool> {
+        Binding(get: { pendingAction != nil }, set: { if !$0 { pendingAction = nil } })
+    }
+
+    private func run(_ action: HostAction) async {
+        if await model.perform(action, me: session.me?.id, using: repository) {
+            dismiss()
+        }
     }
 }
 
@@ -82,13 +132,13 @@ struct EventDetailView: View {
         .mockEnvironment()
 }
 
-#Preview("Hosting, co-hosted") {
-    NavigationStack { EventDetailView(eventId: MockEvents.birthdayId) }
+#Preview("Hosting, no cover, purple") {
+    NavigationStack { EventDetailView(eventId: MockEvents.gameNightId) }
         .mockEnvironment()
 }
 
-#Preview("Waitlisted") {
-    NavigationStack { EventDetailView(eventId: MockEvents.supperClubId) }
+#Preview("Long title, grey") {
+    NavigationStack { EventDetailView(eventId: MockEvents.galleryId) }
         .mockEnvironment()
 }
 

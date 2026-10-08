@@ -17,7 +17,7 @@ enum WallEntryText {
         case .timeChanged:
             guard let start = entry.details?.startsAt else { return "\(name) changed the time" }
             let zone = entry.details?.timeZone.flatMap(TimeZone.init(identifier:)) ?? .current
-            let when = EventDateFormatter.range(start: start, end: entry.details?.endsAt, timeZone: zone)
+            let when = EventDateFormatter.short(start, in: zone)
             return "\(name) moved it to \(when)"
         case .placeChanged:
             guard let place = entry.details?.locationName ?? entry.details?.locationAddress else {

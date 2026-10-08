@@ -43,6 +43,9 @@ protocol EventsRepository: AnyObject, Sendable {
     func updateEvent(id: Event.ID, with draft: EventDraft) async throws -> Event
     /// `PATCH /api/v1/events/{id}` with `status: cancelled` (the creator only).
     func cancelEvent(id: Event.ID) async throws -> Event
+    /// `DELETE /api/v1/events/{id}`: gone for good, with no one told (the
+    /// creator only). Suggest cancelling instead when people have answered.
+    func deleteEvent(id: Event.ID) async throws
     /// `PATCH /api/v1/events/{id}` with `status: active`: back on (the creator only).
     func uncancelEvent(id: Event.ID) async throws -> Event
     /// `PUT /api/v1/events/{id}/cover`, the image's bytes as multipart
