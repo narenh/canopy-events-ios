@@ -64,7 +64,7 @@ CanopyEventsTests/  Swift Testing tests, not in a target yet (see Tests)
 Everyone gets **Events** (going, maybe, waitlisted; "Past events" link at
 the top), **Invites** (unanswered invitations with Going / Can't Go on each card,
 then, under "Declined", the upcoming events you said you can't go to,
-each with just Going) and **Profile**. There is no Friends or
+each with your answer as a small "Can't Go" menu) and **Profile**. There is no Friends or
 Inbox tab: friends appear only in the invite picker and "friends going",
 and the inbox has a model and repository method but no screen (push will
 cover it).
@@ -707,8 +707,11 @@ decisions are in canopy-events' `docs/decision-log.md`):
   ("Not taking invites from") with Undo.
 - **Invites matches the web's Invited tab**: invitation cards have
   Going / Can't Go (two buttons, even; the web's), and declined events
-  are inline under a "Declined" heading with just Going. The separate
-  Declined screen and its route are gone.
+  are inline under a "Declined" heading. A declined card has no big
+  button: your answer is a small "Can't Go" pill where the status badge
+  would be (`AnswerMenuPill`), a menu of Can't Go (ticked), Going and
+  Maybe; choosing one answers again. The separate Declined screen and its
+  route are gone.
 - **Event details** follow docs/api.md: link and phone on one line each,
   the rest a heading over text; only `http(s)` and `tel:` hrefs open;
   unknown types are skipped. The editor's chips scroll sideways on a
@@ -740,8 +743,10 @@ decisions are in canopy-events' `docs/decision-log.md`):
   are in the repository; the mock has 11 of the real manifest's entries
   (TMDB thumbnail URLs, the server's base64url ids, made-up hues). The
   editor's hero gets a gallery button beside the camera (only when the set
-  is on); its sheet groups tiles by title, with TMDB's logo (a vector
-  asset from the web's SVG) and credit at the foot. Picking one previews
+  is on); its sheet is one grid with no title headings (each tile's
+  VoiceOver label names its title and "n of count"), with TMDB's logo (a
+  vector asset from the web's SVG) and credit at the foot. That foot is
+  the only place the credit appears. Picking one previews
   it (the 780 px image) and jumps the color; Save sends it after the
   event is saved, as a picked photo is.
 - **Not built:** the friends screens and friend links (models, repository

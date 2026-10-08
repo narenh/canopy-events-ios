@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// The TMDB backgrounds, as the web's picker: a grid of 3:2 tiles,
-/// grouped by title (the title small under each group), with TMDB's logo
-/// and credit at the foot (their terms). Picking one previews it on the
+/// The TMDB backgrounds: one grid of 3:2 tiles, in the set's order (a
+/// title's together), no headings (each tile's label names its title and
+/// "n of count"), with TMDB's logo and credit at the foot, the one place
+/// the app shows it. Picking one previews it on the
 /// editor's hero and jumps the color to it; nothing is saved until Save.
 struct BackgroundPickerSheet: View {
     let list: BackgroundList
@@ -16,14 +17,11 @@ struct BackgroundPickerSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: Spacing.large) {
-                    ForEach(list.groups, id: \.first?.id) { group in
-                        VStack(alignment: .leading, spacing: Spacing.xSmall) {
-                            LazyVGrid(columns: columns, spacing: Spacing.small) {
-                                ForEach(group) { tile($0) }
+                    LazyVGrid(columns: columns, spacing: Spacing.small) {
+                        ForEach(Array(list.groups.enumerated()), id: \.offset) { _, group in
+                            ForEach(Array(group.enumerated()), id: \.element.id) { index, background in
+                                tile(background, label: "\(background.title), \(index + 1) of \(group.count)")
                             }
-                            Text(groupTitle(group))
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
                         }
                     }
                     TMDBCredit()
@@ -41,7 +39,7 @@ struct BackgroundPickerSheet: View {
         }
     }
 
-    private func tile(_ background: Background) -> some View {
+    private func tile(_ background: Background, label: String) -> some View {
         Button {
             onPick(background)
             dismiss()
@@ -63,12 +61,7 @@ struct BackgroundPickerSheet: View {
                 }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(background.title)
-    }
-
-    private func groupTitle(_ group: [Background]) -> String {
-        guard let first = group.first else { return "" }
-        return first.year.map { "\(first.title) (\($0))" } ?? first.title
+        .accessibilityLabel(label)
     }
 }
 

@@ -1,17 +1,18 @@
 import SwiftUI
 
 /// One invitation: the event (tap for details) and Going / Can't Go right
-/// on the card, as the web's. A declined event's card offers just Going,
-/// to change your mind.
+/// on the card, as the web's. A declined event's card has no buttons: its
+/// answer is a small "Can't Go ▾" pill that answers again.
 struct InviteCard: View {
     let event: Event
-    var answers: [RSVPStatus] = [.going, .notGoing]
+    /// A declined event's card: the answer pill, no buttons.
+    var isDeclined = false
     let onAnswer: (RSVPStatus) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
             NavigationLink(value: Route.event(event.id)) {
-                EventCard(event: event)
+                EventCard(event: event, onChangeAnswer: isDeclined ? onAnswer : nil)
                     .contentShape(.rect)
             }
             .buttonStyle(.plain)
@@ -22,7 +23,9 @@ struct InviteCard: View {
                     .foregroundStyle(Palette.muted)
             }
 
-            AnswerButtons(current: event.myStatus == .notGoing ? nil : event.myStatus, answers: answers, onAnswer: onAnswer)
+            if !isDeclined {
+                AnswerButtons(current: nil, answers: [.going, .notGoing], onAnswer: onAnswer)
+            }
         }
         .glassCard()
     }
