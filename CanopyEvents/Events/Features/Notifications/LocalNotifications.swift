@@ -7,14 +7,18 @@ import UserNotifications
 /// attachment, and the actor's photo (`CommunicationNotificationBuilder`). The mocked app's stand-in for
 /// push, and the test notification.
 enum LocalNotifications {
-    static func schedule(_ notification: InboxNotification, after seconds: TimeInterval = 5) async throws {
+    /// `card` is what the expanded notification draws (an invitation's).
+    static func schedule(_ notification: InboxNotification, card: NotificationCard? = nil,
+                         after seconds: TimeInterval = 5) async throws {
         guard let payload = NotificationPayload(notification),
               let body = NotificationWording.body(for: notification) else { return }
         let content = UNMutableNotificationContent()
         content.title = NotificationWording.title(for: notification)
         content.body = body
         content.sound = .default
-        content.userInfo = payload.userInfo
+        var userInfo: [String: Any] = payload.userInfo
+        userInfo[NotificationCard.userInfoKey] = card?.userInfoValue
+        content.userInfo = userInfo
         content.threadIdentifier = "event-\(payload.eventId)"
         if let category = NotificationCategory(type: notification.type) {
             content.categoryIdentifier = category.rawValue

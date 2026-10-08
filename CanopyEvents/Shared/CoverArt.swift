@@ -33,9 +33,9 @@ struct CoverArt: View {
 
 #Preview {
     VStack {
-        ForEach([MockEvents.gameNightId, MockEvents.karaokeId, MockEvents.triviaId], id: \.self) { id in
+        ForEach(["Gm8Night4Fun", "Kr6Jules30th", "Tr2Trivia77k"], id: \.self) { id in
             CoverArt(eventId: id).aspectRatio(3 / 2, contentMode: .fit)
         }
-        CoverArt(eventId: MockEvents.gameNightId, theme: .hue(300)).aspectRatio(3 / 2, contentMode: .fit)
+        CoverArt(eventId: "Gm8Night4Fun", theme: .hue(300)).aspectRatio(3 / 2, contentMode: .fit)
     }
 }

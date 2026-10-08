@@ -14,6 +14,8 @@ struct MainTabView: View {
     @State private var hostingPath: [Route] = []
     @State private var isCreatingEvent = LaunchOptions.opensNewEvent
     @State private var showsVerifyFirst = false
+    /// `-mockCard YES`: the expanded notification's card, to look at.
+    @State private var launchCard: NotificationCard?
 
     var body: some View {
         TabView(selection: tabSelection) {
@@ -58,10 +60,18 @@ struct MainTabView: View {
         .animation(.default, value: session.isHost)
         // Signed in: now's the moment to ask about notifications.
         .task {
+            guard !LaunchOptions.showsNotificationCard else { return }  // a screenshot of the card, unobstructed
             if await NotificationPermission.requestIfUndetermined(), LaunchOptions.sendsTestNotification {
-                try? await LocalNotifications.schedule(MockNotifications.adamInvite)
+                let card = try? await NotificationCard.load(MockEvents.eggsId, from: session.repository)
+                try? await LocalNotifications.schedule(MockNotifications.adamInvite, card: card)
             }
         }
+        .task {
+            if LaunchOptions.showsNotificationCard {
+                launchCard = try? await NotificationCard.load(MockEvents.eggsId, from: session.repository)
+            }
+        }
+        .sheet(item: $launchCard) { NotificationCardPreview(card: $0) }
         .onChange(of: notifications.opening) { _, opening in
             guard let opening else { return }
             show(opening)

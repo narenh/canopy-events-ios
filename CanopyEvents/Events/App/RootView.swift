@@ -5,6 +5,7 @@ import SwiftUI
 struct RootView: View {
     @Environment(AppSession.self) private var session
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(NotificationResponder.self) private var notifications
 
     var body: some View {
         Group {
@@ -17,10 +18,14 @@ struct RootView: View {
         }
         .preferredColorScheme(.dark)
         .task { await signInFromLaunchOptions() }
-        // Back from the background: things may have changed meanwhile
-        // (an invite answered from a notification).
+        // Back from the background: send answers given on expanded
+        // notifications, and reload (things may have changed meanwhile).
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active && session.isSignedIn { session.dataChanged() }
+            guard phase == .active && session.isSignedIn else { return }
+            Task {
+                await notifications.applyQueuedAnswers()
+                session.dataChanged()
+            }
         }
     }
 

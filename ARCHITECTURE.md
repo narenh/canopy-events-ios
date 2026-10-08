@@ -38,6 +38,11 @@ CanopyEvents/Events/
   Design/       palette, spacing, radius, type, the mesh background, glass helpers,
                 event colours (OKLCH, ThemeColors) and the hero's fade
   Utilities/    formatters and the platform shims
+CanopyEvents/Shared/               compiled by the app and the notification extension:
+                                   theme colours, cover art, the hero fade, palette,
+                                   type and glass, the API's JSON coders, the App Group,
+                                   the answer queue, and the expanded notification's card
+CanopyEvents/NotificationContent/  the Notification Content Extension (iOS only)
 CanopyEventsTests/  Swift Testing tests, not in a target yet (see Tests)
 ```
 
@@ -223,6 +228,19 @@ APNs pushes later. The payload the server should send is in
 - Screens reload with `.task(id: session.dataVersion)`, which goes up
   after a notification's answer and whenever the app comes back to the
   front.
+- **The expanded notification** is a Notification Content Extension,
+  `CanopyEventsNotificationContent` (`com.canopysf.CanopyEvents.NotificationContent`,
+  category `EVENT_INVITE`, user interaction on, the default content
+  hidden), embedded in the app on iOS. Its `NotificationViewController`
+  hosts `NotificationCardView` (in `Shared/`): the cover hero fading on
+  the event's colour, the title, the big date and time, the place, the
+  faces going, and its own Going / Can't Go. What it draws comes in the
+  notification (`userInfo["card"]`, a `NotificationCard`; the payload is
+  in docs/push-payloads.md). An answer goes into the App Group's
+  `AnswerQueue` (`group.com.canopysf.CanopyEvents`), the card shows a
+  checkmark, and the notification closes; the app sends queued answers
+  when it next becomes active (`NotificationResponder.applyQueuedAnswers`).
+  Profile's Debug section can show the card inside the app.
 - **Real pushes, still to do:** register with APNs and send the token
   (`registerDevice(token:)`); a Notification Service Extension that
   fetches the sender's photo (with the session token from a shared
@@ -337,6 +355,8 @@ Set in the scheme's "Arguments Passed On Launch", or with
   `MockEvents+Upcoming.swift`, e.g. `4fQ9xKpL2mZa`).
 - `-mockNewEvent YES`: open the new-event editor.
 - `-mockEdit YES` with `-mockEvent <id>`: open that event's editor.
+- `-mockCard YES`: show the expanded notification's card (and don't ask
+  for notification permission, so nothing covers it).
 - `-mockTestNotification YES`: send the test notification (Adam Smith
   inviting you to Throw Eggs at Karl) 5 seconds after signing in, once
   notifications are allowed. Profile's "Debug (TestFlight only)" section
@@ -438,6 +458,8 @@ Swift Testing, in `CanopyEventsTests/`:
   `EventWhenTests` the how-soon words, the big when, list lines,
   friendly zone names and the nearby zones; `EditorAndAttendingTests`
   the editor's rules and Attending's words and order.
+- `NotificationCardTests`: the card built from an event (friends
+  first, the 800 px cover), its trip through `userInfo`, and its size.
 - `NotificationTests`: the registered category and its buttons, the
   buttons' answers, the payload (including one as APNs delivers it), the
   test notification's words, and what Going, Can't Go and a tap do.
@@ -449,7 +471,7 @@ Swift Testing, in `CanopyEventsTests/`:
   invited counts).
 
 They're **not in a target yet**, because adding one means editing the
-project file. They were last run (all 55 passing) through a throwaway
+project file. They were last run (all 60 passing) through a throwaway
 Swift package on macOS that links the non-UI sources with the same
 Swift settings. To run them: in Xcode, File → New → Target
 → Unit Testing Bundle named `CanopyEventsTests` (Swift Testing), then
@@ -518,6 +540,44 @@ decisions are in canopy-events' `docs/decision-log.md`):
   clock) before the event's title. Exactly two buttons, Going (✓,
   `checkmark.circle.fill`) and Can't Go (`xmark.circle`), neither styled
   destructive: there's no Maybe, to discourage maybes.
+- **A second target, added by hand to the project file.** The rule
+  "never edit project.pbxproj" is for adding files (the synced folders
+  do that); a target can't be added any other way without Xcode's UI.
+  The extension is iOS only (content extensions don't exist on the Mac
+  or Vision), so its embedding and dependency are filtered to iOS.
+- **Code both targets use lives in `CanopyEvents/Shared/`**, a synced
+  folder both compile, so nothing is duplicated: the theme colours, the
+  cover art, the fade, the design tokens, the JSON coders, the card and
+  the answer queue. The card takes plain values (`NotificationCard`),
+  not the app's models, so the extension needs none of them.
+- **The expanded card's data comes in the notification**, not from a
+  snapshot of the app's: it's what a real push has to carry anyway (the
+  extension runs before the app does), and it keeps the extension to a
+  view. Only answers go the other way, through the App Group.
+- **Answers from the card wait in the App Group** until the app is next
+  active, because the mock's data lives in the app's process. A real
+  build should send the answer from the extension straight to the API
+  (with the session token in a shared keychain group) and drop the
+  queue. Until then, an answer from the card reaches the host only when
+  you next open the app; the Lock Screen's own buttons (which wake the
+  app in the background) don't have that delay.
+- **The system's buttons are hidden on the expanded card**
+  (`notificationActions = []`): the card has its own, styled like the
+  app's, and two pairs of the same buttons read as a mistake. They stay
+  on the short look and the Lock Screen swipe, where there's no card.
+- **The card hides the system's title and body**
+  (`UNNotificationExtensionDefaultContentHidden`): the card says the
+  same, bigger, with the cover.
+- **Signing:** both App IDs (`com.canopysf.CanopyEvents` and
+  `com.canopysf.CanopyEvents.NotificationContent`) and the App Group
+  are registered; a local signed build used Xcode's team profiles for
+  both, each with the group. If Xcode Cloud's signing fails on them, in
+  the developer portal: Identifiers → App Groups → make sure
+  `group.com.canopysf.CanopyEvents` exists; Identifiers →
+  `com.canopysf.CanopyEvents` → App Groups on, with that group (and
+  Communication Notifications on); Identifiers →
+  `com.canopysf.CanopyEvents.NotificationContent` (create it if
+  missing) → App Groups on, with that group.
 - **The cover rides along as an attachment** (the 800 px size, or the
   generated art in the event's colours). Whether iOS shows it well next
   to the communication-notification avatar, or the avatar style loses

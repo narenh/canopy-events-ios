@@ -27,7 +27,24 @@ openapi.yaml.
   "eventId": "Eg1ThrowEggs",
   "eventTitle": "Throw Eggs at Karl",
   "actorId": "6f1c2b9e-4d0a-4a53-9a51-2f7e0c1d8b44",
-  "actorName": "Adam Smith"
+  "actorName": "Adam Smith",
+  "card": {
+    "eventId": "Eg1ThrowEggs",
+    "title": "Throw Eggs at Karl",
+    "startsAt": "2026-10-17T02:00:00.000Z",
+    "endsAt": "2026-10-17T04:00:00.000Z",
+    "timeZone": "America/Los_Angeles",
+    "locationName": "Hyde Street Pier",
+    "coverUrl": "https://events.canopysf.com/covers/Qm7Zc2pR9xTa-800.jpg?v=1759870000000",
+    "themeHue": 60,
+    "themeGrayscale": false,
+    "going": 1,
+    "maybe": 1,
+    "faces": [
+      { "name": "Gus Novak", "photoUrl": null },
+      { "name": "Hana Sato", "photoUrl": "https://account.canopysf.com/photo/…?v=1759870000000" }
+    ]
+  }
 }
 ```
 
@@ -66,6 +83,28 @@ openapi.yaml.
 - `actorId`, `actorName`: who caused it, for the sender's name and photo
   (communication notifications). Omit for `waitlist_promoted`, which has
   no actor.
+
+## The card (invitations)
+
+`card` is what the expanded notification draws when it's long-pressed
+(the app's Notification Content Extension: the cover, title, date and
+time, place, faces going, and its own Going / Can't Go). The extension
+can't reach the app's data, so everything it shows travels in the push.
+Keep it small: an APNs payload is at most 4 KB in all.
+
+- Times are ISO 8601 UTC, as the API writes them; `timeZone` is the
+  event's, and the card shows times on that clock.
+- `coverUrl`: the 800 px `coverImages` entry (or null); covers are
+  public, so the extension can load it. `themeHue` / `themeGrayscale`
+  as on the event.
+- `going` / `maybe`: people, as in `counts`.
+- `faces`: up to six people going or maybe, friends first, as the event
+  page's Attending row orders them. Photos on `account.canopysf.com`
+  only load with the session, so for now the card shows initials when a
+  photo won't load.
+
+Without `card` the expanded notification shows nothing extra (the
+system's own view and buttons).
 
 ## Other types
 
