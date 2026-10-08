@@ -47,7 +47,7 @@ final class MockEventsRepository: EventsRepository {
     func me() async throws -> MeEnvelope {
         await pause()
         guard backend.account(id: personId) != nil else {
-            throw APIError(message: "Sign in first.", reason: "sign_in_required")
+            throw APIError.signInRequired
         }
         let verifyUrl = URL(string: "https://account.canopysf.com/profile?verify=1")
         return MeEnvelope(

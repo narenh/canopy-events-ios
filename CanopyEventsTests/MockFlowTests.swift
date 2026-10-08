@@ -42,7 +42,7 @@ struct MockFlowTests {
         let error = await #expect(throws: APIError.self) {
             try await session.repository.setRSVP(eventId: MockEvents.rooftopId, status: .going, guests: 3)
         }
-        #expect(error?.reason == "too_many_guests")
+        #expect(error?.reason == .tooManyGuests)
     }
 
     @Test func goingToAFullEventWaitlists() async throws {

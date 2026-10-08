@@ -31,7 +31,7 @@ final class MockAccountService: AccountService {
 
     func quickSignUp(firstName: String, lastName: String, email: String) async throws -> AuthToken {
         await backend.pause()
-        guard backend.account(email: email) == nil else { throw Self.emailTaken }
+        guard backend.account(email: email) == nil else { throw APIError.emailHasAccount(email) }
         let account = MockPeople.quickUser(
             id: "p-" + UUID().uuidString.lowercased(), firstName: firstName, lastName: lastName, email: email
         )
@@ -73,10 +73,10 @@ final class MockAccountService: AccountService {
     // MARK: Helpers
 
     private func check(_ code: String) throws {
-        guard code.count == 6, code.allSatisfy(\.isNumber) else { throw Self.badCode }
+        guard code.count == 6, code.allSatisfy(\.isNumber) else { throw APIError.wrongCode }
     }
 
-    private static let noAccount = APIError(message: "No Canopy account uses that email. Try quick sign-up.", reason: "no_account")
-    private static let emailTaken = APIError(message: "This email has an account. Sign in instead.", reason: "email_taken")
-    private static let badCode = APIError(message: "That code isn't right. (Mock: any six digits work.)", reason: "bad_code")
+    private static let noAccount = APIError(
+        message: "No Canopy account uses that email. Try quick sign-up.", reason: APIErrorReason(rawValue: "no_account")
+    )
 }

@@ -1,26 +1,25 @@
 import Foundation
 
-/// A failure from the events API, in the API's own error shape:
-/// `{"error": "<a sentence>", "reason": "<snake_case_code>"}`.
-/// Branch on `reason`; show `message` to people.
+/// A failure from the events API or the account service, in their shared
+/// error shape: `{"error": "<a sentence>", "reason": "<snake_case_code>"}`,
+/// sometimes with a link or two. Branch on `reason`; show `message` to people.
 nonisolated struct APIError: Error, Codable, Hashable, LocalizedError {
     var message: String
-    var reason: String
+    var reason: APIErrorReason
+    /// With `sign_in_required`: where to sign in and come back.
+    var signIn: URL?
+    /// With `sign_in_required`: the quick sign-up, for someone new to Canopy.
+    var quickSignUp: URL?
+    /// With `email_unverified` about your own email: where to prove it.
+    /// Missing when it's about someone you tried to make a co-host.
+    var verify: URL?
+    /// The account service's `email_has_account`: the email that has one.
+    var email: String?
 
     var errorDescription: String? { message }
 
     enum CodingKeys: String, CodingKey {
         case message = "error"
-        case reason
+        case reason, signIn, quickSignUp, verify, email
     }
-}
-
-extension APIError {
-    static let eventNotFound = APIError(message: "There's no event at that link.", reason: "event_not_found")
-    static let eventCancelled = APIError(message: "This event has been cancelled.", reason: "event_cancelled")
-    static let eventOver = APIError(message: "This event is over.", reason: "event_over")
-    static let hostCannotRSVP = APIError(message: "Hosts don't RSVP to their own event.", reason: "host_cannot_rsvp")
-    static let hostsOnly = APIError(message: "Only hosts can do that.", reason: "hosts_only")
-    static let tooManyGuests = APIError(message: "That's more plus-ones than the host allows.", reason: "too_many_guests")
-    static let emailUnverified = APIError(message: "Verify your email first.", reason: "email_unverified")
 }
