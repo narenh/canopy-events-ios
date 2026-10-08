@@ -22,10 +22,20 @@ nonisolated enum NotificationAction: String, CaseIterable, Sendable {
         }
     }
 
+    /// An SF Symbol beside the title. Neither is destructive: saying no
+    /// is a fine answer.
+    var systemImage: String {
+        switch self {
+        case .going: "checkmark.circle.fill"
+        case .notGoing: "xmark.circle"
+        }
+    }
+
     /// Requires unlocking: an answer is seen by the host and other guests,
     /// so someone holding a locked phone shouldn't be able to give it.
     /// Not `.foreground`: answering doesn't open the app.
     var unAction: UNNotificationAction {
-        UNNotificationAction(identifier: rawValue, title: title, options: [.authenticationRequired])
+        UNNotificationAction(identifier: rawValue, title: title, options: [.authenticationRequired],
+                             icon: UNNotificationActionIcon(systemImageName: systemImage))
     }
 }

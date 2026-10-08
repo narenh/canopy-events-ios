@@ -10,8 +10,9 @@ extension MockEvents {
     static let karaokeId = "Kr6Jules30th"
     static let potteryId = "Pt4Workshop1"
     static let triviaId = "Tr2Trivia77k"
-    /// Karl's, which Maya and Sam are invited to: the test notification's.
-    static let marxismId = "Mx1Marxism01"
+    /// Adam's, which Maya and Sam are invited to: the test notification's.
+    /// Always the coming 16 October at 7 PM, so it reads "10/16 · 7p".
+    static let eggsId = "Eg1ThrowEggs"
 
     static var upcoming: [MockEventRecord] {
         let p = MockPeople.self
@@ -71,9 +72,9 @@ extension MockEvents {
                 guests: [guest(maya, .notGoing), guest(p.isaac, .going), guest(p.kofi, .going), guest(p.ben, .maybe)],
                 invitedIds: [maya.id, p.isaac.id]),
             MockEventRecord(
-                event: event(id: marxismId, title: "Marxism 101", description: "Reading group, chapter one. Bring the book; snacks are seized collectively.",
-                             days: 9, hour: 18, minute: 30, hours: 2, locationName: "Mission Branch Library",
-                             locationAddress: "300 Bartlett St, San Francisco", hosts: [host(p.karl)], theme: .hue(25)),
+                event: event(id: eggsId, title: "Throw Eggs at Karl", description: "An invisible hand will provide the eggs. Wear something you can wash.",
+                             days: MockDate.daysUntil(month: 10, day: 16), hour: 19, hours: 2, locationName: "Hyde Street Pier",
+                             locationAddress: "2905 Hyde St, San Francisco", hosts: [host(p.adam)], theme: .hue(60)),
                 guests: [guest(maya, .invited), guest(sam, .invited), guest(p.gus, .going), guest(p.hana, .maybe)],
                 invitedIds: [maya.id, sam.id, p.gus.id]),
         ]

@@ -16,7 +16,9 @@ nonisolated enum NotificationWording {
         let who = notification.actor?.shortName ?? "Someone"
         let event = eventTitle(notification)
         switch notification.type {
-        case .invited: return "Invited you to \(event)"
+        case .invited:
+            // "10/16 · 7p · Throw Eggs at Karl", under the host's name.
+            return notification.event.map { NotificationWhen.line(for: $0) } ?? "Invited you to \(event)"
         case .eventChanged:
             let changed = notification.details?.changed ?? []
             let what = changed.contains(.time) && changed.contains(.place) ? "the time and place"

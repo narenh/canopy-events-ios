@@ -26,9 +26,10 @@ enum MockNotifications {
         }
     }
 
-    /// Karl Marx inviting you to Marxism 101: the test notification.
-    static var karlInvite: InboxNotification {
-        item("test-karl", .invited, MockEvents.marxismId, MockPeople.karl, minutesAgo: 0)
+    /// Adam Smith inviting you to Throw Eggs at Karl: the test
+    /// notification ("Adam Smith · 10/16 · 7p · Throw Eggs at Karl").
+    static var adamInvite: InboxNotification {
+        item("test-adam", .invited, MockEvents.eggsId, MockPeople.adam, minutesAgo: 0)
     }
 
     private static func item(

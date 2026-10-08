@@ -15,37 +15,45 @@ openapi.yaml.
 ```json
 {
   "aps": {
-    "alert": { "title": "Karl Marx", "body": "Invited you to Marxism 101" },
+    "alert": { "title": "Adam Smith", "body": "10/16 · 7p · Throw Eggs at Karl" },
     "category": "EVENT_INVITE",
-    "thread-id": "event-Mx1Marxism01",
+    "thread-id": "event-Eg1ThrowEggs",
     "sound": "default",
     "badge": 3,
     "mutable-content": 1
   },
   "type": "invited",
   "notificationId": "17",
-  "eventId": "Mx1Marxism01",
-  "eventTitle": "Marxism 101",
+  "eventId": "Eg1ThrowEggs",
+  "eventTitle": "Throw Eggs at Karl",
   "actorId": "6f1c2b9e-4d0a-4a53-9a51-2f7e0c1d8b44",
-  "actorName": "Karl Marx"
+  "actorName": "Adam Smith"
 }
 ```
 
 - `aps.alert`: the words. The title is who did it (or the event, for
-  types about the event itself); the body is what happened. The app
+  types about the event itself); the body is what happened. For an
+  invitation the body is the when and the event: `M/d · time · title`,
+  on the event's own clock, with `M/d/yy` when it isn't this year there,
+  and the time as the hour plus `a` or `p`, with minutes only when they
+  aren't :00 (`7p`, `7:30p`, `12p`, `12a`), joined by ` · ` (a middle
+  dot, U+00B7, with spaces): `10/16 · 7p · Throw Eggs at Karl`. The
+  app's `NotificationWhen` is the reference (and its tests the cases). The app
   words a local notification the same way (`NotificationWording`). If the
   senders move to `title-loc-key` / `loc-key` with arguments, the app
   needs matching keys in its strings; until then, send plain text.
 - `aps.category`: `EVENT_INVITE` for `invited`. That gives the
-  notification its two buttons, Going (`GOING`) and Can't Go
-  (`NOT_GOING`), which answer the invitation in the background
+  notification its two buttons, Going (`GOING`, ✓) and Can't Go
+  (`NOT_GOING`, ✕), and only those two (no Maybe, on purpose), which answer the invitation in the background
   (`PUT /api/v1/events/{id}/rsvp`, no plus-ones). Other types send no
   category (no buttons) for now.
 - `aps.thread-id`: `event-<eventId>`, so one event's notifications group
   together.
 - `aps.badge`: the unread count, as `lib/push.js` already has it.
 - `aps.mutable-content: 1`: lets the Notification Service Extension (to
-  come, see ARCHITECTURE.md) add the sender's photo.
+  come, see ARCHITECTURE.md) add the sender's photo and attach the
+  event's cover (the 800 px `coverImages` entry), as the app does for a
+  local notification.
 - `eventId` (required): which event. Without it the app ignores the
   buttons and the tap. A tap opens the event (on Invites for an
   invitation, Events otherwise).
