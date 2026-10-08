@@ -32,6 +32,9 @@ extension MockEventsRepository {
         guard (1...1000).contains(text.count) else { throw APIError.badText }
         var entry = addWallEntry(eventId: eventId, type: .post, person: currentUser.person, text: text)
         entry.canDelete = true
+        if record.isHost(personId) {
+            notifyEveryoneComing(record, .wallPost, details: NotificationDetails(entryId: entry.id, text: String(text.prefix(200))))
+        }
         return entry
     }
 

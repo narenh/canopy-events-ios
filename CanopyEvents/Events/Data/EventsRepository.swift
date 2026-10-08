@@ -13,10 +13,21 @@ protocol EventsRepository: AnyObject, Sendable {
     func me() async throws -> MeEnvelope
     /// `GET /api/v1/me/friends`
     func friends(page: PageRequest) async throws -> FriendList
-    /// `GET /api/v1/me/notifications`
-    func notifications() async throws -> [InboxNotification]
-    /// Mark one inbox entry read.
-    func markNotificationRead(id: InboxNotification.ID) async throws
+
+    // MARK: Notifications
+
+    /// `GET /api/v1/me/notifications`, newest first, with the unread count.
+    func notifications(page: PageRequest) async throws -> NotificationList
+    /// `GET /api/v1/me/notifications/unread`: just the count, for a badge.
+    func unreadNotificationCount() async throws -> Int
+    /// `POST /api/v1/me/notifications/read` with 1 to 100 ids. Answers the unread count after.
+    func markNotificationsRead(ids: [InboxNotification.ID]) async throws -> Int
+    /// `POST /api/v1/me/notifications/read-all`. Answers the unread count after (0).
+    func markAllNotificationsRead() async throws -> Int
+    /// `POST /api/v1/me/devices` with `platform: ios` and the APNs device token (hex).
+    func registerDevice(token: String) async throws
+    /// `DELETE /api/v1/me/devices` with the token, on signing out.
+    func unregisterDevice(token: String) async throws
 
     // MARK: Events
 

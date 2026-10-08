@@ -4,8 +4,8 @@ import Foundation
 /// shared in-memory `MockBackend`. It applies the server's rules through
 /// `MockRules`, so visibility, counts and the waitlist behave for real.
 ///
-/// The CRUD for hosting, guests and the wall is in the `+Hosting`,
-/// `+Guests` and `+Wall` extensions next to this file.
+/// The rest is in the extensions next to this file: `+Hosting`, `+Guests`,
+/// `+Invites`, `+Wall` and `+Notifications`.
 final class MockEventsRepository: EventsRepository {
     let backend: MockBackend
     let personId: Person.ID
@@ -57,17 +57,6 @@ final class MockEventsRepository: EventsRepository {
         let all = MockRules.friends(of: currentUser.person, in: records)
         let (friends, next) = try MockPaging.page(all, page)
         return FriendList(friends: friends, nextCursor: next)
-    }
-
-    func notifications() async throws -> [InboxNotification] {
-        await pause()
-        return backend.inboxes[personId, default: []].sorted { $0.createdAt > $1.createdAt }
-    }
-
-    func markNotificationRead(id: InboxNotification.ID) async throws {
-        await pause()
-        guard let index = backend.inboxes[personId]?.firstIndex(where: { $0.id == id }) else { return }
-        backend.inboxes[personId]?[index].readAt = .now
     }
 
     // MARK: Events

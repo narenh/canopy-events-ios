@@ -25,15 +25,24 @@ extension MockEventsRepository {
         let promoted = MockRules.promoteWaitlist(&record)
         save(record)
         let event = record.event
+        var changed: [EventChange] = []
         if (event.startsAt, event.endsAt, event.timeZone) != (old.startsAt, old.endsAt, old.timeZone) {
+            changed.append(.time)
             addWallEntry(eventId: id, type: .timeChanged, person: currentUser.person, details: WallEntryDetails(
                 startsAt: event.startsAt, endsAt: event.endsAt, timeZone: event.timeZone))
         }
         if (event.locationName, event.locationAddress) != (old.locationName, old.locationAddress) {
+            changed.append(.place)
             addWallEntry(eventId: id, type: .placeChanged, person: currentUser.person, details: WallEntryDetails(
                 locationName: event.locationName, locationAddress: event.locationAddress))
         }
-        promoted.forEach { addWallEntry(eventId: id, type: .offWaitlist, person: $0) }
+        if !changed.isEmpty {
+            notifyEveryoneComing(record, .eventChanged, details: NotificationDetails(changed: changed))
+        }
+        for person in promoted {
+            addWallEntry(eventId: id, type: .offWaitlist, person: person)
+            backend.notify(person.id, .waitlistPromoted, about: event, from: nil)
+        }
         return resolved(record)
     }
 
@@ -46,9 +55,7 @@ extension MockEventsRepository {
         record.event.cancelledAt = .now
         save(record)
         addWallEntry(eventId: id, type: .cancelled, person: currentUser.person)
-        for guest in record.guests where [.going, .maybe, .waitlisted].contains(guest.status) {
-            backend.notify(guest.person.id, .eventCancelled, about: record.event, from: currentUser.person)
-        }
+        notifyEveryoneComing(record, .eventCancelled)
         return resolved(record)
     }
 

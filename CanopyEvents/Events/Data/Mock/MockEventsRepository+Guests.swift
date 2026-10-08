@@ -68,13 +68,15 @@ extension MockEventsRepository {
             addWallEntry(eventId: record.id, type: .going, person: currentUser.person)
         }
         promoted.forEach { addWallEntry(eventId: record.id, type: .offWaitlist, person: $0) }
+        // A change of plus-ones alone isn't news.
         if let new, new != old {
             for host in record.event.hosts {
-                backend.notify(host.person.id, .newRSVP, about: record.event, from: currentUser.person)
+                backend.notify(host.person.id, .rsvp, about: record.event, from: currentUser.person,
+                               details: NotificationDetails(status: new))
             }
         }
         for person in promoted {
-            backend.notify(person.id, .offWaitlist, about: record.event, from: currentUser.person)
+            backend.notify(person.id, .waitlistPromoted, about: record.event, from: nil)
         }
     }
 }
