@@ -544,10 +544,12 @@ Swift Testing, in `CanopyEventsTests/`:
   `joinableList`, rename, reset, remove, leave, delete, the suggestions'
   order and score). `InvitePickerTests`: the invite sheet's "Invite all"
   ticks, who can't be picked, the tray's order, Suggested and A to Z,
-  accent-blind search, and what counts as a phone number or @username.
+  accent-blind search, what counts as a phone number or @username, and
+  "Filter by past event" (its people A to Z, searched within, nobody
+  ticked, a hidden guest list, its words, and loading it from the mock).
 
 They're **not in a target yet**, because adding one means editing the
-project file. They were last run (all 95 passing) through a throwaway
+project file. They were last run (all 99 passing) through a throwaway
 Swift package on macOS that links the non-UI sources with the same
 Swift settings. To run them: in Xcode, File → New → Target
 → Unit Testing Bundle named `CanopyEventsTests` (Swift Testing), then
@@ -838,8 +840,8 @@ The web's lists and inviter, mocked. Judgment calls:
   under the title, so the tray can own the foot. A whole phone number or
   @username is looked up 450 ms after typing stops, each text once, and
   the person is offered first under "Found"; names are never looked up.
-  "Invite everyone from…" is a menu of your past events (the web's
-  `<select>`), with "Picked 5 from Beach bonfire." under it. The picking
+  "Filter by past event" is a menu of your past events (the web's
+  `<select>`; see "Inviter follow-ups" below). The picking
   rules are a plain value (`InvitePicker`) so they're tested without a
   screen. People on the event keep their row, greyed, with their
   `StatusBadge`, and aren't buttons.
@@ -863,3 +865,28 @@ The web's lists and inviter, mocked. Judgment calls:
 - **Launch arguments** reach the new screens for screenshots:
   `-mockInvite YES` with `-mockEvent`, and `-mockPush list|listLink`.
 
+### Inviter follow-ups (canopy-events ad4df3d)
+
+- **"Invite everyone from…" is now "Filter by past event"** and ticks
+  nobody: it narrows the sheet to that event's hosts and going and maybe
+  guests, A to Z under "From Beach bonfire", hiding lists and Suggested;
+  typing searches within it. It's a menu-style `Picker` in its own row
+  at the top of the list, right under the search field (above "Found";
+  the web puts it below the lookup line). Off, it reads "Filter by past
+  event … Everyone": "Everyone" is the first choice and clears it (the
+  web's `<select>` shows "Filter by past event" as its first option
+  until one is picked).
+- **"Showing 4 from Beach bonfire." is only read out** (an
+  accessibility announcement, as the web's is a live region); "No one
+  else from …" and "… guest list isn't shown to you." are lines in the
+  list. The count is everyone from that event, those already on this
+  one (greyed) included, as on the web. The menu shows the choice at
+  once and the list narrows when its people are in; if that fails, the
+  menu goes back. Each event's people are fetched once per sheet.
+- **A friend link is `person.2` inside the line's text** (an interpolated
+  `Image` in `Text`, so it takes the line's size and secondary color and
+  wraps with it), read as "Friend link". The line joins with ", ", no
+  interpunct. Only the invite sheet shows a friend's line in the app:
+  the friends screens aren't built and the co-host picker shows names
+  only, so nothing else changed. `PersonRow` takes `isFriendLink` for
+  when they are.

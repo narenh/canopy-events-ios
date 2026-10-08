@@ -3,8 +3,8 @@ import Observation
 
 /// Loads what the invite sheet offers (friends with suggestions, your
 /// lists and who's on them, your past events, and everyone on this event
-/// already), looks people up by phone or @username, picks a past event's
-/// people, and sends. The picking itself is `picker`.
+/// already), looks people up by phone or @username, narrows the list to a
+/// past event's people, and sends. The picking itself is `picker`.
 @Observable
 final class InviteModel {
     let event: Event
@@ -15,11 +15,14 @@ final class InviteModel {
     private(set) var isSending = false
     /// The lookup for what's typed now, if it's a number or @username.
     private(set) var lookup: InviteLookup?
-    /// A line after "Invite everyone from…" ("Picked 5 from Beach bonfire.").
-    private(set) var notice: String?
+    /// "Filter by past event"'s choice (nil: everyone), set at once; the
+    /// list narrows (`picker.from`) when its people have loaded.
+    private(set) var fromId: Event.ID?
     var errorMessage: String?
     /// Each text is looked up once.
     private var lookups: [String: InviteLookup.State] = [:]
+    /// Each past event's people are fetched once.
+    private var pastPeople: [Event.ID: InvitePicker.PastFilter] = [:]
 
     init(event: Event, me: Person.ID?) {
         self.event = event
@@ -33,10 +36,10 @@ final class InviteModel {
             async let lists = repository.lists()
             async let past = repository.allEvents(.past)
             async let onEvent = statuses(from: repository)
-            // Friends first, so their line ("Invitation · 3 events together") wins.
+            // Friends first, so their line ("Invitation, 3 events together") wins.
             let suggestions = (try? await suggested) ?? []
             for friend in suggestions.map(\.friend) + (try await friends) {
-                picker.add(friend.person, detail: InvitePicker.detail(for: friend))
+                picker.add(friend.person, detail: InvitePicker.detail(for: friend), isFriendLink: friend.source == .link)
             }
             picker.suggestedIds = suggestions.map(\.id)
             var pickLists: [InvitePicker.PickList] = []
@@ -94,30 +97,48 @@ final class InviteModel {
         if picker.query.trimmingCharacters(in: .whitespaces) == typed { lookup = InviteLookup(query: typed, state: state) }
     }
 
-    // MARK: Picking and sending
+    // MARK: Filtering and sending
 
-    /// "Invite everyone from…": that event's hosts and its going and maybe
-    /// guests you can see, picked; those on this event already are left.
-    func pickEveryone(from past: Event, using repository: any EventsRepository) async {
-        do {
-            async let going = repository.guestList(eventId: past.id, status: .going, page: PageRequest(limit: 100))
-            async let maybe = repository.guestList(eventId: past.id, status: .maybe, page: PageRequest(limit: 100))
-            let (goingList, maybeList) = try await (going, maybe)
-            let people = past.hosts.map(\.person) + (goingList.guests + maybeList.guests).map(\.person)
-            for person in people { picker.add(person, detail: InvitePicker.detail(fromEvent: past.title)) }
-            var ids: [Person.ID] = []
-            for person in people where picker.isPickable(person.id) && !ids.contains(person.id) { ids.append(person.id) }
-            picker.setPicked(ids, true)
-            notice = if !goingList.guestsVisible {
-                "\(past.title)'s guest list isn't shown to you."
-            } else if ids.isEmpty {
-                "Everyone from \(past.title) is on this event already."
-            } else {
-                ids.count == 1 ? "Picked 1 from \(past.title)." : "Picked \(ids.count) from \(past.title)."
-            }
-        } catch {
-            errorMessage = error.localizedDescription
+    /// "Filter by past event": narrows the list to that event's hosts and
+    /// its going and maybe guests you can see, ticking nobody; nil goes
+    /// back to everyone. Returns the words to read out ("Showing 4 from
+    /// Beach bonfire."), or nil.
+    func filter(by eventId: Event.ID?, using repository: any EventsRepository) async -> String? {
+        fromId = eventId
+        guard let eventId, let past = pastEvents.first(where: { $0.id == eventId }) else {
+            picker.from = nil
+            return nil
         }
+        do {
+            let from: InvitePicker.PastFilter
+            if let known = pastPeople[eventId] {
+                from = known
+            } else {
+                from = try await people(of: past, from: repository)
+                pastPeople[eventId] = from
+            }
+            guard fromId == eventId else { return nil }
+            picker.from = from
+            return InvitePicker.showing(from)
+        } catch {
+            if fromId == eventId { fromId = picker.from?.eventId }
+            errorMessage = error.localizedDescription
+            return nil
+        }
+    }
+
+    private func people(of past: Event, from repository: any EventsRepository) async throws -> InvitePicker.PastFilter {
+        async let going = repository.guestList(eventId: past.id, status: .going, page: PageRequest(limit: 100))
+        async let maybe = repository.guestList(eventId: past.id, status: .maybe, page: PageRequest(limit: 100))
+        let (goingList, maybeList) = try await (going, maybe)
+        // Its hosts too: not on its guest list, but they were there.
+        let people = past.hosts.map(\.person) + (goingList.guests + maybeList.guests).map(\.person)
+        var ids: [Person.ID] = []
+        for person in people where person.id != picker.me && !ids.contains(person.id) {
+            picker.add(person, detail: InvitePicker.detail(fromEvent: past.title))
+            ids.append(person.id)
+        }
+        return InvitePicker.PastFilter(eventId: past.id, title: past.title, ids: ids, isHidden: !goingList.guestsVisible)
     }
 
     /// Sends the picked, 100 at a time (what the API takes). Returns how

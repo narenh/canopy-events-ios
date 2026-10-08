@@ -1,11 +1,12 @@
 import SwiftUI
 
 /// A host's "Invite" (the web's invite sheet): one search field (names,
-/// and a whole phone number or @username to look someone up), then your
-/// lists with "Invite all <n>", "Invite everyone from…" a past event,
-/// Suggested (the first eight not on the event), and everyone else A to
-/// Z. People on the event stay in the list, greyed, with their status.
-/// The picked gather in a tray at the foot, beside "Invite 7".
+/// and a whole phone number or @username to look someone up), "Filter by
+/// past event" under it, then your lists with "Invite all <n>", Suggested
+/// (the first eight not on the event), and everyone else A to Z. Filtered,
+/// it's just that event's people, and typing searches within them. People
+/// on the event stay in the list, greyed, with their status. The picked
+/// gather in a tray at the foot, beside "Invite 7".
 struct InviteSheet: View {
     let event: Event
     /// Called with how many were invited, after the sheet closes.
@@ -52,12 +53,27 @@ struct InviteSheet: View {
 
     @ViewBuilder private var content: some View {
         let picker = model.picker
-        let order = picker.order
+        if !model.pastEvents.isEmpty {
+            Section {
+                InviteFromPastMenu(events: model.pastEvents, selection: fromSelection)
+            }
+            .glassRowBackground()
+        }
         if let lookup = model.lookup, lookup.query == picker.query.trimmingCharacters(in: .whitespaces) {
             Section("Found") { found(lookup.state) }
                 .glassRowBackground()
         }
-        if !picker.isSearching {
+        if let from = picker.from, from.isHidden {
+            quiet(InvitePicker.hidden(from.title))
+        } else {
+            people
+        }
+    }
+
+    @ViewBuilder private var people: some View {
+        let picker = model.picker
+        let order = picker.order
+        if !picker.isSearching, picker.from == nil {
             let lists = picker.lists.filter { !$0.memberIds.isEmpty }
             if !lists.isEmpty {
                 Section("Your lists") {
@@ -68,34 +84,39 @@ struct InviteSheet: View {
                 }
                 .glassRowBackground()
             }
-            if !model.pastEvents.isEmpty {
-                Section {
-                    InviteFromPastMenu(events: model.pastEvents) { past in
-                        Task { await model.pickEveryone(from: past, using: repository) }
-                    }
-                    if let notice = model.notice {
-                        Text(notice)
-                            .font(.subheadline)
-                            .foregroundStyle(Palette.link)
-                    }
-                }
-                .glassRowBackground()
-            }
             if !order.suggested.isEmpty {
                 Section("Suggested") { rows(order.suggested) }
                     .glassRowBackground()
             }
         }
         if !order.everyone.isEmpty {
-            Section(picker.isSearching ? "Matches" : order.suggested.isEmpty ? "Everyone" : "Everyone else") {
-                rows(order.everyone)
-            }
-            .glassRowBackground()
+            Section(heading(suggested: !order.suggested.isEmpty)) { rows(order.everyone) }
+                .glassRowBackground()
         } else if model.hasLoaded, picker.isSearching, LookupKind(picker.query) == nil {
             quiet("No one by that name. Type a whole phone number or @username to find someone.")
+        } else if let from = picker.from, !picker.isSearching {
+            quiet(InvitePicker.empty(from.title))
         } else if model.hasLoaded, !picker.isSearching, order.suggested.isEmpty {
             quiet("No friends here yet. Type a phone number or @username to find someone, or share the link.")
         }
+    }
+
+    private func heading(suggested: Bool) -> String {
+        if model.picker.isSearching { return "Matches" }
+        if let from = model.picker.from { return "From \(from.title)" }
+        return suggested ? "Everyone else" : "Everyone"
+    }
+
+    /// The menu shows the choice at once; the list narrows once that
+    /// event's people are in, and VoiceOver hears how many.
+    private var fromSelection: Binding<Event.ID?> {
+        Binding(get: { model.fromId }, set: { id in
+            Task {
+                if let words = await model.filter(by: id, using: repository) {
+                    AccessibilityNotification.Announcement(words).post()
+                }
+            }
+        })
     }
 
     private func rows(_ ids: [Person.ID]) -> some View {

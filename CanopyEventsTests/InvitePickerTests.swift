@@ -3,7 +3,8 @@ import Testing
 @testable import CanopyEvents
 
 /// The invite sheet's picking and order (`InvitePicker`), the web's
-/// `inviteOrder`, `listPickable` and "Invite all <n>".
+/// `inviteOrder`, `listPickable`, "Invite all <n>" and "Filter by past
+/// event".
 struct InvitePickerTests {
     private let p = MockPeople.self
 
@@ -83,10 +84,64 @@ struct InvitePickerTests {
         #expect(LookupKind(text) == nil)
     }
 
+    @Test func aPastEventNarrowsTheListToItsPeopleAToZAndTicksNobody() {
+        var picker = picker()
+        picker.suggestedIds = [p.ana.id, p.gus.id]
+        picker.from = .init(eventId: "E", title: "Beach bonfire", ids: [p.theo.id, p.ben.id, p.ana.id, p.hana.id], isHidden: false)
+        // No Suggested; Ben's on this event, so he's there greyed.
+        #expect(picker.order.suggested.isEmpty && picker.order.everyone == [p.ana.id, p.ben.id, p.hana.id, p.theo.id])
+        #expect(picker.selected.isEmpty)
+        // Typing searches within it.
+        picker.query = "na"
+        #expect(picker.order.everyone == [p.ana.id, p.hana.id])
+        picker.query = ""
+        picker.from = nil
+        #expect(picker.order.suggested == [p.ana.id, p.gus.id] && picker.order.everyone.count == 10)
+    }
+
+    @Test func aHiddenGuestListShowsNobody() {
+        var picker = picker()
+        picker.from = .init(eventId: "E", title: "Beach bonfire", ids: [p.ana.id], isHidden: true)
+        #expect(picker.order.suggested.isEmpty && picker.order.everyone.isEmpty)
+    }
+
+    @Test func thePastEventsWords() {
+        func from(_ ids: [Person.ID], hidden: Bool = false) -> InvitePicker.PastFilter {
+            .init(eventId: "E", title: "Beach bonfire", ids: ids, isHidden: hidden)
+        }
+        #expect(InvitePicker.showing(from([p.ana.id, p.ben.id, p.gus.id, p.hana.id])) == "Showing 4 from Beach bonfire.")
+        #expect(InvitePicker.showing(from([p.ana.id])) == "Showing 1 from Beach bonfire.")
+        #expect(InvitePicker.showing(from([])) == "No one else from Beach bonfire.")
+        #expect(InvitePicker.showing(from([p.ana.id], hidden: true)) == "Beach bonfire's guest list isn't shown to you.")
+    }
+
     @Test func detailsUseTheWebsWords() {
         let friend = Friend(person: p.ana, source: .invite, eventsInCommon: 3, lastTogetherAt: nil)
-        #expect(InvitePicker.detail(for: friend) == "Invitation · 3 events together")
+        #expect(InvitePicker.detail(for: friend) == "Invitation, 3 events together")
         #expect(InvitePicker.detail(for: Friend(person: p.ana, source: .sharedEvents, eventsInCommon: 1, lastTogetherAt: nil)) == "1 event together")
+        // A friend link is an icon, not words.
+        #expect(InvitePicker.detail(for: Friend(person: p.ana, source: .link, eventsInCommon: 2, lastTogetherAt: nil)) == "2 events together")
+        #expect(InvitePicker.detail(for: Friend(person: p.ana, source: .link, eventsInCommon: 0, lastTogetherAt: nil)).isEmpty)
         #expect(InvitePicker.invitedNotice(7) == "Invited 7 people." && InvitePicker.invitedNotice(1) == "Invited 1 person.")
+    }
+
+    @MainActor @Test func filteringByAPastEventLoadsItsPeopleAndTicksNobody() async throws {
+        let session = AppSession.mock(delay: .zero)
+        try await session.signInWithPasskey()
+        let repository = session.repository
+        let model = InviteModel(event: try await repository.event(id: MockEvents.gameNightId), me: MockPeople.maya.id)
+        await model.load(from: repository)
+        let bonfire = try await repository.event(id: MockEvents.bonfireId)
+        let going = try await repository.guestList(eventId: bonfire.id, status: .going, page: PageRequest(limit: 100))
+        let maybe = try await repository.guestList(eventId: bonfire.id, status: .maybe, page: PageRequest(limit: 100))
+        let expected = Set(bonfire.hosts.map(\.person.id) + (going.guests + maybe.guests).map(\.person.id)).subtracting([MockPeople.maya.id])
+        #expect(!expected.isEmpty)
+        let words = await model.filter(by: bonfire.id, using: repository)
+        #expect(words == "Showing \(expected.count) from Beach bonfire.")
+        #expect(model.fromId == bonfire.id && Set(model.picker.order.everyone) == expected)
+        #expect(model.picker.selected.isEmpty)
+        // "Everyone" clears it.
+        #expect(await model.filter(by: nil, using: repository) == nil)
+        #expect(model.fromId == nil && model.picker.from == nil)
     }
 }

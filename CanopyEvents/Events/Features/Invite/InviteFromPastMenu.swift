@@ -1,27 +1,21 @@
 import SwiftUI
 
-/// "Invite everyone from…" one of your past events: each by title and
-/// date, most recent first.
+/// "Filter by past event": a menu of your past events, each by title and
+/// date, most recent first, after "Everyone" (no filter). Picking one
+/// narrows the invite sheet to its people; it ticks nobody.
 struct InviteFromPastMenu: View {
     let events: [Event]
-    let onPick: (Event) -> Void
+    /// The event filtered to; nil for everyone.
+    @Binding var selection: Event.ID?
 
     var body: some View {
-        Menu {
+        Picker("Filter by past event", systemImage: "clock.arrow.circlepath", selection: $selection) {
+            Text("Everyone").tag(Event.ID?.none)
             ForEach(events) { event in
-                Button("\(event.title) · \(day(event))") { onPick(event) }
+                Text("\(event.title), \(day(event))").tag(Event.ID?.some(event.id))
             }
-        } label: {
-            HStack {
-                Label("Invite everyone from…", systemImage: "clock.arrow.circlepath")
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.footnote)
-                    .foregroundStyle(Palette.muted)
-                    .accessibilityHidden(true)
-            }
-            .contentShape(.rect)
         }
+        .pickerStyle(.menu)
     }
 
     private func day(_ event: Event) -> String {
@@ -32,8 +26,10 @@ struct InviteFromPastMenu: View {
 }
 
 #Preview {
+    @Previewable @State var selection: Event.ID?
     List {
-        InviteFromPastMenu(events: [PreviewData.event(MockEvents.bonfireId), PreviewData.event(MockEvents.snatchGameId)]) { _ in }
+        InviteFromPastMenu(events: [PreviewData.event(MockEvents.bonfireId), PreviewData.event(MockEvents.snatchGameId)],
+                           selection: $selection)
     }
     .canopyScreen()
 }

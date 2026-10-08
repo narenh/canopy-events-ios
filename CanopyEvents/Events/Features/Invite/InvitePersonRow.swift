@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Someone in the invite sheet: their face, name and how you know them,
-/// and a tick. Already on the event, they're greyed with their status
+/// Someone in the invite sheet: their face, name and how you know them
+/// (a friend link is an icon, read as "Friend link"), and a tick. Already on the event, they're greyed with their status
 /// badge (the fixed status colors) and can't be ticked.
 struct InvitePersonRow: View {
     let candidate: InvitePicker.Candidate
@@ -13,7 +13,8 @@ struct InvitePersonRow: View {
 
     var body: some View {
         Button(action: onToggle) {
-            PersonRow(person: person, detail: candidate.detail.isEmpty ? nil : candidate.detail) {
+            PersonRow(person: person, detail: candidate.detail.isEmpty ? nil : candidate.detail,
+                      isFriendLink: candidate.isFriendLink) {
                 if let status {
                     StatusBadge(kind: badge(status))
                 } else {
@@ -28,7 +29,8 @@ struct InvitePersonRow: View {
         .disabled(status != nil)
         .opacity(status == nil ? 1 : 0.55)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel([person.fullName, candidate.detail].filter { !$0.isEmpty }.joined(separator: ", "))
+        .accessibilityLabel([person.fullName, candidate.isFriendLink ? "Friend link" : "", candidate.detail]
+            .filter { !$0.isEmpty }.joined(separator: ", "))
         .accessibilityValue(status.map(words) ?? (isPicked ? "Picked" : ""))
         .accessibilityAddTraits(status == nil ? [.isButton] : [])
         .accessibilityAddTraits(isPicked ? .isSelected : [])
@@ -53,7 +55,8 @@ struct InvitePersonRow: View {
 
 #Preview {
     List {
-        InvitePersonRow(candidate: .init(person: MockPeople.ana, detail: "Invitation · 3 events together"), status: nil, isPicked: true) {}
+        InvitePersonRow(candidate: .init(person: MockPeople.ana, detail: "Invitation, 3 events together"), status: nil, isPicked: true) {}
+        InvitePersonRow(candidate: .init(person: MockPeople.ines, detail: "2 events together", isFriendLink: true), status: nil, isPicked: false) {}
         InvitePersonRow(candidate: .init(person: MockPeople.theo, detail: "On Drag Race"), status: nil, isPicked: false) {}
         InvitePersonRow(candidate: .init(person: MockPeople.ben, detail: "4 events together"), status: .rsvp(.going), isPicked: false) {}
         InvitePersonRow(candidate: .init(person: MockPeople.chloe, detail: ""), status: .hosting, isPicked: false) {}
