@@ -1,9 +1,11 @@
 import SwiftUI
 
 /// How soon an event is, as a pill on its cover: "NEXT FRIDAY",
-/// "HAPPENING NOW" in the accent; "ENDED" plain; "CANCELLED" in danger.
+/// "HAPPENING NOW" in the event's accent; "ENDED" plain; "CANCELLED" in danger.
 struct RelativePill: View {
     let event: Event
+
+    @Environment(\.eventAccent) private var accent
 
     var body: some View {
         if event.isCancelled {
@@ -12,7 +14,7 @@ struct RelativePill: View {
             if EventPhase(event: event) == .over {
                 pill(words, foreground: .white, background: Color.white.opacity(0.14), border: Color.white.opacity(0.55))
             } else {
-                pill(words, foreground: Palette.onAccent, background: .accentColor, border: .clear)
+                pill(words, foreground: accent.onAccent, background: accent.accent, border: .clear)
             }
         }
     }

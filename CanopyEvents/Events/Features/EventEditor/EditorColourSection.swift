@@ -5,6 +5,8 @@ import SwiftUI
 struct EditorColourSection: View {
     @Bindable var model: EventEditorModel
 
+    @Environment(\.eventAccent) private var accent
+
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.small) {
             HStack {
@@ -17,6 +19,7 @@ struct EditorColourSection: View {
             ThemeSlider(theme: $model.draft.theme)
             if let match = model.coverMatch {
                 Button("Match photo", systemImage: "photo") { model.matchPhoto() }
+                    .foregroundStyle(accent.text)
                     .glassButtonStyle()
                     .disabled(match == model.draft.theme)
             }

@@ -23,12 +23,14 @@ extension View {
         #endif
     }
 
-    /// A secondary action: clear glass.
+    /// A secondary action: clear glass, with white words (an explicit
+    /// `.tint()`, like an event's accent, would otherwise colour them; a
+    /// `foregroundStyle` on the label still wins).
     func glassButtonStyle() -> some View {
         #if os(visionOS)
-        buttonStyle(.bordered)
+        buttonStyle(.bordered).foregroundStyle(.white)
         #else
-        buttonStyle(.glass)
+        buttonStyle(.glass).foregroundStyle(.white)
         #endif
     }
 }

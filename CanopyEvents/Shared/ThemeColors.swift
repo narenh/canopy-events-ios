@@ -17,12 +17,19 @@ nonisolated struct ThemeColors: Hashable, Sendable {
     var glow5: RGB
     /// The glass tint, drawn at 30% opacity.
     var card: RGB
+    /// The accent (Canopy green's #2ec44f turned to the theme), the text
+    /// and icons on it (#03190a), and links and accent text (#b6f5c3):
+    /// the web's `--accent`, `--on-accent` and `--accent-text`.
+    var accent: RGB
+    var onAccent: RGB
+    var accentText: RGB
 
     /// Canopy green, the default: today's hex values exactly.
     static let canopyGreen = ThemeColors(
         base: RGB(hex: "#03120c"), glow1: RGB(hex: "#0f4a33"), glow2: RGB(hex: "#0a3b2e"),
         glow3: RGB(hex: "#145c3e"), glow4: RGB(hex: "#072b1f"), glow5: RGB(hex: "#0c3a28"),
-        card: RGB(hex: "#03200b")
+        card: RGB(hex: "#03200b"),
+        accent: RGB(hex: "#2ec44f"), onAccent: RGB(hex: "#03190a"), accentText: RGB(hex: "#b6f5c3")
     )
 
     /// (L, C, hue offset) for each colour, from docs/api.md's table.
@@ -31,7 +38,8 @@ nonisolated struct ThemeColors: Hashable, Sendable {
         (0.2597, 0.0466, 5.8), (0.3122, 0.0590, 1.9), (0.2150, 0.0537, -11.2),
     ]
 
-    init(base: RGB, glow1: RGB, glow2: RGB, glow3: RGB, glow4: RGB, glow5: RGB, card: RGB) {
+    init(base: RGB, glow1: RGB, glow2: RGB, glow3: RGB, glow4: RGB, glow5: RGB, card: RGB,
+         accent: RGB, onAccent: RGB, accentText: RGB) {
         self.base = base
         self.glow1 = glow1
         self.glow2 = glow2
@@ -39,6 +47,9 @@ nonisolated struct ThemeColors: Hashable, Sendable {
         self.glow4 = glow4
         self.glow5 = glow5
         self.card = card
+        self.accent = accent
+        self.onAccent = onAccent
+        self.accentText = accentText
     }
 
     init(_ theme: EventTheme) {
@@ -47,7 +58,10 @@ nonisolated struct ThemeColors: Hashable, Sendable {
             return
         }
         let c = Self.mesh.map { L, C, offset in Self.themed(L: L, C: C, hue: Double(theme.hueValue) + offset, theme) }
-        self.init(base: c[0], glow1: c[1], glow2: c[2], glow3: c[3], glow4: c[4], glow5: c[5], card: c[6])
+        let green = Self.canopyGreen
+        self.init(base: c[0], glow1: c[1], glow2: c[2], glow3: c[3], glow4: c[4], glow5: c[5], card: c[6],
+                  accent: Self.turn(green.accent, to: theme), onAccent: Self.turn(green.onAccent, to: theme),
+                  accentText: Self.turn(green.accentText, to: theme))
     }
 
     /// Any Canopy-green colour turned to a theme the same way: its offset

@@ -27,7 +27,6 @@ struct EventEditorGuestsSection: View {
                 }
             }
         }
-        .tint(.accentColor)
         .glassCard()
     }
 

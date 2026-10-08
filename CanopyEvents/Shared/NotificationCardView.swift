@@ -48,7 +48,7 @@ struct NotificationCardView: View {
             .padding(.bottom, Spacing.large)
         }
         .background(colors.base.color)
-        .tint(Palette.accent)
+        .eventAccent(card.theme)
         .environment(\.colorScheme, .dark)
     }
 

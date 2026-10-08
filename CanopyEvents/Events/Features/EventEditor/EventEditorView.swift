@@ -61,6 +61,7 @@ struct EventEditorView: View {
             }
             .disabled(model.isSaving)
             .errorAlert($model.errorMessage)
+            .eventAccent(model.draft.theme)
             .canopyScreen(theme: model.draft.theme)
         }
     }

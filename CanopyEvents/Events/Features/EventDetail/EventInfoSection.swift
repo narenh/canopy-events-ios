@@ -7,6 +7,8 @@ import SwiftUI
 struct EventInfoSection: View {
     let event: Event
 
+    @Environment(\.eventAccent) private var accent
+
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.large) {
             if event.locationName != nil || event.locationAddress != nil || event.locationAddressHidden {
@@ -18,7 +20,7 @@ struct EventInfoSection: View {
             if let spots {
                 Text(spots)
                     .font(.subheadline.weight(.bold))
-                    .foregroundStyle(event.isFull ? .white : Palette.link)
+                    .foregroundStyle(event.isFull ? .white : accent.text)
             }
             if let description = event.description, !description.isEmpty {
                 Divider().overlay(.white.opacity(0.22))
@@ -33,7 +35,7 @@ struct EventInfoSection: View {
     private var place: some View {
         HStack(alignment: .firstTextBaseline, spacing: Spacing.medium) {
             Image(systemName: "mappin.and.ellipse")
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyle(accent.accent)
             VStack(alignment: .leading, spacing: Spacing.xSmall) {
                 if let name = event.locationName {
                     Text(name).fontWeight(.semibold)
@@ -45,7 +47,7 @@ struct EventInfoSection: View {
                     if let maps = URL(string: "https://maps.apple.com/?q=" + (address.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")) {
                         Link("Open in Maps", destination: maps)
                             .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Palette.link)
+                            .foregroundStyle(accent.text)
                     }
                 } else if event.locationAddressHidden {
                     Text("Sign in to see the address")

@@ -9,6 +9,7 @@ import SwiftUI
 struct EditorWhenView: View {
     @Bindable var model: EventEditorModel
 
+    @Environment(\.eventAccent) private var accent
     @State private var editing: Piece?
     @State private var searchingZones = false
 
@@ -36,7 +37,7 @@ struct EditorWhenView: View {
                         editing = .end
                     }
                     .font(.body.weight(.semibold))
-                    .foregroundStyle(Palette.link)
+                    .foregroundStyle(accent.text)
                 }
             }
             zoneLine.padding(.top, Spacing.xSmall)
@@ -70,7 +71,7 @@ struct EditorWhenView: View {
             } label: {
                 Text("Change").font(.subheadline.weight(.semibold))
             }
-            .foregroundStyle(Palette.link)
+            .foregroundStyle(accent.text)
             .accessibilityLabel("Change time zone")
         }
     }
