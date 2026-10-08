@@ -20,6 +20,9 @@ enum Palette {
     static let muted = Color(red: 0xE2 / 255, green: 0xEC / 255, blue: 0xE4 / 255)
     /// Text and icons placed on the accent, #03190A.
     static let onAccent = Color(red: 0x03 / 255, green: 0x19 / 255, blue: 0x0A / 255)
+    /// The accent, #2EC44F, for where the asset catalog's `AccentColor`
+    /// isn't there (the notification extension).
+    static let accent = Color(red: 0x2E / 255, green: 0xC4 / 255, blue: 0x4F / 255)
     /// Errors and destructive hints, #FFD2CA.
     static let danger = Color(red: 0xFF / 255, green: 0xD2 / 255, blue: 0xCA / 255)
 }

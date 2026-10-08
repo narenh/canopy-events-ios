@@ -14,9 +14,11 @@ nonisolated enum CoverSize {
         in images: [CoverImage], fallback: URL?,
         frameWidth: CGFloat, frameAspect: CGFloat = 3 / 2, scale: CGFloat
     ) -> URL? {
-        guard let first = images.first else { return fallback }
-        let photoAspect = CGFloat(first.width) / CGFloat(max(first.height, 1))
+        // The photo's shape from its biggest size, the least rounded.
+        guard let biggest = images.last else { return fallback }
+        let photoAspect = CGFloat(biggest.width) / CGFloat(max(biggest.height, 1))
         let needed = frameWidth * scale * max(1, photoAspect / frameAspect)
-        return (images.first { CGFloat($0.width) >= needed } ?? images.last)?.url
+        // A pixel of slack: heights are whole pixels (800 × 533 is "3:2").
+        return (images.first { CGFloat($0.width) + 1 >= needed } ?? images.last)?.url
     }
 }

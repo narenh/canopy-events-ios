@@ -30,6 +30,9 @@ enum LaunchOptions {
     /// `YES` sends the test notification (Adam Smith's invite) 5 seconds
     /// after signing in, once notifications are allowed.
     static var sendsTestNotification: Bool { value(for: "mockTestNotification") == "YES" }
+    /// `YES` shows the expanded notification's card (Profile's Debug
+    /// section has it too).
+    static var showsNotificationCard: Bool { value(for: "mockCard") == "YES" }
     /// `YES` opens the new-event editor on launch.
     static var opensNewEvent: Bool { value(for: "mockNewEvent") == "YES" }
 

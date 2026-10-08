@@ -40,6 +40,16 @@ final class NotificationResponder: NSObject, UNUserNotificationCenterDelegate {
         await respond(to: action, payload: payload)
     }
 
+    /// Sends the answers given on expanded notifications (the extension
+    /// queues them in the App Group). Call when the app becomes active.
+    func applyQueuedAnswers() async {
+        for queued in AnswerQueue.takeAll() {
+            guard let action = NotificationAction(rawValue: queued.action) else { continue }
+            await answer(action, NotificationPayload(type: .invited, eventId: queued.eventId,
+                                                     notificationId: queued.notificationId))
+        }
+    }
+
     // MARK: Responding
 
     func respond(to actionIdentifier: String, payload: NotificationPayload) async {
