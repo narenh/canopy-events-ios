@@ -7,6 +7,7 @@ import SwiftUI
 /// here, and every pushed screen in `RouteView`).
 struct MainTabView: View {
     @Environment(AppSession.self) private var session
+    @Environment(NotificationResponder.self) private var notifications
     @State private var selection = LaunchOptions.startTab ?? .events
     @State private var eventsPath: [Route] = LaunchOptions.startPath
     @State private var invitesPath: [Route] = []
@@ -55,6 +56,17 @@ struct MainTabView: View {
             }
         }
         .animation(.default, value: session.isHost)
+        // Signed in: now's the moment to ask about notifications.
+        .task {
+            if await NotificationPermission.requestIfUndetermined(), LaunchOptions.sendsTestNotification {
+                try? await LocalNotifications.schedule(MockNotifications.karlInvite)
+            }
+        }
+        .onChange(of: notifications.opening) { _, opening in
+            guard let opening else { return }
+            show(opening)
+            notifications.opening = nil
+        }
         .sheet(isPresented: $isCreatingEvent) {
             EventEditorView(event: nil) { created in
                 Task { await didCreate(created) }
@@ -93,6 +105,15 @@ struct MainTabView: View {
             showsVerifyFirst = true
         } else {
             isCreatingEvent = true
+        }
+    }
+
+    /// A tapped notification's event, on its tab.
+    private func show(_ opening: OpenedEvent) {
+        selection = opening.tab
+        switch opening.tab {
+        case .invites: invitesPath = [.event(opening.eventId)]
+        default: eventsPath = [.event(opening.eventId)]
         }
     }
 

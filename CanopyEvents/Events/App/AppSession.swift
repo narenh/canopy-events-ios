@@ -15,6 +15,10 @@ final class AppSession {
     /// The signed-in person's repository.
     private(set) var repository: any EventsRepository
     private var token: AuthToken?
+    /// Goes up when the data changed behind the screens' backs (an answer
+    /// from a notification, the app coming back): lists reload on it with
+    /// `.task(id: session.dataVersion)`.
+    private(set) var dataVersion = 0
 
     @ObservationIgnored private let accounts: any AccountService
     @ObservationIgnored private let makeRepository: (AuthToken) -> any EventsRepository
@@ -78,6 +82,11 @@ final class AppSession {
         if let token { await accounts.signOut(token) }
         account = nil
         token = nil
+    }
+
+    /// Tells the screens to reload.
+    func dataChanged() {
+        dataVersion += 1
     }
 
     /// Reloads you, e.g. after creating your first event (which makes you a host).

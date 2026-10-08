@@ -4,6 +4,7 @@ import SwiftUI
 /// gives the signed-in screens their repository.
 struct RootView: View {
     @Environment(AppSession.self) private var session
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         Group {
@@ -16,6 +17,11 @@ struct RootView: View {
         }
         .preferredColorScheme(.dark)
         .task { await signInFromLaunchOptions() }
+        // Back from the background: things may have changed meanwhile
+        // (an invite answered from a notification).
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active && session.isSignedIn { session.dataChanged() }
+        }
     }
 
     /// Debug builds can skip the sign-in screen (see `LaunchOptions`).
@@ -30,8 +36,10 @@ struct RootView: View {
 }
 
 #Preview("Signed out") {
+    let session = AppSession.mock()
     RootView()
-        .environment(AppSession.mock())
+        .environment(session)
+        .environment(NotificationResponder(session: session))
 }
 
 #Preview("Signed in") {

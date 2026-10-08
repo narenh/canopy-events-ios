@@ -41,6 +41,11 @@ struct ProfileForm: View {
             }
             .glassRowBackground()
 
+            #if DEBUG
+            ProfileDebugSection()
+                .glassRowBackground()
+            #endif
+
             Section {
                 Button("Sign out", role: .destructive) {
                     Task { await session.signOut() }

@@ -26,6 +26,11 @@ enum MockNotifications {
         }
     }
 
+    /// Karl Marx inviting you to Marxism 101: the test notification.
+    static var karlInvite: InboxNotification {
+        item("test-karl", .invited, MockEvents.marxismId, MockPeople.karl, minutesAgo: 0)
+    }
+
     private static func item(
         _ id: String, _ type: NotificationType, _ eventId: Event.ID, _ actor: Person?,
         details: NotificationDetails? = nil, count: Int = 1, minutesAgo: Int, read: Bool = false

@@ -7,6 +7,7 @@ struct PastEventsView: View {
     let showsHosted: Bool
 
     @Environment(\.eventsRepository) private var repository
+    @Environment(AppSession.self) private var session
     @State private var model = EventListModel(.past)
 
     private var events: [Event] {
@@ -29,7 +30,7 @@ struct PastEventsView: View {
             }
         }
         .navigationTitle(showsHosted ? "Past hosted" : "Past events")
-        .task { await model.load(from: repository) }
+        .task(id: session.dataVersion) { await model.load(from: repository) }
         .errorAlert($model.errorMessage)
         .canopyScreen()
     }

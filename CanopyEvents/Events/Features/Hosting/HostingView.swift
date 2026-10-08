@@ -4,6 +4,7 @@ import SwiftUI
 /// over, cancelled ones included, soonest first. "Past" is a pushed list.
 struct HostingView: View {
     @Environment(\.eventsRepository) private var repository
+    @Environment(AppSession.self) private var session
     @State private var model = EventListModel(.hosting)
 
     var body: some View {
@@ -24,7 +25,7 @@ struct HostingView: View {
             }
         }
         .navigationTitle("Hosting")
-        .task { await model.load(from: repository) }
+        .task(id: session.dataVersion) { await model.load(from: repository) }
         .refreshable { await model.load(from: repository) }
         .errorAlert($model.errorMessage)
         .canopyScreen()
