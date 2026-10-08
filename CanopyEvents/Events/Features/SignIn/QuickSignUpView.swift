@@ -25,10 +25,7 @@ struct QuickSignUpView: View {
                 TextField("Last name", text: $lastName)
                     .textContentType(.familyName)
                 TextField("Email", text: $email)
-                    .textContentType(.emailAddress)
-                    .keyboardType(.emailAddress)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
+                    .emailField()
             } footer: {
                 Text("Hosts and guests see your name as \(previewName). Your email is never shown to anyone.")
             }

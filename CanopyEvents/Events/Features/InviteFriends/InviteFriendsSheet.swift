@@ -31,7 +31,7 @@ struct InviteFriendsSheet: View {
             }
             .overlay { emptyState }
             .navigationTitle("Invite friends")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close", role: .cancel) { dismiss() }

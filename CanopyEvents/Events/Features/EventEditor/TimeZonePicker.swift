@@ -10,7 +10,11 @@ struct TimeZonePicker: View {
                 Text(id.replacingOccurrences(of: "_", with: " ")).tag(id)
             }
         }
+        #if os(macOS)
+        .pickerStyle(.menu)
+        #else
         .pickerStyle(.navigationLink)
+        #endif
     }
 }
 

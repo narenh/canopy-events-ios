@@ -14,7 +14,7 @@ struct InvitesView: View {
                     Label("Declined", systemImage: "xmark.circle")
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .buttonStyle(.glass)
+                .glassButtonStyle()
 
                 ForEach(model.events) { event in
                     InviteCard(event: event) { status in

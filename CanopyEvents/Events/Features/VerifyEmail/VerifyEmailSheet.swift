@@ -25,7 +25,7 @@ struct VerifyEmailSheet: View {
                 }
             }
             .navigationTitle("Verify your email")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Not now", role: .cancel) { dismiss() }

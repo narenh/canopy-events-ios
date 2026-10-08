@@ -11,10 +11,10 @@ struct HostToolsSection: View {
             SectionHeader(title: event.viewer?.role == .cohost ? "You're co-hosting" : "You're hosting")
             HStack(spacing: Spacing.small) {
                 Button("Invite friends", systemImage: "person.badge.plus", action: onInvite)
-                    .buttonStyle(.glassProminent)
+                    .glassProminentButtonStyle()
                     .disabled(event.isCancelled || event.isOver)
                 Button("Edit", systemImage: "pencil", action: onEdit)
-                    .buttonStyle(.glass)
+                    .glassButtonStyle()
             }
         }
         .glassCard()

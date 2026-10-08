@@ -21,11 +21,11 @@ struct SignInView: View {
                         Label("Sign in with passkey", systemImage: "person.badge.key.fill")
                             .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.glassProminent)
+                    .glassProminentButtonStyle()
                     .controlSize(.large)
 
                     NavigationLink("Sign in with an email code", value: SignInRoute.emailCode)
-                        .buttonStyle(.glass)
+                        .glassButtonStyle()
                         .controlSize(.large)
 
                     NavigationLink("New to Canopy? Quick sign-up", value: SignInRoute.quickSignUp)

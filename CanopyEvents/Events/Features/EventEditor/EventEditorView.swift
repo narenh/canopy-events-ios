@@ -43,7 +43,7 @@ struct EventEditorView: View {
                 }
             }
             .navigationTitle(model.isNew ? "New event" : "Edit event")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationTitle()
             .toolbar { toolbar }
             .disabled(model.isSaving)
             .confirmationDialog("Cancel this event?", isPresented: $confirmsCancel, titleVisibility: .visible) {

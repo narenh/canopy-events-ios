@@ -12,10 +12,10 @@ struct WallComposer: View {
                 .lineLimit(1...4)
                 .padding(.horizontal, Spacing.medium)
                 .padding(.vertical, Spacing.small)
-                .glassEffect(.regular, in: .rect(cornerRadius: Radius.medium))
+                .glassSurface(cornerRadius: Radius.medium)
             Button("Post", systemImage: "arrow.up", action: onPost)
                 .labelStyle(.iconOnly)
-                .buttonStyle(.glassProminent)
+                .glassProminentButtonStyle()
                 .buttonBorderShape(.circle)
                 .disabled(!canPost)
         }

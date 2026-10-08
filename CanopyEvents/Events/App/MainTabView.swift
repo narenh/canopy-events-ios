@@ -11,7 +11,7 @@ struct MainTabView: View {
     @State private var eventsPath: [Route] = LaunchOptions.openEventId.map { [.event($0)] } ?? []
     @State private var invitesPath: [Route] = []
     @State private var hostingPath: [Route] = []
-    @State private var isCreatingEvent = false
+    @State private var isCreatingEvent = LaunchOptions.opensNewEvent
     @State private var showsVerifyFirst = false
 
     var body: some View {

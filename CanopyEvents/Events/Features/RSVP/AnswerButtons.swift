@@ -30,9 +30,9 @@ struct AnswerButtons: View {
                 .frame(maxWidth: .infinity)
         }
         if isCurrent {
-            button.buttonStyle(.glassProminent)
+            button.glassProminentButtonStyle()
         } else {
-            button.buttonStyle(.glass)
+            button.glassButtonStyle()
         }
     }
 }

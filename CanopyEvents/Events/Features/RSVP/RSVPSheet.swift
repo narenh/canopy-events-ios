@@ -41,7 +41,7 @@ struct RSVPSheet: View {
                 }
             }
             .navigationTitle(event.title)
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", role: .cancel) { dismiss() }

@@ -1,4 +1,4 @@
-/// The main tabs, in order. `hosting` and `newEvent` only appear once
+/// The main tabs, in order. Raw values are for `-mockTab` (LaunchOptions). `hosting` and `newEvent` only appear once
 /// you've hosted something (`AppSession.isHost`).
 enum AppTab: String, Hashable, CaseIterable {
     /// What you're going to, maybe at, or waitlisted for.

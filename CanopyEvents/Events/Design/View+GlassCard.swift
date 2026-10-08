@@ -7,6 +7,6 @@ extension View {
         self
             .padding(Spacing.large)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .glassEffect(.regular, in: .rect(cornerRadius: Radius.large))
+            .glassSurface(cornerRadius: Radius.large)
     }
 }

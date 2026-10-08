@@ -23,6 +23,7 @@ struct RootView: View {
         switch LaunchOptions.mockAccount {
         case "maya": try? await session.signIn(with: AuthToken(value: MockPeople.maya.id))
         case "quick": try? await session.signIn(with: AuthToken(value: MockPeople.sam.id))
+        case "new": try? await session.quickSignUp(firstName: "Ada", lastName: "Ng", email: "ada@example.com")
         default: break
         }
     }

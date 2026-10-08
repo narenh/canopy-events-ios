@@ -21,11 +21,11 @@ struct VerifyEmailBanner: View {
             }
             Spacer(minLength: 0)
             Button("Verify") { isVerifying = true }
-                .buttonStyle(.glassProminent)
+                .glassProminentButtonStyle()
                 .controlSize(.small)
         }
         .padding(Spacing.medium)
-        .glassEffect(.regular.tint(Palette.glow.opacity(0.6)), in: .rect(cornerRadius: Radius.medium))
+        .glassSurface(cornerRadius: Radius.medium, tint: Palette.glow.opacity(0.6))
         .padding(.horizontal, Spacing.large)
         .padding(.bottom, Spacing.small)
         .sheet(isPresented: $isVerifying) {

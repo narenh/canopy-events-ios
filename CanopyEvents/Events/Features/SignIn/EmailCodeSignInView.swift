@@ -15,10 +15,7 @@ struct EmailCodeSignInView: View {
         Form {
             Section {
                 TextField("Email", text: $email)
-                    .textContentType(.emailAddress)
-                    .keyboardType(.emailAddress)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
+                    .emailField()
                     .disabled(codeSent)
             } footer: {
                 Text("Mock accounts: maya@example.com (verified), sam@example.com (quick).")

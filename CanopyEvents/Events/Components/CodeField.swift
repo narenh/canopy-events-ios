@@ -7,8 +7,7 @@ struct CodeField: View {
 
     var body: some View {
         TextField("123456", text: $code)
-            .textContentType(.oneTimeCode)
-            .keyboardType(.numberPad)
+            .oneTimeCodeField()
             .font(.title2.monospacedDigit())
             .onChange(of: code) { _, newValue in
                 code = String(newValue.filter(\.isNumber).prefix(6))
