@@ -88,6 +88,21 @@ struct APIDecodingTests {
         #expect(try decode(FriendLinkOwner.self, APISamples.friendLinkOwner).viewer?.isFriend == true)
     }
 
+    @Test func listsAndSuggestions() throws {
+        #expect(try decode(OwnedList.self, APISamples.ownedList).memberCount == 14)
+        #expect(try JSONDecoder.eventsAPI.decode([String: [OwnedList]].self, from: Data(APISamples.ownedLists.utf8))["lists"]?.count == 1)
+        #expect(try decode(ListMembers.self, APISamples.listMembers).members.first?.person.firstName == "Ana")
+        #expect(try decode(ListLinkOwner.self, APISamples.listLink).viewer?.isOwner == false)
+        #expect(try decode(ListLinkOwner.self, APISamples.listLinkSignedOut).viewer == nil)
+        #expect(try decode(ListJoined.self, APISamples.listJoined).invitedTo == 2)
+        #expect(try decode(HostList.self, APISamples.hostList).memberCount == nil)
+        #expect(try decode(JoinableList.self, APISamples.joinableList).name == "Drag Race")
+        let suggested = try JSONDecoder.eventsAPI.decode([String: [SuggestedFriend]].self, from: Data(APISamples.suggested.utf8))
+        #expect(suggested["friends"]?.first?.score == 1.734)
+        // A single event carries them; an event without the keys decodes them as nil.
+        #expect(try decode(Event.self, APISamples.event).hostLists == nil)
+    }
+
     @Test func settingsOptoutsAndDetailErrors() throws {
         #expect(try decode(Settings.self, APISamples.settings).calendarInvites)
         #expect(try decode(InviteOptouts.self, APISamples.optouts).hosts.first?.shortName == "Ben O")
