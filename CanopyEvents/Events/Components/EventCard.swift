@@ -55,13 +55,14 @@ struct EventCard: View {
             .joined(separator: " · ")
     }
 
+    /// Your part in it, in the fixed status colors; a cancelled event
+    /// keeps it and adds "Cancelled".
     @ViewBuilder private var tag: some View {
-        if event.isCancelled {
-            TagLabel(title: "Cancelled", systemImage: "xmark.octagon", tint: Palette.danger)
-        } else if event.viewer?.isHost == true {
-            TagLabel(title: event.viewer?.role == .cohost ? "Co-hosting" : "Hosting", systemImage: "star.fill")
-        } else if let status = event.myStatus {
-            RSVPStatusBadge(status: status)
+        HStack(spacing: Spacing.xSmall) {
+            if let badge = StatusBadge(event: event) { badge }
+            if event.isCancelled {
+                TagLabel(title: "Cancelled", systemImage: "xmark.octagon", tint: Palette.danger)
+            }
         }
     }
 }

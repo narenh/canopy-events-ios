@@ -16,6 +16,7 @@ struct EventDetailView: View {
     @State private var isInviting = false
     @State private var isManagingCohosts = false
     @State private var pendingAction: HostAction?
+    @State private var confirmsLeave = false
     /// Wider than a phone: the page becomes a column and the hero is inset.
     @State private var isWide = false
     @State private var heroWidth: CGFloat = 0
@@ -98,6 +99,13 @@ struct EventDetailView: View {
         } message: { action in
             Text(action.message(for: event))
         }
+        .confirmationDialog(GuestAction.leave.title, isPresented: $confirmsLeave, titleVisibility: .visible) {
+            Button(GuestAction.leave.confirmLabel, role: .destructive) {
+                Task { await model.leave(using: repository) }
+            }
+        } message: {
+            Text(GuestAction.leave.message)
+        }
     }
 
     @ViewBuilder private func sections(for event: Event) -> some View {
@@ -112,13 +120,25 @@ struct EventDetailView: View {
                 event: event,
                 isSaving: model.isSaving,
                 onAnswer: { status in Task { await model.answer(status, using: repository) } },
-                onAnswerWithGuests: { answeringWithGuests = $0 }
+                onAnswerWithGuests: { answeringWithGuests = $0 },
+                menu: guestMenu(for: event)
             )
         }
         if event.myStatus != .removed {
             AttendingSection(event: event, guestList: model.guestList)
             WallPreviewSection(eventId: event.id, entries: model.latestEntries, isVisible: model.wallVisible)
         }
+    }
+
+    /// For a guest on the event (invited or answered, not removed).
+    private func guestMenu(for event: Event) -> GuestMenu? {
+        guard let status = event.myStatus, status != .removed else { return nil }
+        return GuestMenu(
+            event: event, optedOut: model.optedOut,
+            onMute: { muted in Task { await model.setMuted(muted, using: repository) } },
+            onLeave: { confirmsLeave = true },
+            onOptOut: { host, optOut in Task { await model.setOptedOut(optOut, from: host, using: repository) } }
+        )
     }
 
     private var isConfirming: Binding<Bool> {

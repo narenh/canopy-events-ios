@@ -17,6 +17,8 @@ final class EventDetailModel {
     private(set) var isSaving = false
     /// A line for the host after an action ("New link made...").
     private(set) var hostNotice: String?
+    /// Hosts whose invitations you've opted out of (the guest menu).
+    private(set) var optedOut: Set<Person.ID> = []
     var errorMessage: String?
 
     init(eventId: Event.ID) {
@@ -34,6 +36,7 @@ final class EventDetailModel {
             let latest = try await wall
             self.latestEntries = Array(latest.entries.filter(\.isKnown).prefix(2))
             self.wallVisible = latest.wallVisible
+            self.optedOut = Set((try? await repository.inviteOptouts().hosts.map(\.id)) ?? [])
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -78,6 +81,40 @@ final class EventDetailModel {
             errorMessage = error.localizedDescription
         }
         return false
+    }
+
+    // MARK: The guest menu
+
+    func setMuted(_ muted: Bool, using repository: any EventsRepository) async {
+        do {
+            event = muted ? try await repository.muteEvent(id: eventId) : try await repository.unmuteEvent(id: eventId)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Off the event for good; the page shows it as anyone with the link sees it.
+    func leave(using repository: any EventsRepository) async {
+        do {
+            event = try await repository.leaveEvent(id: eventId)
+            await load(from: repository)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func setOptedOut(_ optOut: Bool, from host: Person, using repository: any EventsRepository) async {
+        do {
+            if optOut {
+                try await repository.optOutOfInvites(from: host.id)
+                optedOut.insert(host.id)
+            } else {
+                try await repository.optInToInvites(from: host.id)
+                optedOut.remove(host.id)
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     /// After a change made elsewhere (the co-hosts sheet).

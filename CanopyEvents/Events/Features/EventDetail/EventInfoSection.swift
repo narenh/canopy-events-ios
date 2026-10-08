@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// The rest of the event's top section, under the title and when: where
-/// (with a map link), who's hosting, spots left, and the description.
+/// (with a map link), who's hosting, spots left, the host's extra details,
+/// and the description.
 /// No card and no border: the cover runs edge to edge above it, so the
 /// whole top reads as one piece on the event's background.
 struct EventInfoSection: View {
@@ -21,6 +22,14 @@ struct EventInfoSection: View {
                 Text(spots)
                     .font(.subheadline.weight(.bold))
                     .foregroundStyle(event.isFull ? .white : accent.text)
+            }
+            ForEach(Array(event.shownDetails.enumerated()), id: \.offset) { _, detail in
+                EventDetailRow(detail: detail)
+            }
+            if event.hiddenDetails > 0 {
+                Text("More details show once you sign in.")
+                    .font(.subheadline)
+                    .foregroundStyle(Palette.muted)
             }
             if let description = event.description, !description.isEmpty {
                 Divider().overlay(.white.opacity(0.22))
@@ -47,7 +56,7 @@ struct EventInfoSection: View {
                     if let maps = URL(string: "https://maps.apple.com/?q=" + (address.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")) {
                         Link("Open in Maps", destination: maps)
                             .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(accent.text)
+                            .accentLink(accent)
                     }
                 } else if event.locationAddressHidden {
                     Text("Sign in to see the address")

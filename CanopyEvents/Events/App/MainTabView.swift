@@ -60,7 +60,7 @@ struct MainTabView: View {
         .animation(.default, value: session.isHost)
         // Signed in: now's the moment to ask about notifications.
         .task {
-            guard !LaunchOptions.showsNotificationCard else { return }  // a screenshot of the card, unobstructed
+            guard !LaunchOptions.showsNotificationCard, !LaunchOptions.skipsPermission else { return }  // a screenshot of the card, unobstructed
             if await NotificationPermission.requestIfUndetermined(), LaunchOptions.sendsTestNotification {
                 try? await LocalNotifications.scheduleTestInvite(using: session.repository)
             }

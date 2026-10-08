@@ -73,6 +73,7 @@ struct EventEditorView: View {
                   prompt: Text("Event title").foregroundStyle(.white.opacity(0.55)), axis: .vertical)
             .font(Typography.eventTitle)
             .foregroundStyle(.white)
+            .textContentType(nil)
             .focused($titleFocused)
             .submitLabel(.done)
             .onChange(of: model.draft.title) { _, title in
@@ -90,6 +91,8 @@ struct EventEditorView: View {
             EditorField(label: "Description", text: $model.draft.description,
                         prompt: "What's happening, what to bring, anything people should know", axis: .vertical)
                 .lineLimit(3...12)
+            EditorDetailsSection(model: model)
+                .padding(.top, Spacing.small)
         }
     }
 
@@ -101,7 +104,7 @@ struct EventEditorView: View {
                 .font(Typography.button)
                 .frame(maxWidth: .infinity)
         }
-        .glassProminentButtonStyle()
+        .accentProminentButtonStyle()
         .controlSize(.large)
         .disabled(!model.draft.isValid || model.isSaving)
         .frame(maxWidth: 680)

@@ -58,6 +58,20 @@ nonisolated enum EventDetailType: String, Codable, Hashable, CaseIterable, Senda
         }
     }
 
+    /// The editor's placeholder for the value (the web's).
+    var placeholder: String {
+        switch self {
+        case .link: "Paste a link"
+        case .info: "Anything else people should know"
+        case .dressCode: "What to wear"
+        case .food: "What's on the menu, or what to bring"
+        case .parking: "Where to park"
+        case .accommodation: "Where people can stay"
+        case .phone: "Phone number"
+        case .unknown: ""
+        }
+    }
+
     /// Hidden from someone signed out (or removed), like the address.
     var isPrivate: Bool { self == .parking || self == .accommodation || self == .phone }
 }

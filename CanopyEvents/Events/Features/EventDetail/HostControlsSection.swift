@@ -40,7 +40,7 @@ struct HostControlsSection: View {
                     ShareLink(item: event.url, subject: Text(event.title)) {
                         wide("Share link", systemImage: "square.and.arrow.up")
                     }
-                    .glassProminentButtonStyle()
+                    .accentProminentButtonStyle()
                     Button(action: onInvite) { wide("Invite", systemImage: "person.badge.plus") }
                         .glassButtonStyle()
                 }

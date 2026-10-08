@@ -62,8 +62,9 @@ CanopyEventsTests/  Swift Testing tests, not in a target yet (see Tests)
 ### Tabs, and the host's app
 
 Everyone gets **Events** (going, maybe, waitlisted; "Past events" link at
-the top), **Invites** (unanswered invitations with answer buttons on each
-card; "Declined" link at the top) and **Profile**. There is no Friends or
+the top), **Invites** (unanswered invitations with Going / Can't Go on each card,
+then, under "Declined", the upcoming events you said you can't go to,
+each with just Going) and **Profile**. There is no Friends or
 Inbox tab: friends appear only in the invite picker and "friends going",
 and the inbox has a model and repository method but no screen (push will
 cover it).
@@ -166,11 +167,15 @@ rule, the app ports it and a test pins it to the web's own output.
   Björn Ottosson's maths, chroma fitted into sRGB). `CanopyBackground`
   draws them as a 3×3 `MeshGradient`. Only the event page, its editor
   and the notification card are themed, and there the accent follows the
-  event too (`.eventAccent(theme)`, read as `@Environment(\.eventAccent)`):
-  Canopy green's accent, the text on it and the link color, each turned
-  like the mesh (`ThemeColors.accent`, `onAccent`, `accentText`, the
-  web's `themeStyle` since events 0189355). Lists and every other screen
-  stay Canopy green.
+  event too (`.eventAccent(event.accent)`, read as
+  `@Environment(\.eventAccent)`): `AccentColors`, the web's `accentTrio`
+  line for line (each hue's own accent at its most vivid lightness, kept
+  at 5:1 for the dark text on it), or for a grey event its `accentHue`'s
+  trio or white (links then bold and underlined, `accentLink`). Main
+  buttons take the accent with its own text color
+  (`accentProminentButtonStyle()`). Lists and every other screen stay
+  Canopy green. Status badges (`StatusBadge`) use the fixed status
+  colors everywhere, never the event's.
 - **The hero** (`EventHeroView`): the cover, or the generated art
   (`CoverArt`, the web's `coverArt` number for number), in a 3:2 frame
   edge to edge on a phone. Its top 2:1 is clear, with the how-soon pill
@@ -193,9 +198,13 @@ rule, the app ports it and a test pins it to the web's own output.
   buttons, the title on the band, the when as big as the page's (each
   piece tapped for its picker), the zone by name with a Change menu
   (`TimeZoneChoices`, the web's `nearbyZones`), quiet dashed fields,
-  then the Guests and Color cards and a Save bar. The color slider
-  (`ThemeSlider`) is the web's grey stretch then hue wheel; picking a
-  photo works out its color (`PhotoHue`) and jumps the slider.
+  the host's details (rows with ×, and "+ Link" … "+ Phone" chips,
+  `EditorDetailsSection`), then the Guests and Color cards and a Save
+  bar. The Color slider (`WheelSlider`) is the web's short grey stretch
+  (12 steps) then the hue wheel, with Match photo as a picture icon on
+  its label line; while Color is grey, an Accent slider (white, then the
+  wheel) appears. Picking a photo works out its color (`PhotoHue`) and
+  jumps the slider. No autofill on any editor field.
 - **Lists** (`EventCard`): a 3:2 thumbnail, a bold accent date line
   ("SAT, OCT 10 · 7:30 PM"), the title, the place, a tag.
 - **Type** (`Typography`): the web's scale as Dynamic Type styles, so
@@ -360,6 +369,8 @@ Set in the scheme's "Arguments Passed On Launch", or with
   `MockEvents+Upcoming.swift`, e.g. `4fQ9xKpL2mZa`).
 - `-mockNewEvent YES`: open the new-event editor.
 - `-mockEdit YES` with `-mockEvent <id>`: open that event's editor.
+- `-mockNoPermission YES`: don't ask for notification permission (so
+  the alert doesn't cover a screenshot).
 - `-mockCard YES`: show the expanded notification's card (and don't ask
   for notification permission, so nothing covers it).
 - `-mockTestNotification YES`: send the test notification (Adam Smith
@@ -367,7 +378,7 @@ Set in the scheme's "Arguments Passed On Launch", or with
   notifications are allowed. Profile's "Debug (TestFlight only)" section
   has the same button, in debug builds and TestFlight.
 - `-mockPush guests|wall` with `-mockEvent <id>`: that event's guest list
-  or wall; `-mockPush past|declined`: those lists.
+  or wall; `-mockPush past`: Past events.
 
 ## How the real API will slot in
 
@@ -398,26 +409,35 @@ No screen changes. Keep the mock for previews and tests.
 values), checked by decoding the specs' own examples
 (`CanopyEventsTests/APIDecodingTests`):
 
-- Events API models: `Person`, `Me`, `MeEnvelope` (`hasHosted`), `Event`
-  (`guestsAllowed`, `capacity`, `spotsLeft`, `coverImageUrl`,
-  `coverImages` (`CoverImage`), `themeHue`, `themeGrayscale`, `coverHue`,
-  `coverGrayscale`, `viewer`, `friendsGoing`), `RSVPCounts`/`GuestCounts`
+- Events API models: `Person`, `Me` (no contact details: those are the
+  account service's), `MeEnvelope` (`hasHosted`), `Event`
+  (`details` (`EventDetail`, `EventDetailType`), `hiddenDetails`,
+  `guestsAllowed`, `capacity`, `spotsLeft`, `coverImageUrl`,
+  `coverImages` (`CoverImage`), `themeHue`, `themeGrayscale`,
+  `accentHue`, `coverHue`, `coverGrayscale`, `viewer`, `friendsGoing`), `RSVPCounts`/`GuestCounts`
   (people, `guests`, `total`; `invited` nil for non-hosts), `Host`/`HostRole`, `RSVP` and `Guest` (`guestsOverLimit`),
-  `RSVPStatus` (with `waitlisted` and `removed`), `Viewer` (`canPost`),
-  `FriendsGoing`, `RSVPResult`, `EventList`, `GuestList`, `Friend`,
-  `FriendList`, `WallEntry`/`WallEntryType`/`WallEntryDetails`, `Wall`
+  `RSVPStatus` (with `waitlisted` and `removed`), `Viewer` (`canPost`,
+  `muted`), `FriendsGoing`, `RSVPResult`, `EventList`, `GuestList`,
+  `Friend` (`source`, optional `lastTogetherAt`), `FriendList`,
+  `FriendLink`, `FriendLinkOwner`, `Settings`, `InviteOptouts`,
+  `EventDetailInput`, `WallEntry`/`WallEntryType`/`WallEntryDetails`, `Wall`
   (`wallVisible`, `canPost`), `InboxNotification`/`NotificationType`/
   `NotificationDetails`/`EventChange`, `EventSummary`,
   `NotificationList`, `InviteResult`/`SkippedInvite`/
   `SkippedInviteReason`, `APIError` (with `signIn`, `quickSignUp`,
-  `verify`), and every `reason` both specs list (`APIErrorReason`).
-- Every events endpoint has a repository method: the five event lists
-  (`declined` included), event CRUD and delete, cancel and un-cancel, cover upload
-  and delete, RSVP and withdraw, the guest list (with `?status=`),
-  invite and uninvite, lookup, co-hosts, removal and restore, new link,
-  the wall, the inbox (list, unread count, mark some or all read) and
-  push devices.
-- Account service: `EmailState`, and its `person` decodes as `Me`.
+  `verify`, `index`), and every `reason` both specs list
+  (`APIErrorReason`).
+- Every events endpoint for apps has a repository method: the six event
+  lists (`all` and `declined` included), event CRUD and delete, cancel
+  and un-cancel, cover upload and delete, answering (an answer changes,
+  never goes back: there's no withdrawing), the guest list (with
+  `?status=`), invite and uninvite, lookup (a POST), co-hosts, removal
+  and restore, new link, the guest menu (mute, leave, invite opt-outs),
+  friends (list, add, take out, friend link, reset, owner, accept),
+  settings, the wall, the inbox (list, unread count, mark some or all
+  read) and push devices.
+- Account service: `EmailState`, and its `person` is `AccountProfile`
+  (read with `profile(for:)`; the Profile and the verify sheet use it).
   `AccountService`'s methods map onto its sign-in, quick sign-up,
   verify, profile and sign-out steps.
 
@@ -437,10 +457,13 @@ values), checked by decoding the specs' own examples
   sign-out everywhere. `AuthToken` is just the token: the sign-in
   answers' `person` is dropped, since the app loads you from events'
   `/me`.
-- `/api/v1/openapi.yaml` (the document itself) has no method.
+- `/api/v1/openapi.yaml` (the document itself) and the site-to-site
+  calendar route have no method.
 - **Not built in the UI:** the name form after an emailed code for a
   new email (the screen points to quick sign-up), the "this takes over
-  an unverified account" warning, withdrawing an RSVP, un-inviting,
+  an unverified account" warning, friends screens (the list, adding by
+  phone or Instagram, taking out, the friend link with its QR code, and
+  opening someone's link at `/f/<code>`), un-inviting,
   removing and restoring guests (the web puts these behind View all),
   lookup by phone or Instagram, the inbox screen and badge, push
   registration, older wall pages, changing your photo, signed-out link
@@ -666,3 +689,46 @@ decisions are in canopy-events' `docs/decision-log.md`):
   (the web does on home), the web's per-field error lines in the
   editor, the "can't be previewed" caption, the signed-out page, and
   restyling the wall, invite, profile and sign-in screens.
+
+### Catching up with the web and the API (canopy-events 1755f46)
+
+- **Contact details come from the Canopy Account service.** Events'
+  `/me` no longer has them, so `Me` doesn't either; `AccountProfile` is
+  the account service's person, loaded at sign-in and after every save
+  or verify (`AppSession.profile`). The Profile waits for it.
+- **Answers are never taken back** (the API dropped `DELETE /rsvp`):
+  `withdrawRSVP` is gone. Leaving an event is the guest menu's "Remove
+  me from event", which asks first.
+- **The guest menu is a ⋯ on the RSVP card's heading line**, for anyone
+  invited or answered (not hosts, not someone removed): Mute / Unmute,
+  one "Opt out of invites from <first name>" (or "Allow invites
+  from…") per host, and "Remove me from event" last. A muted event shows
+  a small bell-slash beside the heading. Opt-outs are listed in Profile
+  ("Not taking invites from") with Undo.
+- **Invites matches the web's Invited tab**: invitation cards have
+  Going / Can't Go (two buttons, even; the web's), and declined events
+  are inline under a "Declined" heading with just Going. The separate
+  Declined screen and its route are gone.
+- **Event details** follow docs/api.md: link and phone on one line each,
+  the rest a heading over text; only `http(s)` and `tel:` hrefs open;
+  unknown types are skipped. The editor's chips scroll sideways on a
+  phone. Empty rows aren't dropped on Save: the mock refuses them as the
+  server does (`bad_detail_value`, with `index`).
+- **Accents are the web's `accentTrio`**, ported line for line and
+  checked at 16 hues against node. Main buttons take the accent's own
+  text color (a bright accent has dark text, white has the grey base), as
+  the web's do; before, they kept white words, which vanished on a white
+  accent.
+- **Status badges are fixed colors**, never the event's: Hosting
+  (co-hosting too), Going, Maybe, "On the waitlist" (the docs' wording),
+  Invited; Can't Go and Removed are plain glass. A cancelled event keeps
+  its badge and adds "Cancelled".
+- **No help text** (the copy rules in CLAUDE.md): the Profile's two
+  footers went; "Contact (only you see these)" says it in the header.
+  US spelling ("color") throughout, code and docs included
+  (`EditorColorSection`).
+- **The Events tab keeps its own lists** (upcoming, with hosting in its
+  own tab); `/me/events/all` is in the repository for later.
+- **Not built:** the friends screens and friend links (models, repository
+  and mock are done).
+

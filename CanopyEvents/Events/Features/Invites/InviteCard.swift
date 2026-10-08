@@ -1,9 +1,11 @@
 import SwiftUI
 
-/// One invitation: the event (tap for details) and answer buttons right
-/// on the card. Also used for declined events, to change your mind.
+/// One invitation: the event (tap for details) and Going / Can't Go right
+/// on the card, as the web's. A declined event's card offers just Going,
+/// to change your mind.
 struct InviteCard: View {
     let event: Event
+    var answers: [RSVPStatus] = [.going, .notGoing]
     let onAnswer: (RSVPStatus) -> Void
 
     var body: some View {
@@ -20,7 +22,7 @@ struct InviteCard: View {
                     .foregroundStyle(Palette.muted)
             }
 
-            AnswerButtons(current: event.myStatus, onAnswer: onAnswer)
+            AnswerButtons(current: event.myStatus == .notGoing ? nil : event.myStatus, answers: answers, onAnswer: onAnswer)
         }
         .glassCard()
     }

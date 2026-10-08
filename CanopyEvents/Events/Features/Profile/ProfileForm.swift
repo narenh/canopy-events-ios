@@ -28,18 +28,16 @@ struct ProfileForm: View {
                 TextField("Venmo", text: $model.draft.venmo)
                 TextField("Cash App", text: $model.draft.cashapp)
             } header: {
-                Text("Contact")
-            } footer: {
-                Text("Only you see these. Canopy never shows your contact details to anyone else.")
+                Text("Contact (only you see these)")
             }
             .glassRowBackground()
 
             Section {
                 Toggle("Let people who know your phone or Instagram find you", isOn: $model.draft.findable)
-            } footer: {
-                Text("Hosts who already have your number or handle can invite you. Nobody can browse or search for you.")
             }
             .glassRowBackground()
+
+            ProfileSettingsSections()
 
             // Always shown while the app is in development. Gate it before
             // the App Store, not before.

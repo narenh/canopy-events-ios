@@ -41,6 +41,13 @@ extension View {
             .environment(\.eventAccent, accent)
     }
 
+    /// The main action, in the accent, with the text and icons the
+    /// accent takes (dark on a bright accent; the grey base on white), as
+    /// the web's main button. Green screens get Canopy green's.
+    func accentProminentButtonStyle() -> some View {
+        modifier(AccentProminent())
+    }
+
     /// A link's look in the event's accent: its color, and, when the
     /// accent is white, bold with an underline.
     func accentLink(_ accent: EventAccent) -> some View {
@@ -48,5 +55,16 @@ extension View {
             .foregroundStyle(accent.text)
             .fontWeight(accent.isWhite ? .bold : nil)
             .underline(accent.isWhite)
+    }
+}
+
+private struct AccentProminent: ViewModifier {
+    @Environment(\.eventAccent) private var accent
+
+    func body(content: Content) -> some View {
+        content
+            .glassProminentButtonStyle()
+            .tint(accent.accent)
+            .foregroundStyle(accent.onAccent)
     }
 }

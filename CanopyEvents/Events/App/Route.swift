@@ -10,6 +10,4 @@ enum Route: Hashable {
     case pastEvents
     /// Past events you hosted.
     case pastHostedEvents
-    /// Events you said you can't go to, so you can change your mind.
-    case declinedEvents
 }

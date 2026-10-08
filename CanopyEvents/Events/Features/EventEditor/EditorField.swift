@@ -1,7 +1,9 @@
 import SwiftUI
 
 /// A quiet field with a dashed edge, for the editor's top card: it reads
-/// like the event page and still looks editable.
+/// like the event page and still looks editable. No autofill on any
+/// editor field (the web's rule: these are the event's, not yours), and
+/// no autocorrection on a one-line one.
 struct EditorField: View {
     let label: String
     @Binding var text: String
@@ -12,6 +14,8 @@ struct EditorField: View {
     var body: some View {
         TextField(label, text: $text, prompt: Text(prompt).foregroundStyle(Palette.muted.opacity(0.8)), axis: axis)
             .font(font)
+            .textContentType(nil)
+            .autocorrectionDisabled(axis == .horizontal)
             .padding(.horizontal, Spacing.medium)
             .padding(.vertical, Spacing.small)
             .background(.black.opacity(0.18), in: .rect(cornerRadius: Radius.small))

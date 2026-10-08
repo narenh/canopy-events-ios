@@ -18,14 +18,13 @@ struct RouteView: View {
         case .wall(let id): WallView(eventId: id)
         case .pastEvents: PastEventsView(showsHosted: false)
         case .pastHostedEvents: PastEventsView(showsHosted: true)
-        case .declinedEvents: DeclinedEventsView()
         }
     }
 }
 
 #Preview {
     NavigationStack {
-        RouteView(route: .declinedEvents)
+        RouteView(route: .pastEvents)
     }
     .mockEnvironment()
 }
