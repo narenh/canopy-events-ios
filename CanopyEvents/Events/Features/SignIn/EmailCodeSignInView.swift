@@ -1,7 +1,9 @@
 import SwiftUI
 
 /// Signing in with a code sent to your email: enter the email, then the
-/// code. Signing in this way also verifies a quick account.
+/// code, then (for an account) a new passkey on this phone. That also
+/// verifies a quick account. An email with no account isn't signed up
+/// here yet; it points to quick sign-up.
 /// Mock: maya@example.com or sam@example.com, and any six digits.
 struct EmailCodeSignInView: View {
     @Environment(AppSession.self) private var session
@@ -47,7 +49,13 @@ struct EmailCodeSignInView: View {
     }
 
     private func signIn() async {
-        await run { try await session.signIn(email: email, code: code) }
+        await run {
+            if try await session.checkSignInCode(code).state == .existing {
+                try await session.signInWithNewPasskey()
+            } else {
+                errorMessage = "No Canopy account uses that email yet. Try quick sign-up."
+            }
+        }
     }
 
     private func run(_ work: () async throws -> Void) async {

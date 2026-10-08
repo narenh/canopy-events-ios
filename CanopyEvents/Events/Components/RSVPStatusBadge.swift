@@ -19,6 +19,7 @@ struct RSVPStatusBadge: View {
         case .notGoing: Palette.danger
         case .waitlisted: .orange
         case .invited: Palette.link
+        case .removed: Palette.muted
         }
     }
 }

@@ -36,7 +36,7 @@ struct EventEditorView: View {
                     CoverImagePickerPlaceholder(currentUrl: model.original?.coverImageUrl)
                 }
                 EventEditorGuestsSection(model: model)
-                if !model.isNew && model.original?.isCancelled == false {
+                if model.original?.isCancelled == false && model.original?.viewer?.isCreator == true {
                     Section {
                         Button("Cancel event", role: .destructive) { confirmsCancel = true }
                     }

@@ -1,12 +1,16 @@
 /// The lists of "my events", one per API endpoint
-/// (`/api/v1/me/events/<rawValue>`). `declined` isn't in the API spec
-/// yet; the Invites tab needs it (see ARCHITECTURE.md).
+/// (`/api/v1/me/events/<rawValue>`).
 nonisolated enum EventListKind: String, Codable, Hashable, CaseIterable, Identifiable {
-    case upcoming
-    case invitations
+    /// Events you host that aren't over, cancelled ones included.
     case hosting
-    case past
+    /// Going, maybe or waitlisted, not over; cancelled ones stay.
+    case upcoming
+    /// Invited with no answer, not over, not cancelled.
+    case invitations
+    /// You said can't go, not over, not cancelled.
     case declined
+    /// Over, and you hosted or said going or maybe. Most recent first.
+    case past
 
     var id: Self { self }
 

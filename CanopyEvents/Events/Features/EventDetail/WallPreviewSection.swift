@@ -1,9 +1,11 @@
 import SwiftUI
 
-/// The latest wall posts, linking to the whole wall.
+/// The latest wall entries, linking to the whole wall.
 struct WallPreviewSection: View {
     let eventId: Event.ID
-    let posts: [WallPost]
+    let entries: [WallEntry]
+    /// False while you can't see the wall (the guest list's names are hidden).
+    var isVisible = true
 
     var body: some View {
         NavigationLink(value: Route.wall(eventId)) {
@@ -14,12 +16,16 @@ struct WallPreviewSection: View {
                     Image(systemName: "chevron.right")
                         .foregroundStyle(Palette.muted)
                 }
-                if posts.isEmpty {
+                if !isVisible {
+                    Label("The wall shows once you've RSVP'd.", systemImage: "eye.slash")
+                        .font(.subheadline)
+                        .foregroundStyle(Palette.muted)
+                } else if entries.isEmpty {
                     Text("No posts yet. Say something!")
                         .font(.subheadline)
                         .foregroundStyle(Palette.muted)
                 } else {
-                    ForEach(posts) { WallPostRow(post: $0) }
+                    ForEach(entries) { WallEntryRow(entry: $0) }
                 }
             }
             .glassCard()
@@ -31,8 +37,9 @@ struct WallPreviewSection: View {
 #Preview {
     NavigationStack {
         VStack {
-            WallPreviewSection(eventId: MockEvents.rooftopId, posts: Array(PreviewData.posts().prefix(2)))
-            WallPreviewSection(eventId: MockEvents.hikeId, posts: [])
+            WallPreviewSection(eventId: MockEvents.rooftopId, entries: Array(PreviewData.wallEntries().prefix(2)))
+            WallPreviewSection(eventId: MockEvents.potteryId, entries: [])
+            WallPreviewSection(eventId: MockEvents.hikeId, entries: [], isVisible: false)
         }
         .padding()
         .canopyScreen()

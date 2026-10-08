@@ -49,7 +49,7 @@ struct EventDetailView: View {
                         FriendsGoingSection(friendsGoing: friendsGoing)
                     }
                     GuestListPreviewSection(event: event, guestList: model.guestList)
-                    WallPreviewSection(eventId: event.id, posts: model.latestPosts)
+                    WallPreviewSection(eventId: event.id, entries: model.latestEntries, isVisible: model.wallVisible)
                 }
                 .padding(.horizontal, Spacing.large)
             }

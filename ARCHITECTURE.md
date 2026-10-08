@@ -2,7 +2,10 @@
 
 How the Canopy Events iOS app is put together, and how to add to it.
 The product rules live in `canopy-events/docs/decisions.md`; the API
-contract is `openapi.yaml` in the same repo. This app is UI only for now:
+contract is `openapi.yaml` in the same repo (with `docs/api.md`), and the
+account service's is `canopy-account-service/openapi.yaml` (with
+`docs/native-api.md`). The models and both protocols match those specs.
+This app is UI only for now:
 **everything runs on in-memory mock data** behind two protocols, so the
 real API can drop in later without touching a screen.
 
@@ -25,8 +28,9 @@ real API can drop in later without touching a screen.
 ```
 CanopyEvents/Events/
   App/          entry point, session, root switch, tabs, navigation routes
-  Models/       plain value types shaped like the API's JSON
-  Data/         the seams: EventsRepository, AccountService, AuthToken, APIError
+  Models/       plain value types shaped exactly like the APIs' JSON
+  Data/         the seams: EventsRepository, AccountService, AuthToken, APIError,
+                the API's JSON coders
     Mock/       the in-memory "server" and the mock implementations
     MockData/   sample people, events, posts, inbox; PreviewData for #Previews
   Features/     one folder per screen area (view + @Observable model)
@@ -118,8 +122,16 @@ case to `AppTab` and a `Tab` in `MainTabView` with its own
   defaults to `MainActor`, and plain data shouldn't be tied to the main
   actor (a real API client may decode off it).
 - Property names match the API's camelCase JSON exactly (`startsAt`,
-  `guestListVisibility`, `emailVerified`...). Enum raw values are the
-  API's strings (`RSVPStatus.notGoing = "not_going"`).
+  `guestListVisibility`, `emailVerified`...), so there are no
+  `CodingKeys` except `APIError.message` (the JSON's `error`). Enum raw
+  values are the API's strings (`RSVPStatus.notGoing = "not_going"`).
+  Where a spec name would clash or read badly, the Swift type is named
+  differently and its doc comment says so: `RSVPCounts` (`Counts`),
+  `InboxNotification` (`Notification`), `RSVP` (`Rsvp`).
+- Types the server says it will add to (`WallEntryType`,
+  `NotificationType`) decode anything unknown as `.unknown`, which the
+  app skips. Error codes are `APIErrorReason`, a string struct, for the
+  same reason.
 - **Other people are only ever `Person`** (id, names, shortName, photoUrl).
   Contact details exist only on `Me`, and only the Profile shows them.
 - Colours, spacing, radii and fonts come from `Design/`, never bare
@@ -158,11 +170,21 @@ case to `AppTab` and a `Tab` in `MainTabView` with its own
                                                                                                   MockBackend
 ```
 
-- `EventsRepository` has one async method per planned `/api/v1` endpoint
-  (each is commented with its method and path), returning the models.
-  Errors are `APIError`, the API's own `{error, reason}` shape.
-- `AccountService` is the account service's part: passkey sign-in, email
-  codes, quick sign-up, verifying, your profile, sign-out. Each sign-in
+- `EventsRepository` has one async method per `/api/v1` endpoint in
+  openapi.yaml (each is commented with its method and path), returning
+  the models. One-thing envelopes come back unwrapped (`{"event": …}` →
+  `Event`, `{"entry": …}` → `WallEntry`, `{"unreadCount": n}` → `Int`,
+  `{"ok": true}` → nothing); everything with more in it is a model
+  (`RSVPResult`, `EventList`, `GuestList`, `Wall`, `NotificationList`...).
+  Errors are `APIError`, the API's own `{error, reason, …}` shape.
+- **Lists page.** Each list method takes a `PageRequest` (`.first`, or
+  `.after(nextCursor)`) and answers a page with `nextCursor`.
+  `EventsRepository+AllPages` follows the cursors for screens that show a
+  whole list (`allEvents`, `allFriends`, `wholeGuestList`); the wall
+  loads its newest page only.
+- `AccountService` is the account service's native API: passkey sign-in;
+  an emailed code, then a new passkey for an existing account or a new
+  account; quick sign-up; verifying; your profile; sign-out. Each sign-in
   returns an `AuthToken`; `AppSession` turns the token into a repository
   with `makeRepository`.
 - Both protocols are `AnyObject, Sendable`; implementations are
@@ -175,20 +197,33 @@ case to `AppTab` and a `Tab` in `MainTabView` with its own
   run: changes survive navigation and signing out and back in, and a
   fresh launch starts from the seed again. Every call waits a short fake
   delay (350 ms; previews use zero) so loading states show.
-- `MockEventsRepository` answers as one person. `MockRules` applies the
-  server's rules from `decisions.md`: guest list visibility (names only
-  for hosts, `everyone`, or once you've answered), counts, capacity and
-  the waitlist (going past the cap becomes `waitlisted`; a freed spot
-  promotes the earliest that fits), implicit friends (hosted or went to
-  the same started, uncancelled event), which events go in which list.
-  Hosts can't RSVP; cancelled and past events refuse answers.
-- Side effects the server will have are mocked too: automatic wall
-  entries ("Maya C is going", "Time changed"), and inbox entries for
-  invites, new RSVPs and cancellations.
-- `MockAccountService`: passkey sign-in is always Maya. Email codes work
-  for `maya@example.com` and `sam@example.com`; **any six digits** pass.
-  Signing in by code verifies a quick account (as the real one does).
-  Quick sign-up with an email that has an account says "sign in instead".
+- `MockEventsRepository` answers as one person, split by topic into
+  `+Hosting`, `+Guests`, `+Invites`, `+Hosts` (co-hosts), `+Moderation`,
+  `+Wall`, `+Notifications` and `+People` (lookup). `MockRules` applies
+  the server's rules from `docs/api.md`: guest list visibility (names
+  only for hosts, `everyone`, or once you've answered), counts (people,
+  plus-ones, and the two together), capacity and the waitlist (a `going`
+  that doesn't fit becomes `waitlisted`; someone going who asks for more
+  room than there is gets `no_room`; a freed spot promotes the earliest
+  that fits), `guestsOverLimit`, removed people (out of the list and
+  counts, the signed-out view for them), implicit friends, and which
+  events go in which list. Hosts can't RSVP; cancelled and past events
+  refuse answers; only the creator cancels, manages co-hosts and makes a
+  new link.
+- Lists page with real `nextCursor`s (`MockPaging`; the mock's cursor is
+  an offset, the real one is opaque).
+- The server's side effects are mocked too: the wall's own entries
+  (`going`, `off_waitlist`, `time_changed`, `place_changed`, `cancelled`,
+  `uncancelled`, `cohost_added`), and typed inbox entries for invites,
+  answers (folded while unread), changes, cancelling, co-hosting,
+  waitlist promotions and host posts. Nobody is told of their own doing.
+  Wall and inbox ids are digits, like the real ones.
+- `MockAccountService`: passkey sign-in is always Maya. Any email gets a
+  "code"; **any six digits** pass. For `maya@example.com` or
+  `sam@example.com` the code answers `existing` and signs in (verifying a
+  quick account, as the real one does); for anyone else it answers
+  `new`, and the screen points to quick sign-up. Quick sign-up with an
+  email that has an account fails with `email_has_account`.
 - Seed data (all dates relative to today, so it never goes stale):
   Maya (verified host) has events she's going to, maybe at, waitlisted
   for (a full supper club), invited to (one with a hidden guest list),
@@ -212,53 +247,94 @@ Set in the scheme's "Arguments Passed On Launch", or with
 
 1. Write `Data/API/APIEventsRepository.swift`: a class conforming to
    `EventsRepository`, holding the bearer token, calling `/api/v1` with
-   `URLSession` and decoding the envelopes (`{"event": …}`,
-   `{"events": …, "nextCursor": …}`) into the existing models. Decode
-   dates with a strategy that accepts fractional seconds
-   (`2026-10-31T03:00:00.000Z`); the stock `.iso8601` strategy doesn't.
-   Map error bodies to `APIError`.
-2. Write `AccountServiceClient` conforming to `AccountService`, with
-   ASAuthorization passkeys against `account.canopysf.com` once its native
-   sign-in exists; keep the token in the Keychain.
+   `URLSession`, sending `PageRequest` as `?cursor=&limit=`, decoding with
+   `JSONDecoder.eventsAPI` (it takes the API's millisecond times; the
+   stock `.iso8601` strategy doesn't) and encoding bodies with
+   `JSONEncoder.eventsAPI`. Unwrap the one-thing envelopes. Turn an
+   `EventDraft` into `EventInput` (POST) or an `EventPatch` of only what
+   changed (PATCH), empty strings as null. Decode error bodies as
+   `APIError`. The cover is `multipart/form-data`, field `cover`.
+2. Write `AccountServiceClient` conforming to `AccountService` against
+   `account.canopysf.com/api/native/v1`: keep the ceremony from
+   `auth/begin` between steps, make and use passkeys with ASAuthorization
+   (relying party `canopysf.com`; the Associated Domains entitlement
+   `webcredentials:canopysf.com`), and keep the token in the Keychain.
+   Its answers decode with a plain `JSONDecoder` (its times are
+   milliseconds, and the models here don't use any).
 3. In `CanopyEventsApp`, replace `AppSession.mock()` with
    `AppSession(accounts: AccountServiceClient(), makeRepository: { APIEventsRepository(token: $0) })`.
 
 No screen changes. Keep the mock for previews and tests.
 
-## Mock vs real: the gaps
+## Mock vs real
 
-Things the app assumes that the API (openapi.yaml on canopy-events
-`feat/core`) doesn't have yet. Names are guesses; rename freely when the
-API lands.
+**Matches the specs exactly** (names, optionality, nesting, enum
+values), checked by decoding the specs' own examples
+(`CanopyEventsTests/APIDecodingTests`):
 
-- **Not in the spec yet:** `Event.capacity`, `Event.spotsLeft`,
-  `Event.plusOnesAllowed`, `Event.coverImageUrl`; `MeEnvelope.hasHosted`
-  (drives the host's app); the `declined` list
-  (`/api/v1/me/events/declined`); wall posts (`WallPost`, kinds, and the
-  three wall methods); notifications (`InboxNotification`,
-  `NotificationKind`, mark-read); `EventDraft.capacity` and
-  `plusOnesAllowed` on create/edit.
-- **The account service** has no native sign-in, quick sign-up, code or
-  profile API for apps yet; `AccountService` is shaped from
-  `decisions.md`. No passkey or email is ever involved in the mock.
-- **Pagination:** the API pages lists with `cursor`/`nextCursor`; the
-  repository returns whole arrays for now.
-- **Not built:** withdrawing an RSVP from the UI (the repository method
-  exists), un-inviting, co-host management, host moderation (remove a
-  guest, new link), cover upload (the editor shows a placeholder),
-  changing your photo, the inbox screen, push registration, signed-out
-  link previews (`locationAddressHidden` is modelled but never true in
-  the mock), opening event links (universal links), persisting the
-  sign-in across launches.
-- Photos in the mock come from pravatar.cc and picsum.photos; offline,
-  avatars fall back to initials and covers to a green gradient.
+- Events API models: `Person`, `Me`, `MeEnvelope` (`hasHosted`), `Event`
+  (`guestsAllowed`, `capacity`, `spotsLeft`, `coverImageUrl`, `viewer`,
+  `friendsGoing`), `RSVPCounts`/`GuestCounts` (people, `guests`,
+  `total`), `Host`/`HostRole`, `RSVP` and `Guest` (`guestsOverLimit`),
+  `RSVPStatus` (with `waitlisted` and `removed`), `Viewer` (`canPost`),
+  `FriendsGoing`, `RSVPResult`, `EventList`, `GuestList`, `Friend`,
+  `FriendList`, `WallEntry`/`WallEntryType`/`WallEntryDetails`, `Wall`
+  (`wallVisible`, `canPost`), `InboxNotification`/`NotificationType`/
+  `NotificationDetails`/`EventChange`, `EventSummary`,
+  `NotificationList`, `InviteResult`/`SkippedInvite`/
+  `SkippedInviteReason`, `APIError` (with `signIn`, `quickSignUp`,
+  `verify`), and every `reason` both specs list (`APIErrorReason`).
+- Every events endpoint has a repository method: the five event lists
+  (`declined` included), event CRUD, cancel and un-cancel, cover upload
+  and delete, RSVP and withdraw, the guest list (with `?status=`),
+  invite and uninvite, lookup, co-hosts, removal and restore, new link,
+  the wall, the inbox (list, unread count, mark some or all read) and
+  push devices.
+- Account service: `EmailState`, and its `person` decodes as `Me`.
+  `AccountService`'s methods map onto its sign-in, quick sign-up,
+  verify, profile and sign-out steps.
+
+**Still mock-only, or not modelled:**
+
+- The mock itself: no network, no passkey, any six digits as a code,
+  photos from pravatar.cc and covers from picsum.photos (offline,
+  avatars fall back to initials and covers to a green gradient). Cover
+  upload keeps no bytes. Lookup matches only the two accounts' own
+  numbers and handles.
+- `EventDraft` and `ProfileDraft` are form state, not the request
+  bodies; the clients map them (above). `ProfileDraft.venmo` is sent as
+  `venmoHandle`.
+- Not modelled from the account service: the ceremony, the passkey
+  options and responses (they live inside the client), passkey and
+  session lists, changing the email (reauth), profile photo upload,
+  sign-out everywhere. `AuthToken` is just the token: the sign-in
+  answers' `person` is dropped, since the app loads you from events'
+  `/me`.
+- `/api/v1/openapi.yaml` (the document itself) has no method.
+- **Not built in the UI:** the name form after an emailed code for a
+  new email (the screen points to quick sign-up), the "this takes over
+  an unverified account" warning, withdrawing an RSVP, un-inviting,
+  un-cancelling, co-host management, host moderation (remove, restore,
+  new link), cover upload (the editor shows a placeholder), lookup by
+  phone or Instagram, the inbox screen and badge, push registration,
+  older wall pages, changing your photo, signed-out link previews,
+  opening event links (universal links), persisting the sign-in across
+  launches.
 
 ## Tests
 
-`CanopyEventsTests/MockFlowTests.swift` uses Swift Testing to drive the
-mock flows end to end (lists, hidden guest lists, plus-ones, the
-waitlist, quick sign-up, verifying, becoming a host, invites, state
-surviving sign-out). It's **not in a target yet**, because adding one
-means editing the project file. To run it: in Xcode, File → New → Target
+Swift Testing, in `CanopyEventsTests/`:
+
+- `APIDecodingTests` decodes the specs' own examples (copied into
+  `APISamples`) into the models and round-trips them through the API's
+  encoder. When a spec changes, change `APISamples` with it.
+- `MockFlowTests` drives the mock flows end to end (lists and cursors,
+  hidden guest lists and walls, plus-ones, the waitlist, code sign-in,
+  quick sign-up, verifying, becoming a host, invites, state surviving
+  sign-out); `MockHostFlowTests` the host side (co-hosts, removal, new
+  links, creator-only cancel, notification folding, lookup).
+
+They're **not in a target yet**, because adding one means editing the
+project file. To run them: in Xcode, File → New → Target
 → Unit Testing Bundle named `CanopyEventsTests` (Swift Testing), then
 point it at the existing `CanopyEventsTests` folder.

@@ -17,7 +17,7 @@ final class GuestListModel {
 
     func load(from repository: any EventsRepository) async {
         do {
-            guestList = try await repository.guestList(eventId: eventId)
+            guestList = try await repository.wholeGuestList(eventId: eventId)
         } catch {
             errorMessage = error.localizedDescription
         }

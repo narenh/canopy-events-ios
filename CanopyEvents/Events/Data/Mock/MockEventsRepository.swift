@@ -4,8 +4,8 @@ import Foundation
 /// shared in-memory `MockBackend`. It applies the server's rules through
 /// `MockRules`, so visibility, counts and the waitlist behave for real.
 ///
-/// The CRUD for hosting, guests and the wall is in the `+Hosting`,
-/// `+Guests` and `+Wall` extensions next to this file.
+/// The rest is in the extensions next to this file: `+Hosting`, `+Guests`,
+/// `+Invites`, `+Wall` and `+Notifications`.
 final class MockEventsRepository: EventsRepository {
     let backend: MockBackend
     let personId: Person.ID
@@ -33,11 +33,6 @@ final class MockEventsRepository: EventsRepository {
         set { backend.records = newValue }
     }
 
-    var posts: [WallPost] {
-        get { backend.posts }
-        set { backend.posts = newValue }
-    }
-
     func pause() async {
         await backend.pause()
     }
@@ -47,7 +42,7 @@ final class MockEventsRepository: EventsRepository {
     func me() async throws -> MeEnvelope {
         await pause()
         guard backend.account(id: personId) != nil else {
-            throw APIError(message: "Sign in first.", reason: "sign_in_required")
+            throw APIError.signInRequired
         }
         let verifyUrl = URL(string: "https://account.canopysf.com/profile?verify=1")
         return MeEnvelope(
@@ -57,32 +52,22 @@ final class MockEventsRepository: EventsRepository {
         )
     }
 
-    func friends() async throws -> [Friend] {
+    func friends(page: PageRequest) async throws -> FriendList {
         await pause()
-        return MockRules.friends(of: currentUser.person, in: records)
-    }
-
-    func notifications() async throws -> [InboxNotification] {
-        await pause()
-        return backend.inboxes[personId, default: []].sorted { $0.createdAt > $1.createdAt }
-    }
-
-    func markNotificationRead(id: InboxNotification.ID) async throws {
-        await pause()
-        guard let index = backend.inboxes[personId]?.firstIndex(where: { $0.id == id }) else { return }
-        backend.inboxes[personId]?[index].readAt = .now
+        let all = MockRules.friends(of: currentUser.person, in: records)
+        let (friends, next) = try MockPaging.page(all, page)
+        return FriendList(friends: friends, nextCursor: next)
     }
 
     // MARK: Events
 
-    func events(_ list: EventListKind) async throws -> [Event] {
+    func events(_ list: EventListKind, page: PageRequest) async throws -> EventList {
         await pause()
-        let events = records
+        let all = records
             .filter { MockRules.record($0, isIn: list, for: currentUser.person) }
-            .map(resolved)
-        return list == .past
-            ? events.sorted { $0.startsAt > $1.startsAt }
-            : events.sorted { $0.startsAt < $1.startsAt }
+            .sorted { list == .past ? $0.event.startsAt > $1.event.startsAt : $0.event.startsAt < $1.event.startsAt }
+        let (page, next) = try MockPaging.page(all, page)
+        return EventList(events: page.map { resolved($0, withFriends: false) }, nextCursor: next)
     }
 
     func event(id: Event.ID) async throws -> Event {
@@ -98,15 +83,28 @@ final class MockEventsRepository: EventsRepository {
         return record
     }
 
+    /// A new 12-character base62 event id.
+    func newEventId() -> Event.ID {
+        String((0..<12).map { _ in "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".randomElement()! })
+    }
+
+    /// Anyone the mock world knows: the sample people and every account.
+    func knownPerson(_ id: Person.ID) -> Person? {
+        MockPeople.everyone.first { $0.id == id } ?? backend.account(id: id)?.person
+    }
+
     /// Replaces a stored record with a changed copy.
     func save(_ record: MockEventRecord) {
         guard let index = records.firstIndex(where: { $0.id == record.id }) else { return }
         records[index] = record
     }
 
-    /// The record turned into the event `currentUser` sees.
-    func resolved(_ record: MockEventRecord) -> Event {
+    /// The record turned into the event `currentUser` sees. Lists leave
+    /// out `friendsGoing`; a single event has it.
+    func resolved(_ record: MockEventRecord, withFriends: Bool = true) -> Event {
         let friendIds = Set(MockRules.friends(of: currentUser.person, in: records).map(\.id))
-        return MockRules.event(record, for: currentUser.person, friendIds: friendIds)
+        var event = MockRules.event(record, for: currentUser.person, friendIds: friendIds)
+        if !withFriends { event.friendsGoing = nil }
+        return event
     }
 }

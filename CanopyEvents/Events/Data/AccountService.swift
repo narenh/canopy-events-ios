@@ -1,26 +1,41 @@
-/// Signing in, quick sign-up, email verification and your profile: the
-/// account service's job (`account.canopysf.com`), not the events API's. Each sign-in method returns a
-/// token; `AppSession` turns the token into an `EventsRepository`.
+/// Signing in, signing up, email verification and your profile: the
+/// account service's native API (`account.canopysf.com/api/native/v1`,
+/// docs/native-api.md), not the events API's. Each way of signing in ends
+/// with a token; `AppSession` turns it into an `EventsRepository`.
 ///
-/// Tonight only `MockAccountService` exists (no passkeys, no network). The
-/// real one will use ASAuthorization passkeys against
-/// `account.canopysf.com`, once its native sign-in is built.
+/// The real one keeps the sign-in's ceremony value between steps, makes
+/// and uses passkeys with ASAuthorization, and keeps the token in the
+/// Keychain. Today only `MockAccountService` exists (no passkeys, no network).
 protocol AccountService: AnyObject, Sendable {
-    /// Sign in with a passkey on this device.
+    // MARK: Signing in
+
+    /// `auth/begin`, `auth/passkey/options`, a passkey, `auth/passkey/verify`.
     func signInWithPasskey() async throws -> AuthToken
-    /// Email a one-time sign-in code.
+    /// `auth/begin`, `auth/email/start`: email a 6-digit code (any email
+    /// gets one). Again sends a new code.
     func sendSignInCode(to email: String) async throws
-    /// Sign in with an emailed code. For an unverified account, this also
-    /// verifies it.
-    func signIn(email: String, code: String) async throws -> AuthToken
-    /// Quick sign-up: name and email, then a passkey. The account starts
-    /// unverified. Fails with `email_taken` if the email has an account.
+    /// `auth/email/verify`: the code proves the email, and says whether
+    /// it has an account.
+    func checkSignInCode(_ code: String) async throws -> EmailState
+    /// For `existing`: `auth/register/existing`, a new passkey on this
+    /// phone, `auth/register/verify`. Also proves the account's email.
+    func signInWithNewPasskey() async throws -> AuthToken
+    /// For `new`: `auth/register/new` with names (and Venmo), a passkey,
+    /// `auth/register/verify`. The account is made verified.
+    func signUp(firstName: String, lastName: String, venmo: String?) async throws -> AuthToken
+    /// `auth/begin`, `auth/quick/start`, a passkey, `auth/register/verify`.
+    /// The account starts unverified. `email_has_account` if it has one.
     func quickSignUp(firstName: String, lastName: String, email: String) async throws -> AuthToken
-    /// Email a code that proves the signed-in person's address.
-    func sendVerificationCode(for token: AuthToken) async throws
-    /// Prove the email with that code; the account becomes verified.
-    func verifyEmail(code: String, for token: AuthToken) async throws
-    /// Save your own profile. Returns you as saved.
+
+    // MARK: Signed in
+
+    /// `me/verify/start`: email a code that proves your address. Returns
+    /// true if there was nothing to prove (already verified).
+    func sendVerificationCode(for token: AuthToken) async throws -> Bool
+    /// `me/verify/check`: prove the email with that code. Returns you, verified.
+    func verifyEmail(code: String, for token: AuthToken) async throws -> Me
+    /// `PATCH /me`: save your own profile. Returns you as saved.
     func updateProfile(_ profile: ProfileDraft, for token: AuthToken) async throws -> Me
+    /// `POST /signout`. Forget the token whatever happens.
     func signOut(_ token: AuthToken) async
 }

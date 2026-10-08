@@ -15,7 +15,7 @@ struct RSVPSheet: View {
         self.event = event
         self.onSave = onSave
         _status = State(initialValue: status == .waitlisted ? .going : status)
-        _guests = State(initialValue: event.viewer?.rsvp?.guests ?? 0)
+        _guests = State(initialValue: min(event.viewer?.rsvp?.guests ?? 0, event.guestsAllowed))
     }
 
     var body: some View {
@@ -27,12 +27,12 @@ struct RSVPSheet: View {
                 .pickerStyle(.segmented)
                 .listRowBackground(Color.clear)
 
-                if status != .notGoing && event.plusOnesAllowed > 0 {
+                if status != .notGoing && event.guestsAllowed > 0 {
                     Section {
                         Stepper("Bringing \(guests) \(guests == 1 ? "guest" : "guests")",
-                                value: $guests, in: 0...event.plusOnesAllowed)
+                                value: $guests, in: 0...event.guestsAllowed)
                     } footer: {
-                        Text("The host allows up to \(event.plusOnesAllowed) per RSVP.")
+                        Text("The host allows up to \(event.guestsAllowed) per RSVP.")
                     }
                 }
 

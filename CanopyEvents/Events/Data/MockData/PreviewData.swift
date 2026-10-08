@@ -15,8 +15,8 @@ enum PreviewData {
         return MockRules.guestList(record, for: me.person)
     }
 
-    static func posts(_ id: Event.ID = MockEvents.rooftopId) -> [WallPost] {
-        MockWallPosts.all.filter { $0.eventId == id }.sorted { $0.createdAt > $1.createdAt }
+    static func wallEntries(_ id: Event.ID = MockEvents.rooftopId) -> [WallEntry] {
+        MockWall.entries[id, default: []].sorted { $0.createdAt > $1.createdAt }
     }
 
     static var friends: [Friend] {

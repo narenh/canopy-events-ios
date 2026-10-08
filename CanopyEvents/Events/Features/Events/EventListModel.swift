@@ -19,7 +19,7 @@ final class EventListModel {
         do {
             var merged: [Event.ID: Event] = [:]
             for kind in kinds {
-                for event in try await repository.events(kind) {
+                for event in try await repository.allEvents(kind) {
                     merged[event.id] = event
                 }
             }
