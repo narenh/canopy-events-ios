@@ -243,7 +243,7 @@ rule, the app ports it and a test pins it to the web's own output.
   fresh launch starts from the seed again. Every call waits a short fake
   delay (350 ms; previews use zero) so loading states show.
 - `MockEventsRepository` answers as one person, split by topic into
-  `+Hosting`, `+Guests`, `+Invites`, `+Hosts` (co-hosts), `+Moderation`,
+  `+Hosting`, `+Covers`, `+Guests`, `+Invites`, `+Hosts` (co-hosts), `+Moderation`,
   `+Wall`, `+Notifications` and `+People` (lookup). `MockRules` applies
   the server's rules from `docs/api.md`: guest list visibility (names
   only for hosts, `everyone`, or once you've answered), counts (people,
