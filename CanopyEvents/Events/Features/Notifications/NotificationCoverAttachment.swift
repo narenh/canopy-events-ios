@@ -3,7 +3,7 @@ import UserNotifications
 
 /// The event's cover as a notification attachment: a local copy (the
 /// system moves it into its own store), the 800 px size when there is
-/// one, or the generated art drawn in the event's colours when there's no
+/// one, or the generated art drawn in the event's colors when there's no
 /// cover (or it won't load). How iOS combines it with the communication
 /// notification's avatar has to be checked on a phone (ARCHITECTURE.md).
 enum NotificationCoverAttachment {

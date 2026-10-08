@@ -7,9 +7,11 @@ struct ProfileView: View {
     @Environment(AppSession.self) private var session
 
     var body: some View {
-        if let me = session.me {
-            ProfileForm(model: ProfileModel(me: me))
-                .id(me)  // fresh form state whenever your saved profile changes
+        if let profile = session.profile {
+            ProfileForm(model: ProfileModel(profile: profile))
+                .id(profile)  // fresh form state whenever your saved profile changes
+        } else {
+            ProgressView()
         }
     }
 }

@@ -36,22 +36,6 @@ extension MockEventsRepository {
         return RSVPResult(event: resolved(record), waitlisted: finalStatus == .waitlisted && status == .going)
     }
 
-    func withdrawRSVP(eventId: Event.ID) async throws -> Event {
-        await pause()
-        var record = try record(eventId)
-        try checkCanAnswer(record)
-        let old = record.guest(currentUser.id)
-        record.guests.removeAll { $0.person.id == currentUser.id }
-        if record.invitedIds.contains(currentUser.id) {
-            record.guests.append(Guest(person: currentUser.person, status: .invited, guests: 0,
-                                       guestsOverLimit: false, respondedAt: nil))
-        }
-        let promoted = MockRules.promoteWaitlist(&record)
-        save(record)
-        afterAnswer(record, old: old?.status, new: nil, promoted: promoted)
-        return resolved(record)
-    }
-
     private func checkCanAnswer(_ record: MockEventRecord) throws {
         if record.event.isCancelled { throw APIError.eventCancelled }
         if record.event.isOver { throw APIError.eventOver }

@@ -3,7 +3,7 @@ import Foundation
 /// Uploading and removing an event's cover.
 extension MockEventsRepository {
     /// Mock: the photo is kept in a temporary file (one size, its own),
-    /// and its colour worked out the way the server does. The theme
+    /// and its color worked out the way the server does. The theme
     /// doesn't change: that's the host's call.
     func setCover(eventId: Event.ID, imageData: Data) async throws -> Event {
         await pause()

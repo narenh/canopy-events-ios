@@ -1,5 +1,5 @@
-/// An event's colour as one value: Canopy's own green (`themeHue` null),
-/// a hue (`themeHue`, 0–359), or no colour at all (`themeGrayscale`
+/// An event's color as one value: Canopy's own green (`themeHue` null),
+/// a hue (`themeHue`, 0–359), or no color at all (`themeGrayscale`
 /// true, which wins over any hue). The web calls this the "theme key".
 nonisolated enum EventTheme: Hashable, Sendable {
     case canopyGreen

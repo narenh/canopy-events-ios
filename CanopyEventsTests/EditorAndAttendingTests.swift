@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import CanopyEvents
 
-/// The editor's when and colour rules, and Attending's words and order.
+/// The editor's when and color rules, and Attending's words and order.
 @MainActor
 struct EditorAndAttendingTests {
     @Test func theEndMovesWithTheStartAndDefaultsToThreeHours() {
@@ -22,11 +22,11 @@ struct EditorAndAttendingTests {
         model.draft.theme = .hue(300)
         model.draft.theme = .grayscale
         #expect(model.draft.themeHue == 300 && model.draft.themeGrayscale)
-        model.draft.theme = ThemeSliderScale.theme(at: 30 + 300)
+        model.draft.theme = ThemeSliderScale.theme(at: ThemeSliderScale.greySteps + 300)
         #expect(model.draft.theme == .hue(300) && !model.draft.themeGrayscale)
     }
 
-    @Test func matchPhotoUsesTheSavedCoversColour() {
+    @Test func matchPhotoUsesTheSavedCoversColor() {
         let model = EventEditorModel(event: PreviewData.event(MockEvents.supperClubId))
         #expect(model.coverMatch == .hue(45) && model.draft.theme == .hue(30))
         model.matchPhoto()

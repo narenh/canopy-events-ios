@@ -74,7 +74,13 @@ final class MockAccountService: AccountService {
         return backend.account(id: token.value)?.emailVerified ?? false
     }
 
-    func verifyEmail(code: String, for token: AuthToken) async throws -> Me {
+    func profile(for token: AuthToken) async throws -> AccountProfile {
+        await backend.pause()
+        guard let account = backend.account(id: token.value) else { throw Self.signedOut }
+        return account
+    }
+
+    func verifyEmail(code: String, for token: AuthToken) async throws -> AccountProfile {
         await backend.pause()
         try check(code)
         guard var account = backend.account(id: token.value) else { throw Self.signedOut }
@@ -83,7 +89,7 @@ final class MockAccountService: AccountService {
         return account
     }
 
-    func updateProfile(_ profile: ProfileDraft, for token: AuthToken) async throws -> Me {
+    func updateProfile(_ profile: ProfileDraft, for token: AuthToken) async throws -> AccountProfile {
         await backend.pause()
         guard var account = backend.account(id: token.value) else { throw Self.signedOut }
         try checkNames(profile.firstName, profile.lastName)

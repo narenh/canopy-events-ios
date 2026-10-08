@@ -4,8 +4,8 @@ import SwiftUI
 /// the cover hero (with its photo buttons), the title typed where the
 /// title goes, the date and times as big as the page's, the zone under
 /// them, the place, address and description in the same unbordered top;
-/// then the Guests and Colour cards, and Save in a bar at the bottom.
-/// The background is the event's colour as it's being picked. No help
+/// then the Guests and Color cards, and Save in a bar at the bottom.
+/// The background is the event's color as it's being picked. No help
 /// text. Cancelling, deleting and the rest live in the event page's ⋯.
 struct EventEditorView: View {
     /// Called with the saved event, after the sheet closes.
@@ -40,7 +40,7 @@ struct EventEditorView: View {
                     .padding(.top, -heroWidth / 6)
                     VStack(spacing: Spacing.large) {
                         EventEditorGuestsSection(model: model)
-                        EditorColourSection(model: model)
+                        EditorColorSection(model: model)
                     }
                     .padding(.horizontal, isWide ? 0 : Spacing.large)
                     .padding(.top, Spacing.xxLarge)
@@ -61,7 +61,7 @@ struct EventEditorView: View {
             }
             .disabled(model.isSaving)
             .errorAlert($model.errorMessage)
-            .eventAccent(model.draft.theme)
+            .eventAccent(model.draft.accent)
             .canopyScreen(theme: model.draft.theme)
         }
     }

@@ -9,7 +9,7 @@ struct ProfileForm: View {
     var body: some View {
         Form {
             Section {
-                if let me = session.me { ProfileHeader(me: me) }
+                if let profile = session.profile { ProfileHeader(profile: profile) }
             }
             .listRowBackground(Color.clear)
 
@@ -66,6 +66,6 @@ struct ProfileForm: View {
 }
 
 #Preview {
-    NavigationStack { ProfileForm(model: ProfileModel(me: MockPeople.maya)) }
+    NavigationStack { ProfileForm(model: ProfileModel(profile: MockPeople.maya)) }
         .mockEnvironment()
 }

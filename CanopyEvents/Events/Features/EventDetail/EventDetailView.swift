@@ -4,7 +4,7 @@ import SwiftUI
 /// column with rounded top corners on iPad), the title and when on its
 /// fade, the place, hosts and description with no card around them, then
 /// your RSVP (or the host's controls), Attending and the wall, all on the
-/// event's own colours.
+/// event's own colors.
 struct EventDetailView: View {
     @Environment(\.eventsRepository) private var repository
     @Environment(AppSession.self) private var session
@@ -38,7 +38,7 @@ struct EventDetailView: View {
         }
         .task(id: session.dataVersion) { await model.load(from: repository) }
         .errorAlert($model.errorMessage)
-        .eventAccent(model.event?.theme ?? .canopyGreen)
+        .eventAccent(model.event?.accent ?? .canopyGreen)
         .canopyScreen(theme: model.event?.theme ?? .canopyGreen)
     }
 
@@ -75,7 +75,7 @@ struct EventDetailView: View {
             RSVPSheet(event: event, status: status) { status, guests in
                 Task { await model.answer(status, guests: guests, using: repository) }
             }
-            .eventAccent(event.theme)
+            .eventAccent(event.accent)
         }
         .sheet(isPresented: $isEditing) {
             EventEditorView(event: event) { _ in

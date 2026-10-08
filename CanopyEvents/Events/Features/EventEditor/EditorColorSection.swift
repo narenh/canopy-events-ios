@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// The "Colour" card: the slider, and "Match photo" when the cover's
-/// colour is known. The page behind the editor previews it.
-struct EditorColourSection: View {
+/// The "Color" card: the slider, and "Match photo" when the cover's
+/// color is known. The page behind the editor previews it.
+struct EditorColorSection: View {
     @Bindable var model: EventEditorModel
 
     @Environment(\.eventAccent) private var accent
@@ -10,7 +10,7 @@ struct EditorColourSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.small) {
             HStack {
-                Text("Colour").font(Typography.cardHeading)
+                Text("Color").font(Typography.cardHeading)
                 Spacer()
                 Text(ThemeSlider.words(for: model.draft.theme))
                     .font(.subheadline)

@@ -36,10 +36,10 @@ CanopyEvents/Events/
   Features/     one folder per screen area (view + @Observable model)
   Components/   small reusable views (Avatar, EventCard, VerifyEmailBanner...)
   Design/       palette, spacing, radius, type, the mesh background, glass helpers,
-                event colours (OKLCH, ThemeColors) and the hero's fade
+                event colors (OKLCH, ThemeColors) and the hero's fade
   Utilities/    formatters and the platform shims
 CanopyEvents/Shared/               compiled by the app and the notification extension:
-                                   theme colours, cover art, the hero fade, palette,
+                                   theme colors, cover art, the hero fade, palette,
                                    type and glass, the API's JSON coders, the App Group,
                                    the answer queue, and the expanded notification's card
 CanopyEvents/NotificationContent/  the Notification Content Extension (iOS only)
@@ -98,7 +98,7 @@ macOS.
 - Sheets (editor, RSVP with plus-ones, invite friends, co-hosts, verify
   email) are presented by the screen that owns them, with local
   `@State`. Sheets keep the system's sheet background, except the
-  editor, which is drawn as the event and previews its colour.
+  editor, which is drawn as the event and previews its color.
   `canopyScreen()` (the mesh) is otherwise for full screens.
 - The sign-in flow has its own small stack and `SignInRoute`.
 
@@ -141,10 +141,10 @@ case to `AppTab` and a `Tab` in `MainTabView` with its own
   same reason.
 - **Other people are only ever `Person`** (id, names, shortName, photoUrl).
   Contact details exist only on `Me`, and only the Profile shows them.
-- Colours, spacing, radii and fonts come from `Design/`, never bare
+- Colors, spacing, radii and fonts come from `Design/`, never bare
   numbers or hex. Type is `Typography`'s Dynamic Type styles (the web's
   scale and weights), never fixed point sizes, so accessibility sizes
-  work. An event's colours come from `ThemeColors(event.theme)`. Liquid Glass goes through `glassCard()`,
+  work. An event's colors come from `ThemeColors(event.theme)`. Liquid Glass goes through `glassCard()`,
   `glassSurface(cornerRadius:)`, `glassProminentButtonStyle()` and
   `glassButtonStyle()`, which fall back to visionOS's own glass. The few
   iPhone-only modifiers go through `Utilities/View+Platform.swift`. That
@@ -160,14 +160,14 @@ The event pages follow canopy-events' web designs (its
 `public/events.css` and `public/ui.js`). Where the web has an exact
 rule, the app ports it and a test pins it to the web's own output.
 
-- **Event colours.** `Event.theme` (`EventTheme`: Canopy green, a hue,
+- **Event colors.** `Event.theme` (`EventTheme`: Canopy green, a hue,
   or grey) gives `ThemeColors`: the mesh's base, five glows and the
   card tint, each worked out in OKLCH as docs/api.md says (`OKLCH`,
   Björn Ottosson's maths, chroma fitted into sRGB). `CanopyBackground`
   draws them as a 3×3 `MeshGradient`. Only the event page, its editor
   and the notification card are themed, and there the accent follows the
   event too (`.eventAccent(theme)`, read as `@Environment(\.eventAccent)`):
-  Canopy green's accent, the text on it and the link colour, each turned
+  Canopy green's accent, the text on it and the link color, each turned
   like the mesh (`ThemeColors.accent`, `onAccent`, `accentText`, the
   web's `themeStyle` since events 0189355). Lists and every other screen
   stay Canopy green.
@@ -193,9 +193,9 @@ rule, the app ports it and a test pins it to the web's own output.
   buttons, the title on the band, the when as big as the page's (each
   piece tapped for its picker), the zone by name with a Change menu
   (`TimeZoneChoices`, the web's `nearbyZones`), quiet dashed fields,
-  then the Guests and Colour cards and a Save bar. The colour slider
+  then the Guests and Color cards and a Save bar. The color slider
   (`ThemeSlider`) is the web's grey stretch then hue wheel; picking a
-  photo works out its colour (`PhotoHue`) and jumps the slider.
+  photo works out its color (`PhotoHue`) and jumps the slider.
 - **Lists** (`EventCard`): a 3:2 thumbnail, a bold accent date line
   ("SAT, OCT 10 · 7:30 PM"), the title, the place, a tag.
 - **Type** (`Typography`): the web's scale as Dynamic Type styles, so
@@ -238,7 +238,7 @@ APNs pushes later. The payload the server should send is in
   category `EVENT_INVITE`, user interaction on, the default content
   hidden), embedded in the app on iOS. Its `NotificationViewController`
   hosts `NotificationCardView` (in `Shared/`): the cover hero fading on
-  the event's colour, the title, the big date and time, the place, the
+  the event's color, the title, the big date and time, the place, the
   faces going, and its own Going / Can't Go. What it draws comes in the
   notification (`userInfo["card"]`, a `NotificationCard`; the payload is
   in docs/push-payloads.md). An answer goes into the App Group's
@@ -335,9 +335,9 @@ APNs pushes later. The payload the server should send is in
   email that has an account fails with `email_has_account`.
 - Covers: the seed's are picsum.photos placeholders at the API's four
   sizes, each with a `coverHue`. An uploaded cover is kept in a temporary
-  file (`MockCoverFile`) with its own size, and its colour worked out on
+  file (`MockCoverFile`) with its own size, and its color worked out on
   the device the way the server does (`PhotoHue`). Events come in
-  several colours (blue, purple, teal, red, pink) and one grey.
+  several colors (blue, purple, teal, red, pink) and one grey.
 - `hasHosted` stays true once you've hosted (`MockBackend.hostedPeople`),
   even after deleting the event; only hosts get `counts.invited`.
 - Seed data (all dates relative to today, so it never goes stale):
@@ -445,7 +445,7 @@ values), checked by decoding the specs' own examples
   lookup by phone or Instagram, the inbox screen and badge, push
   registration, older wall pages, changing your photo, signed-out link
   previews, opening event links (universal links), persisting the
-  sign-in across launches. (Built since: cover upload, colours,
+  sign-in across launches. (Built since: cover upload, colors,
   co-hosts, new link, cancel and bring back, delete.)
 
 ## Tests
@@ -455,8 +455,8 @@ Swift Testing, in `CanopyEventsTests/`:
 - `APIDecodingTests` decodes the specs' own examples (copied into
   `APISamples`) into the models and round-trips them through the API's
   encoder. When a spec changes, change `APISamples` with it.
-- `ThemeColorTests` checks the colour maths against the web's own
-  output to the byte (theme colours at seven hues and grey, turning a
+- `ThemeColorTests` checks the color maths against the web's own
+  output to the byte (theme colors at seven hues and grey, turning a
   green, the generated cover art, a photo's hue, the slider's scale);
   the expected values were made by running canopy-events'
   `public/ui.js` in node. `CoverSizeTests` checks picking a cover size.
@@ -496,7 +496,7 @@ decisions are in canopy-events' `docs/decision-log.md`):
   buttons** (the page ignores the top safe area); in the iPad column it
   sits below the bars with rounded top corners.
 - **The mesh is a 3×3 `MeshGradient`, not five radial glows.** The
-  colours are the web's to the byte; their placement is close (glow 1
+  colors are the web's to the byte; their placement is close (glow 1
   top left, 2 top right, 5 middle, 4 lower left, 3 low right) but not
   pixel-identical. The generated cover art likewise uses a linear and
   two elliptical gradients whose sizes only approximate CSS's.
@@ -505,7 +505,7 @@ decisions are in canopy-events' `docs/decision-log.md`):
   can't leak onto the lists. It also sets the tint, so prominent buttons
   and the selected answer turn; secondary glass buttons keep white words
   (`glassButtonStyle()` says so), rather than taking the tint. The
-  colours match the web's to the byte (tests at seven hues, grey and
+  colors match the web's to the byte (tests at seven hues, grey and
   green); the web checked dark text on the accent at every hue (at
   least 6.8:1).
 - **Pull-down: the image stays put, and the content slides over it**
@@ -561,7 +561,7 @@ decisions are in canopy-events' `docs/decision-log.md`):
   The extension is iOS only (content extensions don't exist on the Mac
   or Vision), so its embedding and dependency are filtered to iOS.
 - **Code both targets use lives in `CanopyEvents/Shared/`**, a synced
-  folder both compile, so nothing is duplicated: the theme colours, the
+  folder both compile, so nothing is duplicated: the theme colors, the
   cover art, the fade, the design tokens, the JSON coders, the card and
   the answer queue. The card takes plain values (`NotificationCard`),
   not the app's models, so the extension needs none of them.
@@ -617,7 +617,7 @@ decisions are in canopy-events' `docs/decision-log.md`):
   `com.canopysf.CanopyEvents.NotificationContent` (create it if
   missing) → App Groups on, with that group.
 - **The cover rides along as an attachment** (the 800 px size, or the
-  generated art in the event's colours). Whether iOS shows it well next
+  generated art in the event's colors). Whether iOS shows it well next
   to the communication-notification avatar, or the avatar style loses
   out, still has to be checked on a phone; if it looks wrong, drop
   `NotificationCoverAttachment` from `LocalNotifications`.
@@ -653,7 +653,7 @@ decisions are in canopy-events' `docs/decision-log.md`):
 - **Save is a prominent bar at the bottom; Close is in the toolbar.**
   The heading ("New Event"/"Edit Event") is read out, not shown.
   Cancelling moved from the editor to the page's ⋯ menu.
-- **A picked photo's colour is worked out on the device** with the
+- **A picked photo's color is worked out on the device** with the
   server's algorithm (`PhotoHue`), so the slider jumps at once; the
   mock's upload stores the same. If the event saves but its cover
   upload fails, the editor stays open with the error, and Save tries
@@ -662,7 +662,7 @@ decisions are in canopy-events' `docs/decision-log.md`):
   web's overrides), like the rest of the app's words.
 - **The how-soon pill is worked out when the page draws**, not ticked
   over while it's open (the web redraws it).
-- **Not ported yet:** tinting list cards' glass with the event's colour
+- **Not ported yet:** tinting list cards' glass with the event's color
   (the web does on home), the web's per-field error lines in the
   editor, the "can't be previewed" caption, the signed-out page, and
   restyling the wall, invite, profile and sign-in screens.

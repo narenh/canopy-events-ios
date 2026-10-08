@@ -17,19 +17,27 @@ enum APISamples {
     {"id": "4fQ9xKpL2mZa", "url": "https://events.canopysf.com/e/4fQ9xKpL2mZa", "title": "Rooftop dinner",
      "description": "Bring a jacket.", "startsAt": "2026-11-01T02:30:00.000Z", "endsAt": "2026-11-01T06:00:00.000Z",
      "timeZone": "America/Los_Angeles", "locationName": "Ana's place", "locationAddress": "1 Market St, San Francisco",
-     "locationAddressHidden": false, "guestListVisibility": "responded", "guestsAllowed": 1, "capacity": 20,
+     "locationAddressHidden": false,
+     "details": [
+       {"type": "link", "label": "Playlist", "value": "https://open.spotify.com/playlist/37i9dQZF1DX4WYpdgoIcn6", "href": "https://open.spotify.com/playlist/37i9dQZF1DX4WYpdgoIcn6"},
+       {"type": "dress_code", "label": null, "value": "Warm layers", "href": null},
+       {"type": "parking", "label": null, "value": "Street parking on Main; the garage closes at 11.", "href": null},
+       {"type": "phone", "label": "Ana's cell", "value": "(415) 555-0142", "href": "tel:4155550142"},
+       {"type": "hologram", "label": null, "value": "From the future", "href": null}],
+     "hiddenDetails": 0, "guestListVisibility": "responded", "guestsAllowed": 1, "capacity": 20,
      "spotsLeft": 14, "coverImageUrl": "https://events.canopysf.com/covers/Qm7Zc2pR9xTa.jpg?v=1759870000000",
      "coverImages": [
        {"width": 400, "height": 300, "url": "https://events.canopysf.com/covers/Qm7Zc2pR9xTa-400.jpg?v=1759870000000"},
        {"width": 800, "height": 600, "url": "https://events.canopysf.com/covers/Qm7Zc2pR9xTa-800.jpg?v=1759870000000"},
        {"width": 1200, "height": 900, "url": "https://events.canopysf.com/covers/Qm7Zc2pR9xTa-1200.jpg?v=1759870000000"},
        {"width": 1600, "height": 1200, "url": "https://events.canopysf.com/covers/Qm7Zc2pR9xTa.jpg?v=1759870000000"}],
-     "themeHue": null, "themeGrayscale": false, "coverHue": 24, "coverGrayscale": false,
+     "themeHue": null, "themeGrayscale": false, "accentHue": null, "coverHue": 24, "coverGrayscale": false,
      "status": "active", "cancelledAt": null, "createdAt": "2026-10-07T20:00:00.000Z", "updatedAt": "2026-10-07T20:00:00.000Z",
      "hosts": [{"person": \(ana), "role": "creator"}],
      "counts": \(counts),
      "viewer": {"role": null, "rsvp": {"status": "going", "guests": 1, "guestsOverLimit": false, "invited": true,
-                "respondedAt": "2026-10-08T17:12:00.000Z"}, "canEdit": false, "canSeeGuestList": true, "canPost": true},
+                "respondedAt": "2026-10-08T17:12:00.000Z"}, "canEdit": false, "canSeeGuestList": true, "canPost": true,
+                "muted": false},
      "friendsGoing": {"count": 1, "people": [\(ben)]}}
     """
 
@@ -38,9 +46,8 @@ enum APISamples {
 
     /// `MeEnvelope`'s example.
     static let meEnvelope = """
-    {"person": {"id": "6f1c2b9e-4d0a-4a53-9a51-2f7e0c1d8b44", "email": "ana@example.com", "firstName": "Ana",
-                "lastName": "Lima", "shortName": "Ana L", "photoUrl": null, "phone": "+14155551234",
-                "instagram": "ana.lima", "venmo": "ana-l", "cashapp": "AnaL", "emailVerified": false, "findable": true},
+    {"person": {"id": "6f1c2b9e-4d0a-4a53-9a51-2f7e0c1d8b44", "firstName": "Ana", "lastName": "Lima",
+                "shortName": "Ana L", "photoUrl": null, "emailVerified": false, "findable": true},
      "verifyUrl": "https://account.canopysf.com/profile?verify=1&return=https%3A%2F%2Fevents.canopysf.com%2F",
      "hasHosted": false}
     """
@@ -75,7 +82,8 @@ enum APISamples {
        "actor": \(ben),
        "event": {"id": "4fQ9xKpL2mZa", "url": "https://events.canopysf.com/e/4fQ9xKpL2mZa", "title": "Rooftop dinner",
                  "startsAt": "2026-11-01T02:30:00.000Z", "timeZone": "America/Los_Angeles", "status": "active",
-                 "coverImageUrl": null, "coverImages": [], "themeHue": 300, "themeGrayscale": false},
+                 "coverImageUrl": null, "coverImages": [], "themeHue": 300, "themeGrayscale": false,
+                 "accentHue": null},
        "details": {"status": "going"}, "count": 4}]}
     """
 
@@ -101,4 +109,19 @@ enum APISamples {
      "photoUrl": "https://account.canopysf.com/photo/6f1c2b9e-4d0a-4a53-9a51-2f7e0c1d8b44?v=1759870000000",
      "venmo": "ana-l", "phone": "+14155551234", "instagram": "ana.lima", "cashapp": "AnaL", "findable": true, "isAdmin": false}
     """
+
+    /// A page of friends: one from events together, one only added (no
+    /// events in common, so `lastTogetherAt` is null).
+    static let friends = """
+    {"friends": [
+       {"person": \(ana), "source": "shared_events", "eventsInCommon": 3, "lastTogetherAt": "2026-09-12T02:00:00.000Z"},
+       {"person": \(ben), "source": "added", "eventsInCommon": 0, "lastTogetherAt": null}],
+     "nextCursor": null}
+    """
+
+    static let friendLink = #"{"url": "https://events.canopysf.com/f/7Hq2mXc9LpRt", "code": "7Hq2mXc9LpRt"}"#
+    static let friendLinkOwner = #"{"person": \#(ana), "viewer": {"isYou": false, "isFriend": true}}"#
+    static let settings = #"{"calendarInvites": true}"#
+    static let optouts = #"{"hosts": [\#(ben)]}"#
+    static let detailError = #"{"error": "a link is a web address, starting http:// or https://", "reason": "bad_detail_url", "index": 1}"#
 }

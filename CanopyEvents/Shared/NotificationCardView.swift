@@ -2,7 +2,7 @@ import SwiftUI
 
 /// The expanded invite notification, in the app's style: the cover hero
 /// (fading itself out; 2:1 in the notification, 3:2 in the app) on the
-/// event's colour, the title, the big
+/// event's color, the title, the big
 /// date and time, the place, the faces going, and two answer buttons.
 /// After an answer it shows what was said. Drawn by the notification
 /// extension; the app has it too (Profile's Debug section), to look at.
@@ -48,7 +48,7 @@ struct NotificationCardView: View {
             .padding(.bottom, Spacing.large)
         }
         .background(colors.base.color)
-        .eventAccent(card.theme)
+        .eventAccent(card.accent)
         .environment(\.colorScheme, .dark)
     }
 

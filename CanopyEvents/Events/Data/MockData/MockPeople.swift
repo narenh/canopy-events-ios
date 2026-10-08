@@ -5,11 +5,10 @@ import Foundation
 enum MockPeople {
     // MARK: Signed-in accounts
 
-    static let maya = Me(
-        id: "p-maya", email: "maya@example.com", firstName: "Maya", lastName: "Chen",
-        shortName: "Maya C", photoUrl: photo(47), phone: "+14155550123",
-        instagram: "maya.chen", venmo: "maya-chen", cashapp: nil,
-        emailVerified: true, findable: true
+    static let maya = AccountProfile(
+        id: "p-maya", email: "maya@example.com", emailVerified: true, firstName: "Maya", lastName: "Chen",
+        shortName: "Maya C", photoUrl: photo(47), venmo: "maya-chen", phone: "+14155550123",
+        instagram: "maya.chen", cashapp: nil, findable: true, isAdmin: false
     )
 
     /// An unverified quick account with one invite and one RSVP.
@@ -20,12 +19,11 @@ enum MockPeople {
     static let ada = quickUser(id: "p-ada", firstName: "Ada", lastName: "Ng", email: "ada@example.com")
 
     /// A quick sign-up: name and email only, email not yet verified.
-    static func quickUser(id: String, firstName: String, lastName: String, email: String) -> Me {
-        Me(
-            id: id, email: email, firstName: firstName, lastName: lastName,
+    static func quickUser(id: String, firstName: String, lastName: String, email: String) -> AccountProfile {
+        AccountProfile(
+            id: id, email: email, emailVerified: false, firstName: firstName, lastName: lastName,
             shortName: PersonName.short(firstName: firstName, lastName: lastName),
-            photoUrl: nil, phone: nil, instagram: nil, venmo: nil, cashapp: nil,
-            emailVerified: false, findable: true
+            photoUrl: nil, venmo: nil, phone: nil, instagram: nil, cashapp: nil, findable: true, isAdmin: false
         )
     }
 

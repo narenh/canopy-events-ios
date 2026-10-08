@@ -10,7 +10,7 @@ final class EventEditorModel {
     var draft: EventDraft
     /// A photo picked for the cover, not uploaded until Save.
     private(set) var pickedCover: Data?
-    /// The colour that matches the picked photo, once worked out.
+    /// The color that matches the picked photo, once worked out.
     private(set) var pickedCoverTheme: EventTheme?
     /// The saved cover is to go, on Save.
     private(set) var removesCover = false
@@ -27,7 +27,7 @@ final class EventEditorModel {
     /// Whether the hero shows a photo (picked, or the saved one kept).
     var hasCover: Bool { pickedCover != nil || (original?.hasCover == true && !removesCover) }
 
-    /// The colour "Match photo" applies: the picked photo's, else the
+    /// The color "Match photo" applies: the picked photo's, else the
     /// saved cover's (its `coverHue`), or nil when it isn't known.
     var coverMatch: EventTheme? {
         if pickedCover != nil { return pickedCoverTheme }
@@ -53,10 +53,10 @@ final class EventEditorModel {
         draft.endsAt = nil
     }
 
-    // MARK: Cover and colour
+    // MARK: Cover and color
 
-    /// A photo was picked: keep it for Save, and jump the colour to it
-    /// when its colour can be worked out (the host can still change it).
+    /// A photo was picked: keep it for Save, and jump the color to it
+    /// when its color can be worked out (the host can still change it).
     func pick(_ data: Data) {
         pickedCover = data
         removesCover = false

@@ -3,7 +3,7 @@ import Foundation
 /// What the expanded invite notification draws, carried in the push
 /// itself (`userInfo["card"]`, docs/push-payloads.md), since the
 /// extension can't reach the app's data: the event's title, when, place,
-/// cover and colour, and a few of the faces going.
+/// cover and color, and a few of the faces going.
 nonisolated struct NotificationCard: Codable, Hashable, Identifiable, Sendable {
     var eventId: String
     var title: String
@@ -15,6 +15,8 @@ nonisolated struct NotificationCard: Codable, Hashable, Identifiable, Sendable {
     var coverUrl: URL?
     var themeHue: Int?
     var themeGrayscale: Bool
+    /// A grey event's accent hue; nil is white.
+    var accentHue: Int?
     var going: Int
     var maybe: Int
     /// Up to six, friends first.
@@ -25,6 +27,7 @@ nonisolated struct NotificationCard: Codable, Hashable, Identifiable, Sendable {
     var id: String { eventId }
 
     var theme: EventTheme { EventTheme(hue: themeHue, grayscale: themeGrayscale) }
+    var accent: AccentColors { AccentColors(theme: theme, accentHue: accentHue) }
     var zone: TimeZone { TimeZone(identifier: timeZone) ?? .current }
 
     /// From a notification's `userInfo`, or nil without a readable card.
@@ -50,7 +53,8 @@ nonisolated struct NotificationCard: Codable, Hashable, Identifiable, Sendable {
     }
 
     init(eventId: String, title: String, startsAt: Date, endsAt: Date?, timeZone: String, locationName: String?,
-         coverUrl: URL?, themeHue: Int?, themeGrayscale: Bool, going: Int, maybe: Int, faces: [CardFace]) {
+         coverUrl: URL?, themeHue: Int?, themeGrayscale: Bool, accentHue: Int?, going: Int, maybe: Int,
+         faces: [CardFace]) {
         self.eventId = eventId
         self.title = title
         self.startsAt = startsAt
@@ -60,6 +64,7 @@ nonisolated struct NotificationCard: Codable, Hashable, Identifiable, Sendable {
         self.coverUrl = coverUrl
         self.themeHue = themeHue
         self.themeGrayscale = themeGrayscale
+        self.accentHue = accentHue
         self.going = going
         self.maybe = maybe
         self.faces = faces

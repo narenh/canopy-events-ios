@@ -11,6 +11,9 @@ nonisolated struct Viewer: Codable, Hashable {
     /// Whether you may post on the wall: hosts, and answers of going,
     /// maybe or waitlisted.
     var canPost: Bool
+    /// You muted this event: its chatter doesn't reach your inbox. Always
+    /// false for a host.
+    var muted: Bool
 
     var isHost: Bool { role != nil }
     var isCreator: Bool { role == .creator }

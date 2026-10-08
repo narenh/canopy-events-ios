@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// The event's colour as a slider, the web's: a grey stretch at the left
-/// end (no colour), then the whole hue wheel, drawn at a lightness you can
-/// see (the mesh's own colours are too dark on a thin track). The thumb
+/// The event's color as a slider, the web's: a grey stretch at the left
+/// end (no color), then the whole hue wheel, drawn at a lightness you can
+/// see (the mesh's own colors are too dark on a thin track). The thumb
 /// is filled with the theme's brightest glow. Dragging changes the theme
 /// at once, so the page behind it previews it live.
 struct ThemeSlider: View {
@@ -35,7 +35,7 @@ struct ThemeSlider: View {
             theme = ThemeSliderScale.theme(at: Int((fraction * maximum).rounded()))
         })
         .accessibilityElement()
-        .accessibilityLabel("Colour")
+        .accessibilityLabel("Color")
         .accessibilityValue(Self.words(for: theme))
         .accessibilityAdjustableAction { direction in
             let step = direction == .increment ? 10 : -10
@@ -47,10 +47,10 @@ struct ThemeSlider: View {
         CGFloat(Double(ThemeSliderScale.value(for: theme)) / maximum)
     }
 
-    /// "No colour", "Canopy green", or "300°", as the web says it.
+    /// "No color", "Canopy green", or "300°", as the web says it.
     static func words(for theme: EventTheme) -> String {
         switch theme {
-        case .grayscale: "No colour"
+        case .grayscale: "No color"
         case .canopyGreen: "Canopy green"
         case .hue(let hue): "\(hue)°"
         }

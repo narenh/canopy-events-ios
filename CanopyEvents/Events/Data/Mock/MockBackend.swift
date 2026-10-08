@@ -5,7 +5,7 @@ import Foundation
 /// `MockEventsRepository`, so a change made as one person (an invite, an
 /// RSVP) is there when someone else signs in, until the app quits.
 final class MockBackend {
-    var accounts: [Me]
+    var accounts: [AccountProfile]
     var records: [MockEventRecord]
     /// Each event's wall, by event id, in the order entries were made.
     var wall: [Event.ID: [WallEntry]]
@@ -13,6 +13,17 @@ final class MockBackend {
     /// Everyone who has ever hosted or co-hosted (`hasHosted` stays true
     /// once it is, even after an event is deleted or they step down).
     var hostedPeople: Set<Person.ID>
+    /// Friends added by hand, linked or invited, by whose list they're
+    /// in: one way unless both sides have the other.
+    var friendEdges: [Person.ID: [Person.ID: FriendSource]] = [:]
+    /// People someone took out of their list: they stay out until added again.
+    var removedFriends: [Person.ID: Set<Person.ID>] = [:]
+    /// Friend link codes, by whose they are.
+    var friendLinks: [Person.ID: String] = [:]
+    /// Whose invitations someone opted out of, oldest first.
+    var inviteOptouts: [Person.ID: [Person.ID]] = [:]
+    /// Settings, by whose they are; missing means the defaults.
+    var settings: [Person.ID: Settings] = [:]
     /// Push tokens, by whose they are (up to 10 each).
     var devices: [Person.ID: [String]] = [:]
     private let delay: Duration
@@ -43,16 +54,16 @@ final class MockBackend {
         return String(lastId)
     }
 
-    func account(id: Person.ID) -> Me? {
+    func account(id: Person.ID) -> AccountProfile? {
         accounts.first { $0.id == id }
     }
 
-    func account(email: String) -> Me? {
-        accounts.first { $0.email?.caseInsensitiveCompare(email) == .orderedSame }
+    func account(email: String) -> AccountProfile? {
+        accounts.first { $0.email.caseInsensitiveCompare(email) == .orderedSame }
     }
 
     /// Adds the account, or replaces the one with the same id.
-    func save(_ account: Me) {
+    func save(_ account: AccountProfile) {
         accounts.removeAll { $0.id == account.id }
         accounts.append(account)
     }
@@ -65,6 +76,9 @@ final class MockBackend {
         from actor: Person?, details: NotificationDetails? = nil
     ) {
         guard personId != actor?.id else { return }
+        // Muted: the chatter skips the inbox; the essentials still come.
+        if [.wallPost, .rsvp, .cohostAdded].contains(type),
+           records.first(where: { $0.id == event.id })?.mutedIds.contains(personId) == true { return }
         var inbox = inboxes[personId, default: []]
         if type == .rsvp, let index = inbox.firstIndex(where: { $0.type == .rsvp && !$0.read && $0.event?.id == event.id }) {
             inbox[index].count += 1

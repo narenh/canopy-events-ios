@@ -13,8 +13,27 @@ protocol EventsRepository: AnyObject, Sendable {
 
     /// `GET /api/v1/me`
     func me() async throws -> MeEnvelope
+    /// `GET /api/v1/me/settings`
+    func settings() async throws -> Settings
+    /// `PATCH /api/v1/me/settings`: only what's set changes. Answers the settings after.
+    func updateSettings(calendarInvites: Bool?) async throws -> Settings
+
+    // MARK: Friends
+
     /// `GET /api/v1/me/friends`
     func friends(page: PageRequest) async throws -> FriendList
+    /// `POST /api/v1/me/friends`: one way, they aren't told. Verified only.
+    func addFriend(personId: Person.ID) async throws -> Friend
+    /// `DELETE /api/v1/me/friends/{personId}`: out, and they stay out.
+    func removeFriend(personId: Person.ID) async throws
+    /// `GET /api/v1/me/friend-link`, made the first time.
+    func friendLink() async throws -> FriendLink
+    /// `POST /api/v1/me/friend-link/reset`: the old one stops working.
+    func resetFriendLink() async throws -> FriendLink
+    /// `GET /api/v1/friend-links/{code}`: whose it is. Adds nobody.
+    func friendLinkOwner(code: String) async throws -> FriendLinkOwner
+    /// `POST /api/v1/friend-links/{code}/accept`: friends both ways.
+    func acceptFriendLink(code: String) async throws -> Friend
 
     // MARK: Notifications
 
@@ -33,7 +52,7 @@ protocol EventsRepository: AnyObject, Sendable {
 
     // MARK: Events
 
-    /// `GET /api/v1/me/events/{hosting|upcoming|invitations|declined|past}`
+    /// `GET /api/v1/me/events/{all|hosting|upcoming|invitations|declined|past}`
     func events(_ list: EventListKind, page: PageRequest) async throws -> EventList
     /// `GET /api/v1/events/{id}`
     func event(id: Event.ID) async throws -> Event
@@ -63,17 +82,31 @@ protocol EventsRepository: AnyObject, Sendable {
     /// and plus-ones (0 for `not_going`). The event comes back with your
     /// new `viewer.rsvp`, and `waitlisted` if going didn't fit.
     func setRSVP(eventId: Event.ID, status: RSVPStatus, guests: Int) async throws -> RSVPResult
-    /// `DELETE /api/v1/events/{id}/rsvp`: invited again if a host invited
-    /// you, otherwise off the list.
-    func withdrawRSVP(eventId: Event.ID) async throws -> Event
     /// `POST /api/v1/events/{id}/invites` (hosts only)
     func invite(eventId: Event.ID, personIds: [Person.ID]) async throws -> InviteResult
     /// `DELETE /api/v1/events/{id}/invites/{personId}`: only while they
     /// haven't answered (hosts only).
     func uninvite(eventId: Event.ID, personId: Person.ID) async throws
-    /// `GET /api/v1/people/lookup`: the person, or nil with no hint why.
+    /// `POST /api/v1/people/lookup` (a POST, so the number or handle is
+    /// never in a URL; don't log it): the person, or nil with no hint why.
     /// Verified people only.
     func lookUpPerson(_ lookup: PersonLookup) async throws -> Person?
+
+    // MARK: The guest menu
+
+    /// `PUT /api/v1/events/{id}/mute`: its chatter skips your inbox.
+    func muteEvent(id: Event.ID) async throws -> Event
+    /// `DELETE /api/v1/events/{id}/mute`
+    func unmuteEvent(id: Event.ID) async throws -> Event
+    /// `POST /api/v1/events/{id}/leave`: off the event for good (ask first).
+    /// Answers the event as anyone with the link sees it.
+    func leaveEvent(id: Event.ID) async throws -> Event
+    /// `GET /api/v1/me/invite-optouts`
+    func inviteOptouts() async throws -> InviteOptouts
+    /// `PUT /api/v1/me/invite-optouts/{personId}`: their invitations are skipped.
+    func optOutOfInvites(from personId: Person.ID) async throws
+    /// `DELETE /api/v1/me/invite-optouts/{personId}`
+    func optInToInvites(from personId: Person.ID) async throws
 
     // MARK: Hosts and moderation
 

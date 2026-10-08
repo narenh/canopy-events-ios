@@ -10,8 +10,10 @@ struct MockEventRecord {
     var event: Event
     /// Everyone on the guest list (hosts aren't on it), oldest first.
     var guests: [Guest]
-    /// People a host invited. Withdrawing an answer leaves them `invited`.
+    /// People a host invited.
     var invitedIds: Set<Person.ID> = []
+    /// Guests who muted the event: its chatter skips their inbox.
+    var mutedIds: Set<Person.ID> = []
 
     var id: Event.ID { event.id }
 

@@ -3,7 +3,7 @@ import Foundation
 import ImageIO
 
 /// The hue that matches a photo, worked out the way the server does for
-/// `coverHue` (docs/api.md, "The colour that matches the photo"; the web's
+/// `coverHue` (docs/api.md, "The color that matches the photo"; the web's
 /// `hueFromPixels`), so the editor's slider can jump to it as soon as a
 /// photo is picked. Nil for an essentially grey photo.
 nonisolated enum PhotoHue {

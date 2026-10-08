@@ -21,7 +21,14 @@ extension MockEvents {
             MockEventRecord(
                 event: event(id: rooftopId, title: "Rooftop dinner", description: "Pasta, a view, and too much wine. Bring a jacket: it gets windy up there.",
                              days: 3, hour: 19, minute: 30, hours: 4, locationName: "Ana's place",
-                             locationAddress: "1 Market St, San Francisco", hosts: [host(p.ana)], guestsAllowed: 1, cover: cover("rooftop", hue: 225), theme: .hue(225)),
+                             locationAddress: "1 Market St, San Francisco", hosts: [host(p.ana)], guestsAllowed: 1, cover: cover("rooftop", hue: 225), theme: .hue(225),
+                             details: [
+                                 EventDetail(type: .link, label: "Playlist", value: "https://open.spotify.com/playlist/37i9dQZF1DX4WYpdgoIcn6",
+                                             href: "https://open.spotify.com/playlist/37i9dQZF1DX4WYpdgoIcn6"),
+                                 EventDetail(type: .dressCode, label: nil, value: "Warm layers", href: nil),
+                                 EventDetail(type: .parking, label: nil, value: "Street parking on Main; the garage closes at 11.", href: nil),
+                                 EventDetail(type: .phone, label: "Ana's cell", value: "(415) 555-0142", href: "tel:4155550142"),
+                             ]),
                 guests: [guest(maya, .going, plus: 1), guest(p.ben, .going, plus: 2), guest(p.chloe, .going), guest(p.gus, .maybe),
                          guest(p.hana, .notGoing), guest(sam, .invited), guest(p.lena, .going), guest(p.kofi, .invited)],
                 invitedIds: [maya.id, sam.id, p.kofi.id, p.ben.id]),
@@ -47,7 +54,11 @@ extension MockEvents {
             MockEventRecord(
                 event: event(id: supperClubId, title: "Supper club: Oaxaca", description: "Seven courses, mole three ways. Strictly eight seats.",
                              days: 12, hour: 19, hours: 3, locationName: "Diego's kitchen",
-                             locationAddress: "2100 Mission St, San Francisco", hosts: [host(p.diego)], capacity: 8, cover: cover("supper", hue: 45), theme: .hue(30)),
+                             locationAddress: "2100 Mission St, San Francisco", hosts: [host(p.diego)], capacity: 8, cover: cover("supper", hue: 45), theme: .hue(30),
+                             details: [
+                                 EventDetail(type: .food, label: "Potluck", value: "Bring a dish to share.\nWe'll have drinks.", href: nil),
+                                 EventDetail(type: .link, label: nil, value: "https://www.example.com/oaxaca-supper-club/menu/", href: "https://www.example.com/oaxaca-supper-club/menu/"),
+                             ]),
                 guests: [p.ana, p.ben, p.chloe, p.elif, p.farah, p.hana, p.isaac, p.kofi].map { guest($0, .going) }
                     + [guest(maya, .waitlisted), guest(p.gus, .waitlisted)]),
             MockEventRecord(
@@ -62,7 +73,7 @@ extension MockEvents {
             MockEventRecord(
                 event: event(id: potteryId, title: "Pottery workshop", description: "Wheel-throwing for beginners. Wear clothes you don't love.",
                              days: 14, hour: 11, hours: 3, locationName: "Clayroom",
-                             locationAddress: "180 Capp St, San Francisco", hosts: [host(p.farah)], guestsAllowed: 1, cover: cover("pottery", hue: 55)),
+                             locationAddress: "180 Capp St, San Francisco", hosts: [host(p.farah)], guestsAllowed: 1, cover: cover("pottery", hue: 55), theme: .grayscale, accentHue: 30),
                 guests: [guest(maya, .invited), guest(sam, .going), guest(p.kofi, .going), guest(p.lena, .maybe)],
                 invitedIds: [maya.id]),
             MockEventRecord(

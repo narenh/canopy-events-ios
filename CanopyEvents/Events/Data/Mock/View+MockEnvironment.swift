@@ -5,7 +5,7 @@ extension View {
     /// `AppSession` and its instant (no delay) mock repository, as Maya
     /// unless you pass someone else (e.g. `MockPeople.sam`, the unverified
     /// quick account). Previews only.
-    func mockEnvironment(signedInAs me: Me = MockPeople.maya) -> some View {
+    func mockEnvironment(signedInAs me: AccountProfile = MockPeople.maya) -> some View {
         modifier(MockEnvironment(me: me))
     }
 }
@@ -17,7 +17,7 @@ private struct MockEnvironment: ViewModifier {
     @State private var notifications: NotificationResponder
     private let personId: Person.ID
 
-    init(me: Me) {
+    init(me: AccountProfile) {
         let session = AppSession.mock(delay: .zero, extraAccounts: [me])
         _session = State(initialValue: session)
         _notifications = State(initialValue: NotificationResponder(session: session))

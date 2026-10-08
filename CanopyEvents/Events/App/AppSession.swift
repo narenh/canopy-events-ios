@@ -33,6 +33,10 @@ final class AppSession {
     }
 
     var me: Me? { account?.person }
+    /// You as the Canopy Account service has you, with your own contact
+    /// details (the events API has none): for the Profile and the verify
+    /// sheet. Loaded at sign-in; nil if it couldn't be.
+    private(set) var profile: AccountProfile?
     var isSignedIn: Bool { account != nil }
     var needsVerification: Bool { me.map { !$0.emailVerified } ?? false }
     /// Once you've hosted anything, the app shows its hosting UI for good.
@@ -75,11 +79,13 @@ final class AppSession {
         account = try await repository.me()
         self.repository = repository
         self.token = token
+        profile = try? await accounts.profile(for: token)
     }
 
     func signOut() async {
         if let token { await accounts.signOut(token) }
         account = nil
+        profile = nil
         token = nil
     }
 
@@ -103,7 +109,7 @@ final class AppSession {
 
     func verifyEmail(code: String) async throws {
         guard let token else { return }
-        _ = try await accounts.verifyEmail(code: code, for: token)
+        profile = try await accounts.verifyEmail(code: code, for: token)
         account = try await repository.me()
     }
 
@@ -111,7 +117,7 @@ final class AppSession {
 
     func updateProfile(_ profile: ProfileDraft) async throws {
         guard let token else { return }
-        _ = try await accounts.updateProfile(profile, for: token)
+        self.profile = try await accounts.updateProfile(profile, for: token)
         account = try await repository.me()
     }
 }

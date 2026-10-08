@@ -14,6 +14,8 @@ nonisolated struct EventSummary: Codable, Hashable, Identifiable {
     var coverImages: [CoverImage]
     var themeHue: Int?
     var themeGrayscale: Bool
+    /// A grey event's accent hue; nil is white.
+    var accentHue: Int?
 }
 
 extension EventSummary {
@@ -22,7 +24,8 @@ extension EventSummary {
         self.init(
             id: event.id, url: event.url, title: event.title, startsAt: event.startsAt,
             timeZone: event.timeZone, status: event.status, coverImageUrl: event.coverImageUrl,
-            coverImages: event.coverImages, themeHue: event.themeHue, themeGrayscale: event.themeGrayscale
+            coverImages: event.coverImages, themeHue: event.themeHue, themeGrayscale: event.themeGrayscale,
+            accentHue: event.accentHue
         )
     }
 }
