@@ -14,6 +14,9 @@ final class EventEditorModel {
     private(set) var pickedCoverTheme: EventTheme?
     /// The saved cover is to go, on Save.
     private(set) var removesCover = false
+    /// A TMDB background chosen for the cover, sent on Save (after a new
+    /// event is made), as a picked photo is.
+    private(set) var pickedBackground: Background?
     private(set) var isSaving = false
     var errorMessage: String?
 
@@ -25,12 +28,15 @@ final class EventEditorModel {
     var isNew: Bool { original == nil }
 
     /// Whether the hero shows a photo (picked, or the saved one kept).
-    var hasCover: Bool { pickedCover != nil || (original?.hasCover == true && !removesCover) }
+    var hasCover: Bool {
+        pickedCover != nil || pickedBackground != nil || (original?.hasCover == true && !removesCover)
+    }
 
     /// The color "Match photo" applies: the picked photo's, else the
     /// saved cover's (its `coverHue`), or nil when it isn't known.
     var coverMatch: EventTheme? {
         if pickedCover != nil { return pickedCoverTheme }
+        if let pickedBackground { return pickedBackground.theme }
         return removesCover ? nil : original?.coverTheme
     }
 
@@ -59,13 +65,24 @@ final class EventEditorModel {
     /// when its color can be worked out (the host can still change it).
     func pick(_ data: Data) {
         pickedCover = data
+        pickedBackground = nil
         removesCover = false
         pickedCoverTheme = PhotoHue.theme(ofImageData: data)
         if let pickedCoverTheme { draft.theme = pickedCoverTheme }
     }
 
+    /// A background chosen: preview it, and jump the color to its own.
+    func pick(_ background: Background) {
+        pickedBackground = background
+        pickedCover = nil
+        pickedCoverTheme = nil
+        removesCover = false
+        draft.theme = background.theme
+    }
+
     func removeCover() {
         pickedCover = nil
+        pickedBackground = nil
         pickedCoverTheme = nil
         removesCover = original?.hasCover == true
     }
@@ -89,6 +106,8 @@ final class EventEditorModel {
             }
             if let pickedCover {
                 event = try await repository.setCover(eventId: event.id, imageData: pickedCover)
+            } else if let pickedBackground {
+                event = try await repository.setCoverBackground(eventId: event.id, backgroundId: pickedBackground.id)
             } else if removesCover {
                 event = try await repository.deleteCover(eventId: event.id)
             }

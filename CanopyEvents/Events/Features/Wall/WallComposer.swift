@@ -8,7 +8,7 @@ struct WallComposer: View {
 
     var body: some View {
         HStack(spacing: Spacing.small) {
-            TextField("Write something…", text: $text, axis: .vertical)
+            TextField("Write something for everyone coming", text: $text, axis: .vertical)
                 .lineLimit(1...4)
                 .padding(.horizontal, Spacing.medium)
                 .padding(.vertical, Spacing.small)

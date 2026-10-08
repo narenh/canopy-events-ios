@@ -70,6 +70,11 @@ protocol EventsRepository: AnyObject, Sendable {
     /// `PUT /api/v1/events/{id}/cover`, the image's bytes as multipart
     /// `cover` (JPEG, PNG, WebP or HEIC, up to 15 MB). Hosts only.
     func setCover(eventId: Event.ID, imageData: Data) async throws -> Event
+    /// `GET /api/v1/backgrounds`: the TMDB backdrops a host can choose.
+    func backgrounds() async throws -> BackgroundList
+    /// `PUT /api/v1/events/{id}/cover/background`: one becomes the cover,
+    /// as an upload would. Hosts only.
+    func setCoverBackground(eventId: Event.ID, backgroundId: Background.ID) async throws -> Event
     /// `DELETE /api/v1/events/{id}/cover`. Hosts only.
     func deleteCover(eventId: Event.ID) async throws -> Event
 

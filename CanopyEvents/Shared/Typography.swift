@@ -11,7 +11,8 @@ enum Typography {
     static let whenDate = Font.system(.title2, weight: .semibold)
     /// ...and the time, nearly as big (21–23 px, 500).
     static let whenTime = Font.system(.title3, weight: .medium)
-    /// A card's big heading, e.g. "Attending" (22 px, 800).
+    /// Every event-page card's heading, one size for all ("RSVP",
+    /// "Hosting", "Attending", "Updates"; the web's 22 px, 800).
     static let sectionTitle = Font.system(.title2, weight: .heavy)
     /// A card's heading, e.g. "Are you going?" (19 px, 700).
     static let cardHeading = Font.system(.title3, weight: .bold)

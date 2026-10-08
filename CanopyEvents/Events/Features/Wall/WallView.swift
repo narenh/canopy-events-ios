@@ -7,6 +7,8 @@ import SwiftUI
 struct WallView: View {
     @Environment(\.eventsRepository) private var repository
     @State private var model: WallModel
+    /// The entry waiting for "Delete this post?" / "Delete this update?".
+    @State private var deleting: WallEntry?
 
     init(eventId: Event.ID) {
         _model = State(initialValue: WallModel(eventId: eventId))
@@ -19,7 +21,7 @@ struct WallView: View {
                 .swipeActions {
                     if entry.canDelete {
                         Button("Delete", systemImage: "trash", role: .destructive) {
-                            Task { await model.delete(entry, using: repository) }
+                            deleting = entry
                         }
                     }
                 }
@@ -27,11 +29,11 @@ struct WallView: View {
         .overlay {
             if let wall = model.wall {
                 if !wall.wallVisible {
-                    ContentUnavailableView("Wall hidden", systemImage: "eye.slash",
-                                           description: Text("The wall shows once you've RSVP'd."))
+                    ContentUnavailableView("Updates", systemImage: "eye.slash",
+                                           description: Text("The host shows updates to people who've answered. Answer to see them."))
                 } else if model.entries.isEmpty {
-                    ContentUnavailableView("No posts yet", systemImage: "text.bubble",
-                                           description: Text("Be the first to say something."))
+                    ContentUnavailableView(wall.canPost ? "Nothing here yet. Say hello to everyone coming." : "Nothing here yet.",
+                                           systemImage: "text.bubble")
                 }
             } else {
                 ProgressView()
@@ -44,7 +46,12 @@ struct WallView: View {
                 }
             }
         }
-        .navigationTitle("Wall")
+        .navigationTitle("Updates")
+        .confirmationDialog(deleting?.type == .post ? "Delete this post?" : "Delete this update?",
+                            isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
+                            titleVisibility: .visible, presenting: deleting) { entry in
+            Button("Delete", role: .destructive) { Task { await model.delete(entry, using: repository) } }
+        }
         .inlineNavigationTitle()
         .task { await model.load(from: repository) }
         .refreshable { await model.load(from: repository) }

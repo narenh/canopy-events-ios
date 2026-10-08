@@ -21,6 +21,8 @@ nonisolated extension APIErrorReason {
     static let badText = Self(rawValue: "bad_text")
     static let badCapacity = Self(rawValue: "bad_capacity")
     static let badImage = Self(rawValue: "bad_image")
+    /// A background id that isn't in the current set: fetch the list again.
+    static let badBackground = Self(rawValue: "bad_background")
     static let badIds = Self(rawValue: "bad_ids")
     static let badPlatform = Self(rawValue: "bad_platform")
     static let badToken = Self(rawValue: "bad_token")
@@ -94,6 +96,8 @@ nonisolated extension APIErrorReason {
 
     static let tooLarge = Self(rawValue: "too_large")
     static let rateLimited = Self(rawValue: "rate_limited")
+    /// TMDB didn't give the background just now: try again in a minute.
+    static let backgroundUnreachable = Self(rawValue: "background_unreachable")
     static let accountsUnreachable = Self(rawValue: "accounts_unreachable")
     static let serverError = Self(rawValue: "server_error")
 }

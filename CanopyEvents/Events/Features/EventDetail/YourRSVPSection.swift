@@ -16,7 +16,7 @@ struct YourRSVPSection: View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
             HStack {
                 Text(heading)
-                    .font(Typography.cardHeading)
+                    .font(Typography.sectionTitle)
                     .accessibilityAddTraits(.isHeader)
                 if event.viewer?.muted == true {
                     Image(systemName: "bell.slash")

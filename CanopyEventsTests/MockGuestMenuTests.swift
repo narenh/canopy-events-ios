@@ -100,4 +100,20 @@ struct MockGuestMenuTests {
         #expect(all == parts)
         #expect(!all.contains(MockEvents.triviaId))
     }
+
+    @Test func aBackgroundBecomesTheCover() async throws {
+        try await session.signInWithPasskey()
+        let list = try await session.repository.backgrounds()
+        #expect(list.groups.map { $0.first?.title } == ["Mean Girls", "The Devil Wears Prada", "The Wizard of Oz", "Wicked", "Schitt's Creek"])
+        let wicked = try #require(list.backgrounds.first { $0.title == "Wicked" })
+        let event = try await session.repository.setCoverBackground(eventId: MockEvents.gameNightId, backgroundId: wicked.id)
+        #expect(event.hasCover && event.coverHue == 145)
+        let bad = await #expect(throws: APIError.self) {
+            try await session.repository.setCoverBackground(eventId: MockEvents.gameNightId, backgroundId: "nope")
+        }
+        #expect(bad?.reason == .badBackground)
+        let model = EventEditorModel(event: event)
+        model.pick(try #require(list.backgrounds.first { $0.grayscale }))
+        #expect(model.draft.theme == .grayscale && model.hasCover)
+    }
 }

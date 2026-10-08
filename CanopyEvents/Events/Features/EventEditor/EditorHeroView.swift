@@ -3,8 +3,9 @@ import SwiftUI
 
 /// The editor's cover, drawn as the event page's hero (3:2, fading itself
 /// out the same way), with a dashed line where the clear 2:1 ends, so the host sees
-/// what stays clear. A camera button (add or change) and a × (remove) sit
-/// top right as 48 pt dark glass circles. Nothing uploads until Save.
+/// what stays clear. A gallery button (a TMDB background, when the set is
+/// on), a camera button (add or change a photo) and a × (remove) sit top
+/// right as 48 pt dark glass circles. Nothing uploads until Save.
 /// Pulled down, the picture (with its buttons) stays put and the fields
 /// slide down over it, as on the page.
 struct EditorHeroView: View {
@@ -14,6 +15,9 @@ struct EditorHeroView: View {
     var overscroll: CGFloat = 0
 
     @State private var item: PhotosPickerItem?
+    @State private var backgrounds: BackgroundList?
+    @State private var choosesBackground = false
+    @Environment(\.eventsRepository) private var repository
 
     var body: some View {
         picture
@@ -33,6 +37,12 @@ struct EditorHeroView: View {
             .overlay(alignment: .topTrailing) { buttons }
             .clipShape(.rect(topLeadingRadius: isInset ? 18 : 0, topTrailingRadius: isInset ? 18 : 0))
             .pinnedWhilePulled(overscroll)
+            .task { backgrounds = try? await repository.backgrounds() }
+            .sheet(isPresented: $choosesBackground) {
+                if let backgrounds {
+                    BackgroundPickerSheet(list: backgrounds, chosen: model.pickedBackground?.id) { model.pick($0) }
+                }
+            }
             .onChange(of: item) {
                 guard let item else { return }
                 Task {
@@ -45,6 +55,9 @@ struct EditorHeroView: View {
     @ViewBuilder private var picture: some View {
         if let data = model.pickedCover, let image = Image(photoData: data) {
             Color.clear.overlay { image.resizable().scaledToFill() }.clipped()
+        } else if let background = model.pickedBackground {
+            CoverPicture(eventId: model.original?.id ?? "", images: [], fullSizeUrl: background.previewUrl,
+                         theme: model.draft.theme)
         } else if model.hasCover, let original = model.original {
             CoverPicture(eventId: original.id, images: original.coverImages, fullSizeUrl: original.coverImageUrl,
                          theme: model.draft.theme)
@@ -55,6 +68,10 @@ struct EditorHeroView: View {
 
     private var buttons: some View {
         HStack(spacing: Spacing.small) {
+            if backgrounds?.enabled == true, backgrounds?.backgrounds.isEmpty == false {
+                Button { choosesBackground = true } label: { Self.circle("photo.on.rectangle.angled") }
+                    .accessibilityLabel("Choose a background")
+            }
             PhotosPicker(selection: $item, matching: .images) {
                 Self.circle("camera.fill")
             }

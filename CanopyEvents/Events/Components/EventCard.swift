@@ -5,6 +5,9 @@ import SwiftUI
 /// OCT 10 · 7:30 PM"), the title, where, and a tag for your part in it.
 struct EventCard: View {
     let event: Event
+    /// Shows your answer as a menu pill to answer again, in the badge's
+    /// place (declined events).
+    var onChangeAnswer: ((RSVPStatus) -> Void)?
 
     @Environment(\.horizontalSizeClass) private var sizeClass
 
@@ -59,7 +62,11 @@ struct EventCard: View {
     /// keeps it and adds "Cancelled".
     @ViewBuilder private var tag: some View {
         HStack(spacing: Spacing.xSmall) {
-            if let badge = StatusBadge(event: event) { badge }
+            if let onChangeAnswer, let status = event.myStatus {
+                AnswerMenuPill(current: status, onAnswer: onChangeAnswer)
+            } else if let badge = StatusBadge(event: event) {
+                badge
+            }
             if event.isCancelled {
                 TagLabel(title: "Cancelled", systemImage: "xmark.octagon", tint: Palette.danger)
             }

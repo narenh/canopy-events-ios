@@ -20,8 +20,8 @@ struct HostControlsSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
-            Text(isCreator ? "You're hosting" : "You're co-hosting")
-                .font(Typography.cardHeading)
+            Text(isCreator ? "Hosting" : "Co-hosting")
+                .font(Typography.sectionTitle)
                 .accessibilityAddTraits(.isHeader)
             if phase == .cancelled {
                 Text(isCreator ? "This event is cancelled. Bring it back from the ⋯ menu." : "This event is cancelled. Only the person who made it can bring it back.")

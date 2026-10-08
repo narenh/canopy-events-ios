@@ -2,9 +2,9 @@ import SwiftUI
 
 /// The Invites tab: events you've been invited to and haven't answered,
 /// with the answer buttons on each card; then, under "Declined", the
-/// upcoming events you said you can't go to, each with just Going to
-/// change your mind (an answer changes, never goes back). As the web's
-/// Invited tab.
+/// upcoming events you said you can't go to, each with its answer as a
+/// small "Can't Go ▾" pill to answer again (an answer changes, never
+/// goes back).
 struct InvitesView: View {
     @Environment(\.eventsRepository) private var repository
     @Environment(AppSession.self) private var session
@@ -23,7 +23,7 @@ struct InvitesView: View {
                         .padding(.top, invitations.events.isEmpty ? 0 : Spacing.medium)
                         .accessibilityAddTraits(.isHeader)
                     ForEach(declined.events) { event in
-                        InviteCard(event: event, answers: [.going]) { status in Task { await answer(event, status) } }
+                        InviteCard(event: event, isDeclined: true) { status in Task { await answer(event, status) } }
                     }
                 }
             }

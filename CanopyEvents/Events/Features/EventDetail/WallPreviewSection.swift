@@ -11,7 +11,7 @@ struct WallPreviewSection: View {
         NavigationLink(value: Route.wall(eventId)) {
             VStack(alignment: .leading, spacing: Spacing.medium) {
                 HStack {
-                    Text("Wall")
+                    Text("Updates")
                         .font(Typography.sectionTitle)
                         .accessibilityAddTraits(.isHeader)
                     Spacer()
@@ -19,11 +19,11 @@ struct WallPreviewSection: View {
                         .foregroundStyle(Palette.muted)
                 }
                 if !isVisible {
-                    Label("The wall shows once you've RSVP'd.", systemImage: "eye.slash")
+                    Label("The host shows updates to people who've answered. Answer to see them.", systemImage: "eye.slash")
                         .font(.subheadline)
                         .foregroundStyle(Palette.muted)
                 } else if entries.isEmpty {
-                    Text("No posts yet. Say something!")
+                    Text("Nothing here yet.")
                         .font(.subheadline)
                         .foregroundStyle(Palette.muted)
                 } else {
