@@ -19,6 +19,8 @@ struct EventDetailView: View {
     /// Wider than a phone: the page becomes a column and the hero is inset.
     @State private var isWide = false
     @State private var heroWidth: CGFloat = 0
+    /// How far the page is pulled down past its top: the picture stays put.
+    @State private var overscroll: CGFloat = 0
 
     init(eventId: Event.ID) {
         _model = State(initialValue: EventDetailModel(eventId: eventId))
@@ -42,7 +44,7 @@ struct EventDetailView: View {
     private func content(for event: Event) -> some View {
         ScrollView {
             VStack(spacing: 0) {
-                EventHeroView(event: event, isInset: isWide)
+                EventHeroView(event: event, isInset: isWide, overscroll: overscroll)
                     .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { heroWidth = $0 }
                 // The title starts on the band: the last sixth of the width.
                 VStack(alignment: .leading, spacing: Spacing.xLarge) {
@@ -62,6 +64,7 @@ struct EventDetailView: View {
             .padding(.top, isWide ? Spacing.large : 0)
             .padding(.bottom, Spacing.xxLarge)
         }
+        .trackingOverscroll($overscroll)
         .onGeometryChange(for: Bool.self) { $0.size.width >= 700 } action: { isWide = $0 }
         .ignoresSafeArea(edges: isWide ? [] : .top)
         .toolbar {
