@@ -36,8 +36,7 @@ struct ProfileDebugSection: View {
             return
         }
         do {
-            let card = try? await NotificationCard.load(MockEvents.eggsId, from: repository)
-            try await LocalNotifications.schedule(MockNotifications.adamInvite, card: card, after: 5)
+            try await LocalNotifications.scheduleTestInvite(using: repository, after: 5)
             status = "Coming in 5 seconds. Lock the phone to see it, and long-press it for the card."
         } catch {
             status = "Couldn't schedule it: \(error.localizedDescription)"

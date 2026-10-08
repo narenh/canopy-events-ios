@@ -27,13 +27,26 @@ nonisolated struct NotificationCard: Codable, Hashable, Identifiable, Sendable {
     var theme: EventTheme { EventTheme(hue: themeHue, grayscale: themeGrayscale) }
     var zone: TimeZone { TimeZone(identifier: timeZone) ?? .current }
 
-    /// From a notification's `userInfo`, or nil without a card.
+    /// From a notification's `userInfo`, or nil without a readable card.
     init?(userInfo: [AnyHashable: Any]) {
-        guard let object = userInfo[Self.userInfoKey], JSONSerialization.isValidJSONObject(object),
-              let data = try? JSONSerialization.data(withJSONObject: object),
-              let card = try? JSONDecoder.eventsAPI.decode(Self.self, from: data)
-        else { return nil }
+        guard case .success(let card) = Self.read(userInfo) else { return nil }
         self = card
+    }
+
+    /// The card, or why there isn't one (for the extension's log).
+    static func read(_ userInfo: [AnyHashable: Any]) -> Result<NotificationCard, CardProblem> {
+        guard let object = userInfo[userInfoKey] else {
+            return .failure(.missing(keys: userInfo.keys.map { "\($0)" }.sorted()))
+        }
+        guard JSONSerialization.isValidJSONObject(object),
+              let data = try? JSONSerialization.data(withJSONObject: object) else {
+            return .failure(.notJSON(type: "\(type(of: object))"))
+        }
+        do {
+            return .success(try JSONDecoder.eventsAPI.decode(Self.self, from: data))
+        } catch {
+            return .failure(.undecodable("\(error)"))
+        }
     }
 
     init(eventId: String, title: String, startsAt: Date, endsAt: Date?, timeZone: String, locationName: String?,

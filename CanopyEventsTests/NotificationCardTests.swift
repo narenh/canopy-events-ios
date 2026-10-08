@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import UserNotifications
 @testable import CanopyEvents
 
 /// The expanded notification's card: what it's built from, and that it
@@ -31,5 +32,33 @@ struct NotificationCardTests {
     @Test func anEventWithNoCoverHasNoCoverUrl() {
         let card = NotificationCard(event: PreviewData.event(MockEvents.eggsId), guests: [])
         #expect(card.coverUrl == nil && card.title == "Throw Eggs at Karl" && card.faces.isEmpty)
+    }
+
+    /// What the Debug button sends: the content `scheduleTestInvite` builds
+    /// carries a card the extension can read (the TestFlight bug was the
+    /// extension never running, not the card; this keeps the card honest).
+    @Test func theTestInviteCarriesACardTheExtensionCanRead() async throws {
+        let repository = MockEventsRepository(signedInAs: MockPeople.maya, delay: .zero)
+        let card = try await NotificationCard.load(MockEvents.eggsId, from: repository)
+        let content = try #require(await LocalNotifications.content(for: MockNotifications.adamInvite, card: card))
+        #expect(content.categoryIdentifier == "EVENT_INVITE")
+        #expect(content.body.hasSuffix(" · 7p · Throw Eggs at Karl"))
+        guard case .success(let read) = NotificationCard.read(content.userInfo) else {
+            Issue.record("the extension couldn't read the card: \(NotificationCard.read(content.userInfo))")
+            return
+        }
+        #expect(read == card && read.title == "Throw Eggs at Karl")
+    }
+
+    @Test func aMissingCardSaysWhy() {
+        guard case .failure(let problem) = NotificationCard.read(["eventId": "x", "type": "invited"]) else {
+            Issue.record("read a card from nothing")
+            return
+        }
+        #expect(problem.description == "no card in userInfo (keys: eventId, type)")
+        guard case .failure(.undecodable) = NotificationCard.read(["card": ["title": 3]]) else {
+            Issue.record("decoded a broken card")
+            return
+        }
     }
 }

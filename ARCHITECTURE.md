@@ -459,7 +459,9 @@ Swift Testing, in `CanopyEventsTests/`:
   friendly zone names and the nearby zones; `EditorAndAttendingTests`
   the editor's rules and Attending's words and order.
 - `NotificationCardTests`: the card built from an event (friends
-  first, the 800 px cover), its trip through `userInfo`, and its size.
+  first, the 800 px cover), its trip through `userInfo`, its size, the
+  test invite's content carrying a card the extension can read, and the
+  reasons it can't.
 - `NotificationTests`: the registered category and its buttons, the
   buttons' answers, the payload (including one as APNs delivers it), the
   test notification's words, and what Going, Can't Go and a tap do.
@@ -471,7 +473,7 @@ Swift Testing, in `CanopyEventsTests/`:
   invited counts).
 
 They're **not in a target yet**, because adding one means editing the
-project file. They were last run (all 60 passing) through a throwaway
+project file. They were last run (all 62 passing) through a throwaway
 Swift package on macOS that links the non-UI sources with the same
 Swift settings. To run them: in Xcode, File → New → Target
 → Unit Testing Bundle named `CanopyEventsTests` (Swift Testing), then
@@ -565,6 +567,29 @@ decisions are in canopy-events' `docs/decision-log.md`):
   (`notificationActions = []`): the card has its own, styled like the
   app's, and two pairs of the same buttons read as a mistake. They stay
   on the short look and the Lock Screen swipe, where there's no card.
+- **The extension links UserNotificationsUI explicitly**
+  (`OTHER_LDFLAGS = -framework UserNotificationsUI`). The first TestFlight
+  build showed a blank card with the system's buttons under it: its
+  `import UserNotificationsUI` was autolinked, and the linker drops an
+  autolinked framework when no symbol in it is referenced (everything
+  used is an Objective-C protocol or message), so the extension host
+  couldn't find `_UNNotificationContentExtensionVendorContext` ("Unable
+  to find NSExtensionContextClass… did you link the framework that
+  declares the extension point?"), never connected the controller, and
+  `didReceive` never ran. Found by running the extension in the
+  simulator (a throwaway UI test that allows notifications, waits for
+  the test invite and long-presses it) and reading its log.
+- **The extension always hides the system's buttons, first thing**, and
+  when a notification carries no card it can read, it shows the
+  notification's own title and body with the same buttons, and logs why
+  (`NotificationCard.read`, subsystem `com.canopysf.CanopyEvents`).
+- **The notification's cover is 2:1, not 3:2.** iOS caps an expanded
+  notification's height (about 380 pt on a 6.3" phone, seen in the
+  simulator) and cuts off the top of anything taller; the full 3:2 card
+  is about 450 pt. So the extension shows the hero's clear 2:1 part,
+  sized for the notification's actual width (the card is measured at
+  that width, not its ideal size, which loses the cover). The app's own
+  view of the card stays 3:2.
 - **The card hides the system's title and body**
   (`UNNotificationExtensionDefaultContentHidden`): the card says the
   same, bigger, with the cover.
