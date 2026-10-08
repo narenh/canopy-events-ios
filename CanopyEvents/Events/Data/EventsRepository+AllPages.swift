@@ -24,6 +24,18 @@ extension EventsRepository {
         }
     }
 
+    /// Everyone on one of your lists, newest first.
+    func allListMembers(listId: OwnedList.ID) async throws -> [ListMember] {
+        var members: [ListMember] = []
+        var page = PageRequest(limit: 100)
+        while true {
+            let answer = try await listMembers(listId: listId, page: page)
+            members += answer.members
+            guard let next = answer.nextCursor else { return members }
+            page = .after(next, limit: 100)
+        }
+    }
+
     /// The whole guest list: every page's guests, with the latest counts.
     func wholeGuestList(eventId: Event.ID) async throws -> GuestList {
         var list = try await guestList(eventId: eventId, status: nil, page: .first)

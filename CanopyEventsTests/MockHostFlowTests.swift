@@ -75,6 +75,7 @@ struct MockHostFlowTests {
         let repository = session.repository
         try await repository.deleteEvent(id: MockEvents.gameNightId)
         try await repository.deleteEvent(id: MockEvents.birthdayId)
+        try await repository.deleteEvent(id: MockEvents.dragFinaleId)
         let error = await #expect(throws: APIError.self) { try await repository.event(id: MockEvents.gameNightId) }
         #expect(error?.reason == .eventNotFound)
         #expect(try await repository.allEvents(.hosting).isEmpty)

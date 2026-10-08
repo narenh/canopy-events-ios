@@ -24,11 +24,12 @@ extension MockBackend {
     }
 
     /// Puts `friendId` in `personId`'s list (and takes back a removal).
-    func befriend(_ personId: Person.ID, _ friendId: Person.ID, source: FriendSource) {
+    func befriend(_ personId: Person.ID, _ friendId: Person.ID, source: FriendSource, at date: Date = .now) {
         guard personId != friendId else { return }
         removedFriends[personId]?.remove(friendId)
         if friendEdges[personId]?[friendId] == nil {
             friendEdges[personId, default: [:]][friendId] = source
+            friendEdgeDates[personId, default: [:]][friendId] = date
         }
     }
 

@@ -61,6 +61,12 @@ nonisolated struct Event: Codable, Hashable, Identifiable {
     var viewer: Viewer?
     /// Only on a single event (not in lists), and only when signed in.
     var friendsGoing: FriendsGoing?
+    /// Only on a single event, and only to its hosts: the lists on it, in
+    /// the order they were put on. Nil for anyone else.
+    var hostLists: [HostList]? = nil
+    /// Only on a single event: a list on it you could join ("Get invited
+    /// next time"). Nil for hosts, someone a host removed, or none.
+    var joinableList: JoinableList? = nil
 }
 
 nonisolated extension Event {

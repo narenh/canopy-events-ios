@@ -45,11 +45,11 @@ enum MockPeople {
     /// is his initials, drawn for the notification too.
     static let adam = person("p-adam", "Adam", "Smith")
 
-    static let everyone = [ana, ben, chloe, diego, elif, farah, gus, hana, isaac, jules, kofi, lena, adam]
+    static let everyone = [ana, ben, chloe, diego, elif, farah, gus, hana, isaac, jules, kofi, lena, adam] + crowd
 
     // MARK: Helpers
 
-    private static func person(_ id: String, _ first: String, _ last: String, photo: Int? = nil) -> Person {
+    static func person(_ id: String, _ first: String, _ last: String, photo: Int? = nil) -> Person {
         Person(
             id: id, firstName: first, lastName: last,
             shortName: PersonName.short(firstName: first, lastName: last),
@@ -59,7 +59,7 @@ enum MockPeople {
 
     /// Placeholder portraits from pravatar.cc; the avatar falls back to
     /// initials when they can't load (offline, previews).
-    private static func photo(_ number: Int) -> URL? {
+    static func photo(_ number: Int) -> URL? {
         URL(string: "https://i.pravatar.cc/200?img=\(number)")
     }
 }

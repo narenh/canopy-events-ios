@@ -14,6 +14,9 @@ struct MockEventRecord {
     var invitedIds: Set<Person.ID> = []
     /// Guests who muted the event: its chatter skips their inbox.
     var mutedIds: Set<Person.ID> = []
+    /// Lists on the event, in the order they were put on. Anyone who joins
+    /// one is invited while the event is still to come.
+    var attachedLists: [MockAttachedList] = []
 
     var id: Event.ID { event.id }
 
@@ -27,6 +30,12 @@ struct MockEventRecord {
 
     func guest(_ personId: Person.ID) -> Guest? {
         guests.first { $0.person.id == personId }
+    }
+
+    /// Not over and not cancelled: joining an attached list still invites
+    /// (an event happening now counts).
+    var isUpcoming: Bool {
+        !event.isOver && !event.isCancelled
     }
 
     /// Going guests plus their plus-ones: what counts against capacity.

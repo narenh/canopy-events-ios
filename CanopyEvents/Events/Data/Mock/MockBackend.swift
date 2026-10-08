@@ -16,6 +16,10 @@ final class MockBackend {
     /// Friends added by hand, linked or invited, by whose list they're
     /// in: one way unless both sides have the other.
     var friendEdges: [Person.ID: [Person.ID: FriendSource]] = [:]
+    /// When each of those edges was made, for the suggestions' score.
+    var friendEdgeDates: [Person.ID: [Person.ID: Date]] = [:]
+    /// Every list, in the order made.
+    var lists: [MockListRecord]
     /// People someone took out of their list: they stay out until added again.
     var removedFriends: [Person.ID: Set<Person.ID>] = [:]
     /// Friend link codes, by whose they are.
@@ -32,8 +36,10 @@ final class MockBackend {
     /// Seeded with the sample data in `MockData/`. `delay` is the fake
     /// network time every call waits; previews pass `.zero`.
     init(delay: Duration = .milliseconds(350)) {
-        self.accounts = [MockPeople.maya, MockPeople.sam]
+        self.accounts = [MockPeople.maya, MockPeople.sam, MockPeople.rosaAccount]
         self.records = MockEvents.all
+        self.lists = MockLists.all
+        self.inviteOptouts = MockLists.optouts
         self.wall = MockWall.entries
         self.hostedPeople = Set(MockEvents.all.flatMap { $0.event.hosts.map(\.person.id) })
         self.inboxes = [
@@ -41,6 +47,7 @@ final class MockBackend {
             MockPeople.sam.id: MockNotifications.inbox(for: MockPeople.sam.id),
         ]
         self.delay = delay
+        inviteSeedLists()
     }
 
     /// The artificial network delay. Every mock call awaits it first.

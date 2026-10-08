@@ -34,6 +34,42 @@ protocol EventsRepository: AnyObject, Sendable {
     func friendLinkOwner(code: String) async throws -> FriendLinkOwner
     /// `POST /api/v1/friend-links/{code}/accept`: friends both ways.
     func acceptFriendLink(code: String) async throws -> Friend
+    /// `GET /api/v1/me/friends/suggested?limit=` (1 to 50): friends with a
+    /// `score`, best first, not paginated. `{"friends": […]}` unwrapped.
+    func suggestedFriends(limit: Int) async throws -> [SuggestedFriend]
+
+    // MARK: Lists
+
+    /// `GET /api/v1/me/lists`: yours, oldest first. `{"lists": […]}` unwrapped.
+    func lists() async throws -> [OwnedList]
+    /// `POST /api/v1/me/lists` with `{name}` (1 to 60). Verified only.
+    func createList(name: String) async throws -> OwnedList
+    /// `PATCH /api/v1/me/lists/{listId}` with `{name}`.
+    func renameList(id: OwnedList.ID, name: String) async throws -> OwnedList
+    /// `DELETE /api/v1/me/lists/{listId}`: gone, with its members and its
+    /// place on events; invitations it made stay.
+    func deleteList(id: OwnedList.ID) async throws
+    /// `POST /api/v1/me/lists/{listId}/reset-link`: a new code and url;
+    /// the old link stops working, members stay.
+    func resetListLink(id: OwnedList.ID) async throws -> OwnedList
+    /// `GET /api/v1/me/lists/{listId}/members`, newest first. The owner only.
+    func listMembers(listId: OwnedList.ID, page: PageRequest) async throws -> ListMembers
+    /// `DELETE /api/v1/me/lists/{listId}/members/{personId}`: they aren't told.
+    func removeListMember(listId: OwnedList.ID, personId: Person.ID) async throws
+    /// `GET /api/v1/me/list-memberships`: lists you're on, newest first.
+    func listMemberships() async throws -> [ListMembership]
+    /// `DELETE /api/v1/me/list-memberships/{listId}`: the owner isn't told.
+    func leaveList(id: ListMembership.ID) async throws
+    /// `GET /api/v1/list-links/{code}`: the list's name and owner. Joins nobody.
+    func listLink(code: String) async throws -> ListLinkOwner
+    /// `POST /api/v1/list-links/{code}/join`: on the list, and invited to
+    /// its attached events still to come.
+    func joinList(code: String) async throws -> ListJoined
+    /// `PUT /api/v1/events/{id}/lists/{listId}`: a host puts one of their
+    /// own lists on the event, which invites everyone on it.
+    func attachList(eventId: Event.ID, listId: OwnedList.ID) async throws -> ListAttached
+    /// `DELETE /api/v1/events/{id}/lists/{listId}`: nobody's invitation changes.
+    func detachList(eventId: Event.ID, listId: OwnedList.ID) async throws -> Event
 
     // MARK: Notifications
 

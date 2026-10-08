@@ -4,8 +4,14 @@ import Foundation
 /// hosted, co-hosted, invited, waitlisted, full, cancelled, hidden guest
 /// lists, another time zone, and past events (which make friends).
 enum MockEvents {
-    /// Every record, upcoming and past.
-    static var all: [MockEventRecord] { upcoming + past }
+    /// Every record, upcoming and past, with the lists on them.
+    static var all: [MockEventRecord] {
+        (upcoming + withLists + past).map { record in
+            var record = record
+            record.attachedLists += listsOnEvents[record.id, default: []]
+            return record
+        }
+    }
 
     // MARK: Building blocks
 

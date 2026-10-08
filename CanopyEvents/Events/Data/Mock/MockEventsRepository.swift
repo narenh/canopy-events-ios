@@ -6,7 +6,8 @@ import Foundation
 ///
 /// The rest is in the extensions next to this file: `+Hosting`, `+Covers`,
 /// `+Guests`, `+GuestMenu`, `+Invites`, `+Hosts`, `+Moderation`, `+Wall`,
-/// `+Notifications`, `+People`, `+Friends` and `+Settings`.
+/// `+Notifications`, `+People`, `+Friends`, `+Suggested`, `+Lists`,
+/// `+ListMemberships`, `+EventLists` and `+Settings`.
 final class MockEventsRepository: EventsRepository {
     let backend: MockBackend
     let personId: Person.ID
@@ -93,12 +94,18 @@ final class MockEventsRepository: EventsRepository {
         records[index] = record
     }
 
-    /// The record turned into the event `currentUser` sees. Lists leave
-    /// out `friendsGoing`; a single event has it.
+    /// The record turned into the event `currentUser` sees. Lists of
+    /// events leave out `friendsGoing`, `hostLists` and `joinableList`; a
+    /// single event has them.
     func resolved(_ record: MockEventRecord, withFriends: Bool = true) -> Event {
         let friendIds = Set(backend.friends(of: currentUser.person).map(\.id))
         var event = MockRules.event(record, for: currentUser.person, friendIds: friendIds)
-        if !withFriends { event.friendsGoing = nil }
+        if withFriends {
+            event.hostLists = backend.hostLists(on: record, for: personId)
+            event.joinableList = backend.joinableList(on: record, for: personId)
+        } else {
+            event.friendsGoing = nil
+        }
         return event
     }
 }
