@@ -19,10 +19,6 @@ final class AppSession {
     /// from a notification, the app coming back): lists reload on it with
     /// `.task(id: session.dataVersion)`.
     private(set) var dataVersion = 0
-    /// Internal tools (Profile's Debug section) show in debug builds and
-    /// TestFlight, never from the App Store (`BuildEnvironment`).
-    private(set) var showsDebugTools = false
-
     @ObservationIgnored private let accounts: any AccountService
     @ObservationIgnored private let makeRepository: (AuthToken) -> any EventsRepository
 
@@ -85,11 +81,6 @@ final class AppSession {
         if let token { await accounts.signOut(token) }
         account = nil
         token = nil
-    }
-
-    /// Works out once, at launch, whether to show internal tools.
-    func resolveBuildEnvironment() async {
-        showsDebugTools = await BuildEnvironment.isInternal()
     }
 
     /// Tells the screens to reload.

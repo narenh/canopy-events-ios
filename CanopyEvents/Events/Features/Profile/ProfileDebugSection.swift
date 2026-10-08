@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Internal builds only (debug and TestFlight, never the App Store; see
-/// `BuildEnvironment`): send the test notification (Karl Marx inviting
+/// Developer tools, shown in every build while the app is in development:
+/// send the test notification (Karl Marx inviting
 /// you to Marxism 101) 5 seconds out, so you can lock the phone and see
 /// it, with Going and Can't Go. Also `-mockTestNotification YES` (debug).
 struct ProfileDebugSection: View {
@@ -18,7 +18,7 @@ struct ProfileDebugSection: View {
                     .foregroundStyle(Palette.muted)
             }
         } header: {
-            Text("Debug (TestFlight only)")
+            Text("Debug")
         }
     }
 
