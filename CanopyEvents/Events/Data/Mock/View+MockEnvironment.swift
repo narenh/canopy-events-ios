@@ -14,10 +14,13 @@ extension View {
 /// `mockEnvironment(signedInAs:)`.
 private struct MockEnvironment: ViewModifier {
     @State private var session: AppSession
+    @State private var notifications: NotificationResponder
     private let personId: Person.ID
 
     init(me: Me) {
-        _session = State(initialValue: AppSession.mock(delay: .zero, extraAccounts: [me]))
+        let session = AppSession.mock(delay: .zero, extraAccounts: [me])
+        _session = State(initialValue: session)
+        _notifications = State(initialValue: NotificationResponder(session: session))
         personId = me.id
     }
 
@@ -26,6 +29,7 @@ private struct MockEnvironment: ViewModifier {
             if session.isSignedIn {
                 content
                     .environment(session)
+                    .environment(notifications)
                     .environment(\.eventsRepository, session.repository)
             } else {
                 ProgressView()

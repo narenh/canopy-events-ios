@@ -23,7 +23,7 @@ struct MockFlowTests {
         let upcoming = try await repository.allEvents(.upcoming)
         #expect(upcoming.allSatisfy { $0.viewer?.isHost != true && $0.friendsGoing == nil })
         #expect(try await repository.allEvents(.hosting).count == 2)
-        #expect(try await repository.allEvents(.invitations).map(\.id).sorted() == [MockEvents.hikeId, MockEvents.potteryId].sorted())
+        #expect(try await repository.allEvents(.invitations).map(\.id).sorted() == [MockEvents.hikeId, MockEvents.potteryId, MockEvents.marxismId].sorted())
         #expect(try await repository.allEvents(.declined).map(\.id) == [MockEvents.triviaId])
     }
 

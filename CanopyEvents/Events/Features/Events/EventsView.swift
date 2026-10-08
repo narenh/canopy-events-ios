@@ -9,6 +9,7 @@ struct EventsView: View {
     var onNewEvent: (() -> Void)?
 
     @Environment(\.eventsRepository) private var repository
+    @Environment(AppSession.self) private var session
     @State private var model = EventListModel(.upcoming)
 
     var body: some View {
@@ -27,7 +28,7 @@ struct EventsView: View {
                 Button("New event", systemImage: "plus", action: onNewEvent)
             }
         }
-        .task { await model.load(from: repository) }
+        .task(id: session.dataVersion) { await model.load(from: repository) }
         .refreshable { await model.load(from: repository) }
         .errorAlert($model.errorMessage)
         .canopyScreen()

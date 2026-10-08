@@ -4,6 +4,7 @@ import SwiftUI
 /// change your answer. Pushed from the Invites tab.
 struct DeclinedEventsView: View {
     @Environment(\.eventsRepository) private var repository
+    @Environment(AppSession.self) private var session
     @State private var model = EventListModel(.declined)
 
     var body: some View {
@@ -27,7 +28,7 @@ struct DeclinedEventsView: View {
             }
         }
         .navigationTitle("Declined")
-        .task { await model.load(from: repository) }
+        .task(id: session.dataVersion) { await model.load(from: repository) }
         .errorAlert($model.errorMessage)
         .canopyScreen()
     }

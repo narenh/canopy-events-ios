@@ -36,7 +36,7 @@ struct EventDetailView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .task { await model.load(from: repository) }
+        .task(id: session.dataVersion) { await model.load(from: repository) }
         .errorAlert($model.errorMessage)
         .canopyScreen(theme: model.event?.theme ?? .canopyGreen)
     }

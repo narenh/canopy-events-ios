@@ -191,6 +191,45 @@ rule, the app ports it and a test pins it to the web's own output.
 - **Type** (`Typography`): the web's scale as Dynamic Type styles, so
   accessibility sizes still scale (list cards stack at those sizes).
 
+## Notifications
+
+`Features/Notifications/` shows notifications with buttons. Local
+notifications drive it today (the app is mocked); the same pieces serve
+APNs pushes later. The payload the server should send is in
+[docs/push-payloads.md](docs/push-payloads.md).
+
+- `NotificationCategory` (`EVENT_INVITE`) and `NotificationAction`
+  (`GOING`, `NOT_GOING`) are registered at launch.
+- `NotificationResponder` is the notification center's delegate, made
+  and registered in `CanopyEventsApp.init` so a tap that launches the
+  app is caught. Going / Can't Go answer through the signed-in person's
+  repository (`setRSVP`, no plus-ones) without opening the app, mark the
+  inbox entry read, and call `session.dataChanged()`. A tap sets
+  `opening`, which `MainTabView` turns into the event on Invites (an
+  invitation) or Events. Banners show while the app is open too.
+- `NotificationPayload` reads and writes the custom keys (`type`,
+  `eventId`, `notificationId`, `eventTitle`, `actorId`, `actorName`);
+  `NotificationWording` words an inbox entry as a title and body.
+- `LocalNotifications.schedule(_:after:)` shows an inbox entry as a
+  notification, through `CommunicationNotificationBuilder`, which donates
+  an incoming `INSendMessageIntent` with the sender as an `INPerson`
+  (their photo, or their initials drawn by `AvatarImage`) so the
+  notification shows who sent it, Messages-style. This needs the
+  Communication Notifications capability
+  (`CanopyEvents.entitlements`) and `INSendMessageIntent` in
+  `NSUserActivityTypes` (`CanopyEvents/Info.plist`, merged into the
+  generated one).
+- `NotificationPermission` asks once, after sign-in.
+- Screens reload with `.task(id: session.dataVersion)`, which goes up
+  after a notification's answer and whenever the app comes back to the
+  front.
+- **Real pushes, still to do:** register with APNs and send the token
+  (`registerDevice(token:)`); a Notification Service Extension that
+  fetches the sender's photo (with the session token from a shared
+  keychain) and runs `CommunicationNotificationBuilder`, since the app
+  itself isn't running when a push arrives; marking read from the
+  extension or on next launch.
+
 ## Where state lives
 
 - **App-wide:** `AppSession` (`@Observable`, in the environment). Only
@@ -298,6 +337,9 @@ Set in the scheme's "Arguments Passed On Launch", or with
   `MockEvents+Upcoming.swift`, e.g. `4fQ9xKpL2mZa`).
 - `-mockNewEvent YES`: open the new-event editor.
 - `-mockEdit YES` with `-mockEvent <id>`: open that event's editor.
+- `-mockTestNotification YES`: send the test notification (Karl Marx
+  inviting you to Marxism 101) 5 seconds after signing in, once
+  notifications are allowed. Profile's Debug section has the same button.
 - `-mockPush guests|wall` with `-mockEvent <id>`: that event's guest list
   or wall; `-mockPush past|declined`: those lists.
 
@@ -395,6 +437,9 @@ Swift Testing, in `CanopyEventsTests/`:
   `EventWhenTests` the how-soon words, the big when, list lines,
   friendly zone names and the nearby zones; `EditorAndAttendingTests`
   the editor's rules and Attending's words and order.
+- `NotificationTests`: the registered category and its buttons, the
+  buttons' answers, the payload (including one as APNs delivers it), the
+  test notification's words, and what Going, Can't Go and a tap do.
 - `MockFlowTests` drives the mock flows end to end (lists and cursors,
   hidden guest lists and walls, plus-ones, the waitlist, code sign-in,
   quick sign-up, verifying, becoming a host, invites, state surviving
@@ -403,7 +448,7 @@ Swift Testing, in `CanopyEventsTests/`:
   invited counts).
 
 They're **not in a target yet**, because adding one means editing the
-project file. They were last run (all 49 passing) through a throwaway
+project file. They were last run (all 55 passing) through a throwaway
 Swift package on macOS that links the non-UI sources with the same
 Swift settings. To run them: in Xcode, File → New → Target
 → Unit Testing Bundle named `CanopyEventsTests` (Swift Testing), then
@@ -449,6 +494,23 @@ decisions are in canopy-events' `docs/decision-log.md`):
   system sheet background, with their lists' backgrounds hidden
   (`glassList()`) and glass rows. The guest list and wall use inline
   titles (they're second-level screens).
+- **Notification buttons need the phone unlocked**
+  (`.authenticationRequired`): an answer is seen by the host and the
+  other guests, so it shouldn't be possible from someone else's hands on
+  a locked phone. They don't open the app (no `.foreground`).
+- **Permission is asked right after sign-in**, not at a cold launch:
+  by then the app has shown what it's for, and invites are what it's
+  about. Saying no changes nothing else (the inbox has everything); the
+  Debug section says so if you try the test notification.
+- **Answering from a notification brings no plus-ones**; the event page
+  is where to add them. A tap opens an invitation on the Invites tab,
+  anything else on Events.
+- **Communication notifications are built in** (the owner's call, with
+  the capability enabled on the App ID): the entitlement in
+  `CanopyEvents.entitlements`, `INSendMessageIntent` in an `Info.plist`
+  merged with the generated one. People without a photo get their
+  initials drawn as the avatar. Karl Marx and Marxism 101 are in the
+  mock for the test notification.
 - **The home screen name is "Events"** (the owner's call;
   `INFOPLIST_KEY_CFBundleDisplayName`). The bundle id and product name
   are unchanged.
