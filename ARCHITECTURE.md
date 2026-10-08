@@ -35,7 +35,8 @@ CanopyEvents/Events/
     MockData/   sample people, events, posts, inbox; PreviewData for #Previews
   Features/     one folder per screen area (view + @Observable model)
   Components/   small reusable views (Avatar, EventCard, VerifyEmailBanner...)
-  Design/       palette, spacing, radius, type, mesh background, glass helpers
+  Design/       palette, spacing, radius, type, the mesh background, glass helpers,
+                event colours (OKLCH, ThemeColors) and the hero's fade
   Utilities/    formatters and the platform shims
 CanopyEventsTests/  Swift Testing tests, not in a target yet (see Tests)
 ```
@@ -89,10 +90,11 @@ macOS.
   each tab's stack has `.navigationDestination(for: Route.self) {
   RouteView(route: $0) }`. Routes carry **ids, not models**, so a pushed
   screen always loads fresh data.
-- Sheets (editor, RSVP with plus-ones, invite friends, verify email) are
-  presented by the screen that owns them, with local `@State`.
-  Sheets keep the system's sheet background. `canopyScreen()` (the
-  mesh) is for full screens only.
+- Sheets (editor, RSVP with plus-ones, invite friends, co-hosts, verify
+  email) are presented by the screen that owns them, with local
+  `@State`. Sheets keep the system's sheet background, except the
+  editor, which is drawn as the event and previews its colour.
+  `canopyScreen()` (the mesh) is otherwise for full screens.
 - The sign-in flow has its own small stack and `SignInRoute`.
 
 **To add a pushable screen:** make `Features/<Area>/<Name>View.swift`, add
@@ -109,7 +111,7 @@ case to `AppTab` and a `Tab` in `MainTabView` with its own
 - Files stay small (all under ~120 lines). Each type has a short doc
   comment saying what it's for.
 - **Views** end in `View` when they're a screen (`GuestListView`),
-  `Section` for a card on the event page (`HostsSection`), `Sheet` for
+  `Section` for a card on the event page (`AttendingSection`), `Sheet` for
   something presented modally, `Row`/`Card` for list items.
 - **Every view has a `#Preview`** with mock data, including its key states
   (unverified, cancelled, waitlisted, hidden guest list, empty). Previews
@@ -135,7 +137,9 @@ case to `AppTab` and a `Tab` in `MainTabView` with its own
 - **Other people are only ever `Person`** (id, names, shortName, photoUrl).
   Contact details exist only on `Me`, and only the Profile shows them.
 - Colours, spacing, radii and fonts come from `Design/`, never bare
-  numbers or hex. Liquid Glass goes through `glassCard()`,
+  numbers or hex. Type is `Typography`'s Dynamic Type styles (the web's
+  scale and weights), never fixed point sizes, so accessibility sizes
+  work. An event's colours come from `ThemeColors(event.theme)`. Liquid Glass goes through `glassCard()`,
   `glassSurface(cornerRadius:)`, `glassProminentButtonStyle()` and
   `glassButtonStyle()`, which fall back to visionOS's own glass. The few
   iPhone-only modifiers go through `Utilities/View+Platform.swift`. That
@@ -143,6 +147,47 @@ case to `AppTab` and a `Tab` in `MainTabView` with its own
 - Use system components first: `List`, `Form`, `ContentUnavailableView`
   for empty states, `ShareLink`, `.confirmationDialog`, `.refreshable`.
   There's no custom empty-state view on purpose.
+
+## The look, after the web
+
+The event pages follow canopy-events' web designs (its
+`docs/decision-log.md` from "Events web: friendlier design" on, and
+`public/events.css` and `public/ui.js`). Where the web has an exact
+rule, the app ports it and a test pins it to the web's own output.
+
+- **Event colours.** `Event.theme` (`EventTheme`: Canopy green, a hue,
+  or grey) gives `ThemeColors`: the mesh's base, five glows and the
+  card tint, each worked out in OKLCH as docs/api.md says (`OKLCH`,
+  Björn Ottosson's maths, chroma fitted into sRGB). `CanopyBackground`
+  draws them as a 3×3 `MeshGradient`. Only the event page and its
+  editor are themed; buttons and links stay Canopy green everywhere.
+- **The hero** (`EventHeroView`): the cover, or the generated art
+  (`CoverArt`, the web's `coverArt` number for number), in a 3:2 frame
+  edge to edge on a phone. Its top 2:1 is clear, with the how-soon pill
+  (`RelativePill`, the web's `relativeWhen`) low on the left; the web's
+  nine-stop fade (`heroFade`) runs into the theme's base, and the last
+  6% melts into the mesh. The title starts on the band (the last sixth
+  of the width), then the big date and time (`EventHeadView`). From a
+  700 pt wide screen the page is a 680 pt column and the hero has 18 pt
+  top corners.
+- **The top section** (`EventInfoSection`): place, hosts, spots and
+  description, with **no card or border** (the owner's call for iOS).
+- **Then** the RSVP card or the host's controls (`HostControlsSection`:
+  Share link + Invite, then Edit + a ⋯ menu), **Attending** (counts,
+  View all, one row of faces ending in +N) and the wall.
+- **Covers are downloaded at the size they're drawn** (`CoverSize`, as
+  docs/api.md says), through `CoverPicture`.
+- **The editor** is drawn as the event: the hero with its photo
+  buttons, the title on the band, the when as big as the page's (each
+  piece tapped for its picker), the zone by name with a Change menu
+  (`TimeZoneChoices`, the web's `nearbyZones`), quiet dashed fields,
+  then the Guests and Colour cards and a Save bar. The colour slider
+  (`ThemeSlider`) is the web's grey stretch then hue wheel; picking a
+  photo works out its colour (`PhotoHue`) and jumps the slider.
+- **Lists** (`EventCard`): a 3:2 thumbnail, a bold accent date line
+  ("SAT, OCT 10 · 7:30 PM"), the title, the place, a tag.
+- **Type** (`Typography`): the web's scale as Dynamic Type styles, so
+  accessibility sizes still scale (list cards stack at those sizes).
 
 ## Where state lives
 
@@ -224,11 +269,19 @@ case to `AppTab` and a `Tab` in `MainTabView` with its own
   quick account, as the real one does); for anyone else it answers
   `new`, and the screen points to quick sign-up. Quick sign-up with an
   email that has an account fails with `email_has_account`.
+- Covers: the seed's are picsum.photos placeholders at the API's four
+  sizes, each with a `coverHue`. An uploaded cover is kept in a temporary
+  file (`MockCoverFile`) with its own size, and its colour worked out on
+  the device the way the server does (`PhotoHue`). Events come in
+  several colours (blue, purple, teal, red, pink) and one grey.
+- `hasHosted` stays true once you've hosted (`MockBackend.hostedPeople`),
+  even after deleting the event; only hosts get `counts.invited`.
 - Seed data (all dates relative to today, so it never goes stale):
   Maya (verified host) has events she's going to, maybe at, waitlisted
   for (a full supper club), invited to (one with a hidden guest list),
   declined, a cancelled one, a co-hosted birthday, a full game night she
-  hosts with a waitlist, one in New York time, and three past events.
+  hosts with a waitlist, one in New York time with a long title, and
+  three past events.
   Sam is an unverified quick account with one invite and one RSVP.
 
 ### Launch options (debug builds only)
@@ -242,6 +295,7 @@ Set in the scheme's "Arguments Passed On Launch", or with
 - `-mockEvent <id>`: push that event on the Events tab (ids are in
   `MockEvents+Upcoming.swift`, e.g. `4fQ9xKpL2mZa`).
 - `-mockNewEvent YES`: open the new-event editor.
+- `-mockEdit YES` with `-mockEvent <id>`: open that event's editor.
 
 ## How the real API will slot in
 
@@ -273,9 +327,10 @@ values), checked by decoding the specs' own examples
 (`CanopyEventsTests/APIDecodingTests`):
 
 - Events API models: `Person`, `Me`, `MeEnvelope` (`hasHosted`), `Event`
-  (`guestsAllowed`, `capacity`, `spotsLeft`, `coverImageUrl`, `viewer`,
-  `friendsGoing`), `RSVPCounts`/`GuestCounts` (people, `guests`,
-  `total`), `Host`/`HostRole`, `RSVP` and `Guest` (`guestsOverLimit`),
+  (`guestsAllowed`, `capacity`, `spotsLeft`, `coverImageUrl`,
+  `coverImages` (`CoverImage`), `themeHue`, `themeGrayscale`, `coverHue`,
+  `coverGrayscale`, `viewer`, `friendsGoing`), `RSVPCounts`/`GuestCounts`
+  (people, `guests`, `total`; `invited` nil for non-hosts), `Host`/`HostRole`, `RSVP` and `Guest` (`guestsOverLimit`),
   `RSVPStatus` (with `waitlisted` and `removed`), `Viewer` (`canPost`),
   `FriendsGoing`, `RSVPResult`, `EventList`, `GuestList`, `Friend`,
   `FriendList`, `WallEntry`/`WallEntryType`/`WallEntryDetails`, `Wall`
@@ -285,7 +340,7 @@ values), checked by decoding the specs' own examples
   `SkippedInviteReason`, `APIError` (with `signIn`, `quickSignUp`,
   `verify`), and every `reason` both specs list (`APIErrorReason`).
 - Every events endpoint has a repository method: the five event lists
-  (`declined` included), event CRUD, cancel and un-cancel, cover upload
+  (`declined` included), event CRUD and delete, cancel and un-cancel, cover upload
   and delete, RSVP and withdraw, the guest list (with `?status=`),
   invite and uninvite, lookup, co-hosts, removal and restore, new link,
   the wall, the inbox (list, unread count, mark some or all read) and
@@ -298,9 +353,9 @@ values), checked by decoding the specs' own examples
 
 - The mock itself: no network, no passkey, any six digits as a code,
   photos from pravatar.cc and covers from picsum.photos (offline,
-  avatars fall back to initials and covers to a green gradient). Cover
-  upload keeps no bytes. Lookup matches only the two accounts' own
-  numbers and handles.
+  avatars fall back to initials and covers to the generated art). An
+  uploaded cover lives in a temporary file, in one size. Lookup matches
+  only the two accounts' own numbers and handles.
 - `EventDraft` and `ProfileDraft` are form state, not the request
   bodies; the clients map them (above). `ProfileDraft.venmo` is sent as
   `venmoHandle`.
@@ -314,12 +369,12 @@ values), checked by decoding the specs' own examples
 - **Not built in the UI:** the name form after an emailed code for a
   new email (the screen points to quick sign-up), the "this takes over
   an unverified account" warning, withdrawing an RSVP, un-inviting,
-  un-cancelling, co-host management, host moderation (remove, restore,
-  new link), cover upload (the editor shows a placeholder), lookup by
-  phone or Instagram, the inbox screen and badge, push registration,
-  older wall pages, changing your photo, signed-out link previews,
-  opening event links (universal links), persisting the sign-in across
-  launches.
+  removing and restoring guests (the web puts these behind View all),
+  lookup by phone or Instagram, the inbox screen and badge, push
+  registration, older wall pages, changing your photo, signed-out link
+  previews, opening event links (universal links), persisting the
+  sign-in across launches. (Built since: cover upload, colours,
+  co-hosts, new link, cancel and bring back, delete.)
 
 ## Tests
 
@@ -328,13 +383,78 @@ Swift Testing, in `CanopyEventsTests/`:
 - `APIDecodingTests` decodes the specs' own examples (copied into
   `APISamples`) into the models and round-trips them through the API's
   encoder. When a spec changes, change `APISamples` with it.
+- `ThemeColorTests` checks the colour maths against the web's own
+  output to the byte (theme colours at seven hues and grey, turning a
+  green, the generated cover art, a photo's hue, the slider's scale);
+  the expected values were made by running canopy-events'
+  `public/ui.js` in node. `CoverSizeTests` checks picking a cover size.
+  `EventWhenTests` the how-soon words, the big when, list lines,
+  friendly zone names and the nearby zones; `EditorAndAttendingTests`
+  the editor's rules and Attending's words and order.
 - `MockFlowTests` drives the mock flows end to end (lists and cursors,
   hidden guest lists and walls, plus-ones, the waitlist, code sign-in,
   quick sign-up, verifying, becoming a host, invites, state surviving
   sign-out); `MockHostFlowTests` the host side (co-hosts, removal, new
-  links, creator-only cancel, notification folding, lookup).
+  links, creator-only cancel and delete, notification folding, lookup,
+  invited counts).
 
 They're **not in a target yet**, because adding one means editing the
-project file. To run them: in Xcode, File → New → Target
+project file. They were last run (all 49 passing) through a throwaway
+Swift package on macOS that links the non-UI sources with the same
+Swift settings. To run them: in Xcode, File → New → Target
 → Unit Testing Bundle named `CanopyEventsTests` (Swift Testing), then
 point it at the existing `CanopyEventsTests` folder.
+
+## Decisions
+
+Judgment calls made porting the web's designs (the services' own
+decisions are in canopy-events' `docs/decision-log.md`):
+
+- **No card at all around the event's top**, not even glass: the place,
+  hosts and description sit straight on the event's mesh under the
+  edge-to-edge hero (the owner's call; the web draws a fading outline).
+- **The phone hero runs under the status bar and the back and share
+  buttons** (the page ignores the top safe area); in the iPad column it
+  sits below the bars with rounded top corners.
+- **The mesh is a 3×3 `MeshGradient`, not five radial glows.** The
+  colours are the web's to the byte; their placement is close (glow 1
+  top left, 2 top right, 5 middle, 4 lower left, 3 low right) but not
+  pixel-identical. The generated cover art likewise uses a linear and
+  two elliptical gradients whose sizes only approximate CSS's.
+- **"View all" opens the existing guest list screen** rather than
+  expanding in place (the web's `<details>`), the iOS way; the host's
+  remove and restore tools are still to come there.
+- **"Co-hosts…" opens a sheet** listing co-hosts (Remove) and friends
+  (Add), saved at once. New link, Cancel, Bring back, Delete and Step
+  down each ask first in a confirmation dialog; Delete says how many
+  answered and that cancelling tells them, as the web's confirm does,
+  then closes the page.
+- **Attending's faces are 56 pt and scale with Dynamic Type**
+  (`@ScaledMetric`), on iPad too (the web uses 64 px from 700 px), at
+  least 5 pt apart, as many as fit.
+- **The answer buttons are words only** (like the web), so they fit
+  three across at large sizes.
+- **The editor's pickers open in popovers** (a calendar for the date,
+  wheels for the times, one date-and-time wheel for the end), since a
+  native control can't be laid see-through over the big words as the
+  web does. "+ End time" adds start + 3 h and opens its picker.
+- **The editor's hero keeps the page's fade, with only a dashed line
+  where the clear 2:1 ends** (the web's earlier editor dimmed the band
+  instead; now that the editor is the event card, it shows what the
+  page will).
+- **Save is a prominent bar at the bottom; Close is in the toolbar.**
+  The heading ("New Event"/"Edit Event") is read out, not shown.
+  Cancelling moved from the editor to the page's ⋯ menu.
+- **A picked photo's colour is worked out on the device** with the
+  server's algorithm (`PhotoHue`), so the slider jumps at once; the
+  mock's upload stores the same. If the event saves but its cover
+  upload fails, the editor stays open with the error, and Save tries
+  again.
+- **Time zone names are English** (`en_US` generic names with the
+  web's overrides), like the rest of the app's words.
+- **The how-soon pill is worked out when the page draws**, not ticked
+  over while it's open (the web redraws it).
+- **Not ported yet:** tinting list cards' glass with the event's colour
+  (the web does on home), the web's per-field error lines in the
+  editor, the "can't be previewed" caption, the signed-out page, and
+  restyling the wall, invite, profile and sign-in screens.
