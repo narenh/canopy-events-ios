@@ -87,6 +87,8 @@ macOS.
   screen always loads fresh data.
 - Sheets (editor, RSVP with plus-ones, invite friends, verify email) are
   presented by the screen that owns them, with local `@State`.
+  Sheets keep the system's sheet background. `canopyScreen()` (the
+  mesh) is for full screens only.
 - The sign-in flow has its own small stack and `SignInRoute`.
 
 **To add a pushable screen:** make `Features/<Area>/<Name>View.swift`, add

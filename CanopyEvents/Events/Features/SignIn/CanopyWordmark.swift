@@ -1,15 +1,15 @@
 import SwiftUI
 
-/// The app's name and tagline on the sign-in screen. A placeholder until
-/// there's a real logo asset.
+/// The Canopy logo and the app's tagline on the sign-in screen. The logo
+/// is the same PNG the account service's pages use.
 struct CanopyWordmark: View {
     var body: some View {
-        VStack(spacing: Spacing.small) {
-            Image(systemName: "leaf.fill")
-                .font(.system(size: 56))
-                .foregroundStyle(Color.accentColor)
-            Text("Canopy Events")
-                .font(Typography.heroTitle)
+        VStack(spacing: Spacing.medium) {
+            Image(.canopyLogo)
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: 220)
+                .accessibilityLabel("Canopy")
             Text("Plans with your people.")
                 .foregroundStyle(Palette.muted)
         }

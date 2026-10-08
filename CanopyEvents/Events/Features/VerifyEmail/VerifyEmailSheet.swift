@@ -37,7 +37,6 @@ struct VerifyEmailSheet: View {
             }
             .task { await sendCode() }
             .errorAlert($errorMessage)
-            .canopyScreen()
         }
         .presentationDetents([.medium])
     }

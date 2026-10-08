@@ -43,7 +43,6 @@ struct InviteFriendsSheet: View {
             }
             .task { await model.load(from: repository) }
             .errorAlert($model.errorMessage)
-            .canopyScreen()
         }
     }
 

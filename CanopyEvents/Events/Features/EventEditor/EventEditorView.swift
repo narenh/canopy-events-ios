@@ -52,7 +52,6 @@ struct EventEditorView: View {
                 Text("Guests are told, and the link keeps working with a cancelled notice.")
             }
             .errorAlert($model.errorMessage)
-            .canopyScreen()
         }
     }
 

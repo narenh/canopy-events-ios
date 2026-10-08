@@ -53,7 +53,6 @@ struct RSVPSheet: View {
                     }
                 }
             }
-            .canopyScreen()
         }
         .presentationDetents([.medium])
     }
