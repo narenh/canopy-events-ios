@@ -64,8 +64,9 @@ CanopyEventsTests/  Swift Testing tests, not in a target yet (see Tests)
 Everyone gets **Events** (going, maybe, waitlisted; "Past events" link at
 the top), **Invites** (unanswered invitations with Going / Can't Go on each card,
 then, under "Declined", the upcoming events you said you can't go to,
-each with your answer as a small "Can't Go" menu) and **Profile**. There is no Friends or
-Inbox tab: friends appear only in the invite picker and "friends going",
+each with your answer as a small "Can't Go" menu) and **Profile** (your
+lists first, then your details and settings). There is no Friends or
+Inbox tab: friends appear only in the invite sheet and "friends going",
 and the inbox has a model and repository method but no screen (push will
 cover it).
 
@@ -96,12 +97,15 @@ macOS.
   each tab's stack has `.navigationDestination(for: Route.self) {
   RouteView(route: $0) }`. Routes carry **ids, not models**, so a pushed
   screen always loads fresh data.
-- Sheets (editor, RSVP with plus-ones, invite friends, co-hosts, verify
-  email) are presented by the screen that owns them, with local
+- Sheets (editor, RSVP with plus-ones, the invite sheet, co-hosts, the
+  host's lists, a list's QR code, verify email) are presented by the screen that owns them, with local
   `@State`. Sheets keep the system's sheet background, except the
   editor, which is drawn as the event and previews its color.
   `canopyScreen()` (the mesh) is otherwise for full screens.
 - The sign-in flow has its own small stack and `SignInRoute`.
+- Every tab's stack, Profile's included, maps `Route`s, so Profile can
+  push one of your lists (`Route.ownList`) and a list's join screen
+  (`Route.listLink`, what `/l/<code>` will open once the app claims it).
 
 **To add a pushable screen:** make `Features/<Area>/<Name>View.swift`, add
 a case to `Route`, add one line to `RouteView`. **To add a tab:** add a
@@ -317,7 +321,9 @@ APNs pushes later. The payload the server should send is in
   delay (350 ms; previews use zero) so loading states show.
 - `MockEventsRepository` answers as one person, split by topic into
   `+Hosting`, `+Covers`, `+Guests`, `+Invites`, `+Hosts` (co-hosts), `+Moderation`,
-  `+Wall`, `+Notifications` and `+People` (lookup). `MockRules` applies
+  `+Wall`, `+Notifications`, `+People` (lookup), `+Friends`,
+  `+Suggested`, `+Lists` (your own), `+ListMemberships` (links, joining,
+  leaving) and `+EventLists` (attaching). `MockRules` applies
   the server's rules from `docs/api.md`: guest list visibility (names
   only for hosts, `everyone`, or once you've answered), counts (people,
   plus-ones, and the two together), capacity and the waitlist (a `going`
@@ -354,8 +360,27 @@ APNs pushes later. The payload the server should send is in
   for (a full supper club), invited to (one with a hidden guest list),
   declined, a cancelled one, a co-hosted birthday, a full game night she
   hosts with a waitlist, one in New York time with a long title, and
-  three past events.
+  six past events (three of them hers: two Drag Race nights and a
+  bonfire).
   Sam is an unverified quick account with one invite and one RSVP.
+- **Lists** (`MockBackend+Lists`, `+EventLists`, `+Suggested`, seeded
+  from `MockLists`): Maya owns Drag Race (20 people, on her upcoming
+  "Drag Race: the finale", which invited them) and Climbing (5); Ana owns
+  Dumpling crew, on her rooftop dinner (Maya is going, so she's offered
+  "Get invited next time") and on Dumpling night II (Maya isn't invited,
+  so joining invites her to 1 event); Maya is on Lena's Supper club. Zane
+  is on Drag Race but opted out of Maya's invitations. The rules are the
+  API's: members are seen only by the owner (a member's owner calls are
+  `list_not_found`), joining your own list is `own_list`, joining invites
+  you to the list's events still to come, attaching invites everyone on
+  it, and opt-outs, hosts and removed guests are skipped without a word.
+  Suggestions are scored with the API's formula (each event together
+  `2^(-days/90)`, doubled for yours; invitations 0.5, links and adds
+  0.25, fading from when made, so `MockBackend.friendEdgeDates` keeps
+  when each edge was made).
+- 24 more people (`MockPeople+Crowd`), so Maya has 30-odd friends. Rosa
+  is a findable account nobody knows yet: look her up in the invite
+  sheet with (415) 555-0188 or @rosa.e.
 
 ### Launch options (debug builds only)
 
@@ -378,7 +403,11 @@ Set in the scheme's "Arguments Passed On Launch", or with
   notifications are allowed. Profile's "Debug (TestFlight only)" section
   has the same button, in debug builds and TestFlight.
 - `-mockPush guests|wall` with `-mockEvent <id>`: that event's guest list
-  or wall; `-mockPush past`: Past events.
+  or wall; `-mockPush past`: Past events; `-mockPush list`: Maya's Drag
+  Race; `-mockPush listLink`: Ana's Dumpling crew's join screen.
+- `-mockInvite YES` with `-mockEvent <id>`: open that event's invite
+  sheet (e.g. `Gm8Night4Fun`, Board game night, or `Dr7FinaleSF9`, the
+  finale with Drag Race on it).
 
 ## How the real API will slot in
 
@@ -414,11 +443,18 @@ values), checked by decoding the specs' own examples
   (`details` (`EventDetail`, `EventDetailType`), `hiddenDetails`,
   `guestsAllowed`, `capacity`, `spotsLeft`, `coverImageUrl`,
   `coverImages` (`CoverImage`), `themeHue`, `themeGrayscale`,
-  `accentHue`, `coverHue`, `coverGrayscale`, `viewer`, `friendsGoing`), `RSVPCounts`/`GuestCounts`
+  `accentHue`, `coverHue`, `coverGrayscale`, `viewer`, `friendsGoing`,
+  `hostLists`, `joinableList`), `RSVPCounts`/`GuestCounts`
   (people, `guests`, `total`; `invited` nil for non-hosts), `Host`/`HostRole`, `RSVP` and `Guest` (`guestsOverLimit`),
   `RSVPStatus` (with `waitlisted` and `removed`), `Viewer` (`canPost`,
   `muted`), `FriendsGoing`, `RSVPResult`, `EventList`, `GuestList`,
   `Friend` (`source`, optional `lastTogetherAt`), `FriendList`,
+  `SuggestedFriend` (`score`), the lists' `OwnedList`, `ListMember`/
+  `ListMembers` (the spec's inline member), `ListMembership`,
+  `ListLinkOwner` (the spec's `ListLink`, renamed because `ListLink` is
+  a view here) with `ListName` and `ListLinkViewer`, `ListJoined`,
+  `ListAttached`, `HostList`, `JoinableList` (all but `OwnedList` have
+  no example in the spec, so their samples are built from the schemas),
   `FriendLink`, `FriendLinkOwner`, `Settings`, `InviteOptouts`,
   `EventDetailInput`, `WallEntry`/`WallEntryType`/`WallEntryDetails`, `Wall`
   (`wallVisible`, `canPost`), `InboxNotification`/`NotificationType`/
@@ -465,11 +501,12 @@ values), checked by decoding the specs' own examples
   phone or Instagram, taking out, the friend link with its QR code, and
   opening someone's link at `/f/<code>`), un-inviting,
   removing and restoring guests (the web puts these behind View all),
-  lookup by phone or Instagram, the inbox screen and badge, push
+  the inbox screen and badge, push
   registration, older wall pages, changing your photo, signed-out link
   previews, opening event links (universal links), persisting the
   sign-in across launches. (Built since: cover upload, colors,
-  co-hosts, new link, cancel and bring back, delete.)
+  co-hosts, new link, cancel and bring back, delete; lists; lookup by
+  phone or Instagram, in the invite sheet.)
 
 ## Tests
 
@@ -499,9 +536,18 @@ Swift Testing, in `CanopyEventsTests/`:
   sign-out); `MockHostFlowTests` the host side (co-hosts, removal, new
   links, creator-only cancel and delete, notification folding, lookup,
   invited counts).
+- `MockListTests`: lists against docs/api.md (only the owner sees who's
+  on one, joining your own fails, opening a link joins nobody, joining
+  invites you to what's still to come and skips what's over or
+  cancelled, attaching invites everyone on it but opt-outs, an opted-out
+  joiner is on the list and nothing else, `hostLists` and
+  `joinableList`, rename, reset, remove, leave, delete, the suggestions'
+  order and score). `InvitePickerTests`: the invite sheet's "Invite all"
+  ticks, who can't be picked, the tray's order, Suggested and A to Z,
+  accent-blind search, and what counts as a phone number or @username.
 
 They're **not in a target yet**, because adding one means editing the
-project file. They were last run (all 62 passing) through a throwaway
+project file. They were last run (all 95 passing) through a throwaway
 Swift package on macOS that links the non-UI sources with the same
 Swift settings. To run them: in Xcode, File → New → Target
 → Unit Testing Bundle named `CanopyEventsTests` (Swift Testing), then
@@ -751,4 +797,69 @@ decisions are in canopy-events' `docs/decision-log.md`):
   event is saved, as a picked photo is.
 - **Not built:** the friends screens and friend links (models, repository
   and mock are done).
+
+### Lists and the invite sheet (canopy-events ff7ed11)
+
+The web's lists and inviter, mocked. Judgment calls:
+
+- **Lists live at the top of Profile**, above your details: there's no
+  Friends tab, and a list is something you open at a door, not set up
+  once. Each opens its own screen (`OwnListView`): Share link and Show
+  QR side by side, the link, then its people newest first with "Joined
+  Oct 8"; swipe to remove (asked first, as the web does). Rename, Reset
+  link and Delete are in the ⋯ menu (the web shows them as quiet links;
+  Reset link is the web's, though the brief didn't list it). "Lists
+  you're on" shows only when you're on any, each with Leave (asked
+  first). A quick account sees "Confirm your email to make lists." in
+  place of the field.
+- **The QR code is drawn on the device** (`QRCode`, CoreImage's
+  generator at level M with a four-module margin, drawn with no
+  smoothing, as docs/api.md asks), in a sheet ("Scan to join") up to
+  420 pt wide with the link under it; the web asks the server for an
+  SVG instead. The same sheet is the host's "Show list QR" for every
+  list on the event.
+- **"Get invited next time" asks first** (a confirmation, "Join Ana's
+  Dumpling crew?" / "Ana will be able to invite you to events."), as the
+  brief asked; the web joins on one tap because its card already reads
+  as the question. After joining, the card says "You're on Ana's
+  Dumpling crew." and, when it brought any, "Ana invited you to 1 event."
+- **The join screen (`/l/<code>`) has no "See your invitations"
+  button** (the web's): the Invites tab is in the tab bar, and the app
+  reloads it after joining (`session.dataChanged()`). Signed-out joining
+  doesn't exist in the app, so its "Sign up to join" isn't ported.
+  Profile's Debug section opens Ana's Dumpling crew's join screen.
+- **The host's "Lists…" is a sheet** (the web's is a block in the host
+  card), like Co-hosts…: the lists on the event with Take off (owner or
+  creator), your others with Add (asked first when it has people on it),
+  and a name field whose list goes on at once. "Show list QR" appears in
+  the ⋯ menu once a list is on.
+- **The invite sheet replaces the friends picker** (`InviteSheet`, at
+  medium and large detents). Search is `.searchable`, always showing
+  under the title, so the tray can own the foot. A whole phone number or
+  @username is looked up 450 ms after typing stops, each text once, and
+  the person is offered first under "Found"; names are never looked up.
+  "Invite everyone from…" is a menu of your past events (the web's
+  `<select>`), with "Picked 5 from Beach bonfire." under it. The picking
+  rules are a plain value (`InvitePicker`) so they're tested without a
+  screen. People on the event keep their row, greyed, with their
+  `StatusBadge`, and aren't buttons.
+- **"Invite all <n>" counts everyone on the list not on the event**,
+  including someone who opted out of your invitations (the app can't
+  know; the web can't either): sending skips them as the API does, so
+  "Invite all 1" on the finale invites nobody (Zane). After sending, the
+  sheet closes and the host card says "Invited 7 people." (nothing when
+  nobody was invited, as on the web).
+- **The sheet and "Lists…" take the event's accent** (`.eventAccent`),
+  like the RSVP sheet, so "Invite 7" and a picked "Invite all" match the
+  page's buttons; Profile's lists stay Canopy green.
+- **One-key answers come back unwrapped**, as elsewhere: `GET /me/lists`
+  is `[OwnedList]`, `/me/list-memberships` is `[ListMembership]`,
+  `/me/friends/suggested` is `[SuggestedFriend]`. List members page like
+  every other list (`allListMembers` follows the cursors).
+- **The seed grew**: 24 more people, three more past events (two Drag
+  Race nights Maya hosted, bouldering), two upcoming events with lists
+  on them (Maya now hosts three upcoming events, so two counts in the
+  older tests moved), and Rosa, a findable account to look up.
+- **Launch arguments** reach the new screens for screenshots:
+  `-mockInvite YES` with `-mockEvent`, and `-mockPush list|listLink`.
 
