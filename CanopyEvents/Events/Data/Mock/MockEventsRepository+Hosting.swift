@@ -103,8 +103,12 @@ extension MockEventsRepository {
         event.startsAt = startsAt
         event.endsAt = draft.endsAt
         event.timeZone = draft.timeZone
-        event.locationName = draft.locationName.isEmpty ? nil : draft.locationName
-        event.locationAddress = draft.locationAddress.isEmpty ? nil : draft.locationAddress
+        let location = try MockRules.stored(draft.location)
+        event.locationName = location.locationName
+        event.locationAddress = location.locationAddress
+        event.latitude = location.latitude
+        event.longitude = location.longitude
+        event.applePlaceId = location.applePlaceId
         event.guestListVisibility = draft.guestListVisibility
         event.capacity = draft.capacity
         event.guestsAllowed = draft.guestsAllowed

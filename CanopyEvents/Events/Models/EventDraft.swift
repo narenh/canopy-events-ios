@@ -3,8 +3,9 @@ import Foundation
 /// The editable fields of an event, used by the create/edit form and sent
 /// to the repository. The API client turns it into an `EventInput` (POST)
 /// or an `EventPatch` with only what changed (PATCH); empty strings
-/// become null. A new event (a copy too) has no start until the host
-/// picks one.
+/// become null. A changed location sends all five of its fields (the
+/// server clears a pin left out of a changed place). A new event (a copy
+/// too) has no start until the host picks one.
 nonisolated struct EventDraft: Hashable {
     var title = ""
     var description = ""
@@ -12,8 +13,8 @@ nonisolated struct EventDraft: Hashable {
     var startsAt: Date?
     var endsAt: Date?
     var timeZone: String
-    var locationName = ""
-    var locationAddress = ""
+    /// Where: what the Location field saves (`LocationFieldModel.value`).
+    var location = EventLocation()
     var guestListVisibility = GuestListVisibility.everyone
     /// Plus-ones each answer may bring, 0 to 10.
     var guestsAllowed = 0
@@ -62,8 +63,10 @@ extension EventDraft {
             title: duplicate.title,
             description: duplicate.description ?? "",
             timeZone: duplicate.timeZone,
-            locationName: duplicate.locationName ?? "",
-            locationAddress: duplicate.locationAddress ?? "",
+            location: EventLocation(
+                locationName: duplicate.locationName, locationAddress: duplicate.locationAddress,
+                latitude: duplicate.latitude, longitude: duplicate.longitude, applePlaceId: duplicate.applePlaceId
+            ),
             guestListVisibility: duplicate.guestListVisibility,
             guestsAllowed: duplicate.guestsAllowed,
             capacity: duplicate.capacity,
@@ -83,8 +86,7 @@ extension EventDraft {
             startsAt: event.startsAt,
             endsAt: event.endsAt,
             timeZone: event.timeZone,
-            locationName: event.locationName ?? "",
-            locationAddress: event.locationAddress ?? "",
+            location: event.location,
             guestListVisibility: event.guestListVisibility,
             guestsAllowed: event.guestsAllowed,
             capacity: event.capacity,

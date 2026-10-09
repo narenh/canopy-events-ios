@@ -21,6 +21,7 @@ extension MockEventsRepository {
         return DuplicateDraft(
             title: event.title, description: event.description, timeZone: event.timeZone,
             locationName: event.locationName, locationAddress: event.locationAddress,
+            latitude: event.latitude, longitude: event.longitude, applePlaceId: event.applePlaceId,
             details: event.shownDetails.map(EventDetailInput.init),
             guestListVisibility: event.guestListVisibility, guestsAllowed: event.guestsAllowed, capacity: event.capacity,
             themeHue: event.themeHue, themeGrayscale: event.themeGrayscale, accentHue: event.accentHue,

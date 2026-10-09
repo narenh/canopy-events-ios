@@ -3,8 +3,8 @@ import SwiftUI
 /// The create/edit form, shown as a sheet, drawn as the event will look:
 /// the cover hero (with its photo buttons), the title typed where the
 /// title goes, the date and times as big as the page's, the zone under
-/// them, the place, address and description in the same unbordered top;
-/// then the Guests and Color cards, and Save in a bar at the bottom.
+/// them, the location (`EditorLocationField`) and description in the
+/// same unbordered top; then the Guests and Color cards, and Save in a bar at the bottom.
 /// The background is the event's color as it's being picked. No help
 /// text. Cancelling, deleting and the rest live in the event page's ⋯.
 /// A copy ("Duplicate") is this same new-event form, filled in.
@@ -93,9 +93,7 @@ struct EventEditorView: View {
 
     private var details: some View {
         VStack(alignment: .leading, spacing: Spacing.small) {
-            EditorField(label: "Place", text: $model.draft.locationName, prompt: "Add a place", font: .body.weight(.semibold))
-            EditorField(label: "Address", text: $model.draft.locationAddress,
-                        prompt: "Address (only signed-in guests see it)")
+            EditorLocationField(model: model.location)
             EditorField(label: "Description", text: $model.draft.description,
                         prompt: "What's happening, what to bring, anything people should know", axis: .vertical)
                 .lineLimit(3...12)

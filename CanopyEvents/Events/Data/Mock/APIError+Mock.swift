@@ -31,6 +31,8 @@ extension APIError {
     static let notOnEvent = APIError(message: "You aren't on this event.", reason: .notOnEvent)
     static let isYou = APIError(message: "That's you.", reason: .isYou)
     static let badStartsAt = APIError(message: "Pick a date and a start time.", reason: .badStartsAt)
+    static let badCoordinates = APIError(message: "That place's position on the map didn't come through. Pick it again, or type it.", reason: .badCoordinates)
+    static let badApplePlaceId = APIError(message: "That place didn't come through. Pick it again, or type it.", reason: .badApplePlaceId)
     static let badCoverFrom = APIError(message: "The original event is gone, so its cover can't be copied.", reason: .badCoverFrom)
     static let noCover = APIError(message: "The original event's cover was removed. Remove it here, or pick another.", reason: .noCover)
     static let oneOf = APIError(message: "Look up by a phone number or an Instagram handle.", reason: .oneOf)

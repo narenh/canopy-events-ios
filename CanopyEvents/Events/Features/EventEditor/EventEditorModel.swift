@@ -13,6 +13,8 @@ final class EventEditorModel {
     /// taken off or replaced, and its lists are offered once it's made.
     let duplicate: DuplicateDraft?
     var draft: EventDraft
+    /// The Location field, which fills `draft.location` on Save.
+    let location: LocationFieldModel
     /// A start time picked before the day, on the event's clock.
     var pendingStartTime: ClockTime?
     /// A photo picked for the cover, not uploaded until Save.
@@ -27,17 +29,21 @@ final class EventEditorModel {
     private(set) var isSaving = false
     var errorMessage: String?
 
-    init(event: Event?) {
+    init(event: Event?, placeSearch: any PlaceSearch = MapKitPlaceSearch()) {
         original = event
         duplicate = nil
-        draft = event.map(EventDraft.init(event:)) ?? .blank()
+        let draft = event.map(EventDraft.init(event:)) ?? .blank()
+        self.draft = draft
+        location = LocationFieldModel(location: draft.location, search: placeSearch)
     }
 
     /// A new event filled in from a copy's draft, with no date or times.
-    init(duplicating duplicate: DuplicateDraft) {
+    init(duplicating duplicate: DuplicateDraft, placeSearch: any PlaceSearch = MapKitPlaceSearch()) {
         original = nil
         self.duplicate = duplicate
-        draft = EventDraft(duplicate: duplicate)
+        let draft = EventDraft(duplicate: duplicate)
+        self.draft = draft
+        location = LocationFieldModel(location: draft.location, search: placeSearch)
     }
 
     var isNew: Bool { original == nil }
@@ -102,6 +108,7 @@ final class EventEditorModel {
     func save(using repository: any EventsRepository) async -> Event? {
         isSaving = true
         defer { isSaving = false }
+        draft.location = location.value
         do {
             var event = if let original {
                 try await repository.updateEvent(id: original.id, with: draft)

@@ -27,6 +27,7 @@ struct APIDecodingTests {
         #expect(event.shownDetails.count == 4 && event.viewer?.muted == false)
         #expect(event.details[0].linkText == "Playlist" && event.details[1].heading == "Dress code")
         #expect(event.details[3].url?.absoluteString == "tel:4155550142")
+        #expect(event.latitude == 37.794 && event.longitude == -122.3951 && event.applePlaceId == nil)
     }
 
     @Test func rsvpResult() throws {
@@ -122,6 +123,7 @@ struct APIDecodingTests {
         #expect(draft.themeHue == 320 && draft.coverFrom == "4fQ9xKpL2mZa" && draft.coverTheme == .hue(318))
         #expect(draft.coverImages.count == 2 && draft.coverImages.last?.url == draft.coverImageUrl)
         #expect(draft.lists == [DuplicateDraftList(id: "Lw3Kp9QzX2aB", name: "Drag Race")])
+        #expect(draft.latitude == nil && draft.longitude == nil && draft.applePlaceId == nil)
         // Round trip (details get new row ids, so compare the JSON's own fields).
         let again = try JSONDecoder.eventsAPI.decode(DuplicateDraft.self, from: JSONEncoder.eventsAPI.encode(draft))
         #expect(again.details.map(\.value) == draft.details.map(\.value))

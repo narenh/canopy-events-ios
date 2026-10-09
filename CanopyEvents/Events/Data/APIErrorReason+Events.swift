@@ -12,6 +12,11 @@ nonisolated extension APIErrorReason {
     static let badDescription = Self(rawValue: "bad_description")
     static let badLocationName = Self(rawValue: "bad_location_name")
     static let badLocationAddress = Self(rawValue: "bad_location_address")
+    /// Half a pin, out of range, or a pin with no name or address.
+    static let badCoordinates = Self(rawValue: "bad_coordinates")
+    static let badApplePlaceId = Self(rawValue: "bad_apple_place_id")
+    /// Places autocomplete's `near` (the server's places, not used on iOS).
+    static let badNear = Self(rawValue: "bad_near")
     static let badStatus = Self(rawValue: "bad_status")
     static let badGuests = Self(rawValue: "bad_guests")
     static let tooManyGuests = Self(rawValue: "too_many_guests")
@@ -77,6 +82,8 @@ nonisolated extension APIErrorReason {
     static let notFound = Self(rawValue: "not_found")
     static let notAFriend = Self(rawValue: "not_a_friend")
     static let friendLinkNotFound = Self(rawValue: "friend_link_not_found")
+    /// A place id that isn't a suggestion's (the server's places).
+    static let placeNotFound = Self(rawValue: "place_not_found")
 
     // MARK: 409: not in this event's state, so redraw from the event
 
@@ -103,5 +110,7 @@ nonisolated extension APIErrorReason {
     /// TMDB didn't give the background just now: try again in a minute.
     static let backgroundUnreachable = Self(rawValue: "background_unreachable")
     static let accountsUnreachable = Self(rawValue: "accounts_unreachable")
+    /// Apple Maps couldn't be asked, or places are off: let the host type it.
+    static let placesUnavailable = Self(rawValue: "places_unavailable")
     static let serverError = Self(rawValue: "server_error")
 }

@@ -4,6 +4,7 @@ extension APISamples {
     static let duplicateDraft = #"""
     {"draft": {"title": "Drag Race night", "description": "Snacks provided.", "timeZone": "America/Los_Angeles",
       "locationName": "Ana's place", "locationAddress": "1 Market St, San Francisco",
+      "latitude": null, "longitude": null, "applePlaceId": null,
       "details": [{"type": "dress_code", "label": null, "value": "Fierce"}],
       "guestListVisibility": "everyone", "guestsAllowed": 1, "capacity": null,
       "themeHue": 320, "themeGrayscale": false, "accentHue": null, "coverFrom": "4fQ9xKpL2mZa",

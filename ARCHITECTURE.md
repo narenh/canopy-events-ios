@@ -207,8 +207,9 @@ rule, the app ports it and a test pins it to the web's own output.
 - **The editor** is drawn as the event: the hero with its photo
   buttons, the title on the band, the when as big as the page's (each
   piece tapped for its picker), the zone by name with a Change menu
-  (`TimeZoneChoices`, the web's `nearbyZones`), quiet dashed fields,
-  the host's details (rows with ×, and "+ Link" … "+ Phone" chips,
+  (`TimeZoneChoices`, the web's `nearbyZones`), quiet dashed fields
+  (one Location field with Apple Maps' suggestions, `EditorLocationField`;
+  see "Location" below), the host's details (rows with ×, and "+ Link" … "+ Phone" chips,
   `EditorDetailsSection`), then the Guests and Color cards and a Save
   bar. The Color slider (`WheelSlider`) is the web's short grey stretch
   (12 steps) then the hue wheel, with Match photo as a picture icon on
@@ -339,7 +340,10 @@ APNs pushes later. The payload the server should send is in
   room than there is gets `no_room`; a freed spot promotes the earliest
   that fits), `guestsOverLimit`, removed people (out of the list and
   counts, the signed-out view for them), implicit friends, and which
-  events go in which list. Hosts can't RSVP; cancelled and past events
+  events go in which list, and the location rules (`MockRules+Location`:
+  the pin and place id as private as the address, a name that's the
+  address's first line dropped, `bad_coordinates` and
+  `bad_apple_place_id`). Hosts can't RSVP; cancelled and past events
   refuse answers; only the creator cancels, manages co-hosts and makes a
   new link.
 - Lists page with real `nextCursor`s (`MockPaging`; the mock's cursor is
@@ -392,6 +396,9 @@ APNs pushes later. The payload the server should send is in
   `2^(-days/90)`, doubled for yours; invitations 0.5, links and adds
   0.25, fading from when made, so `MockBackend.friendEdgeDates` keeps
   when each edge was made).
+- Two seed events have a pin (`MockPin`), as a pick from Apple Maps
+  would save it: Maya's birthday picnic at Dolores Park and Throw Eggs
+  at Karl at Hyde Street Pier. Their place ids are made up.
 - 24 more people (`MockPeople+Crowd`), so Maya has 30-odd friends. Rosa
   is a findable account nobody knows yet: look her up in the invite
   sheet with (415) 555-0188 or @rosa.e.
@@ -439,7 +446,8 @@ Set in the scheme's "Arguments Passed On Launch", or with
    stock `.iso8601` strategy doesn't) and encoding bodies with
    `JSONEncoder.eventsAPI`. Unwrap the one-thing envelopes. Turn an
    `EventDraft` into `EventInput` (POST) or an `EventPatch` of only what
-   changed (PATCH), empty strings as null. Decode error bodies as
+   changed (PATCH), empty strings as null; a changed location sends
+   all five of its fields (`EventLocation`). Decode error bodies as
    `APIError`. The cover is `multipart/form-data`, field `cover`.
 2. Write `AccountServiceClient` conforming to `AccountService` against
    `account.canopysf.com/api/native/v1`: keep the ceremony from
@@ -461,7 +469,7 @@ values), checked by decoding the specs' own examples
 
 - Events API models: `Person`, `Me` (no contact details: those are the
   account service's), `MeEnvelope` (`hasHosted`), `Event`
-  (`details` (`EventDetail`, `EventDetailType`), `hiddenDetails`,
+  (`latitude`, `longitude`, `applePlaceId`, `details` (`EventDetail`, `EventDetailType`), `hiddenDetails`,
   `guestsAllowed`, `capacity`, `spotsLeft`, `coverImageUrl`,
   `coverImages` (`CoverImage`), `themeHue`, `themeGrayscale`,
   `accentHue`, `coverHue`, `coverGrayscale`, `viewer`, `friendsGoing`,
@@ -478,7 +486,7 @@ values), checked by decoding the specs' own examples
   a view here) with `ListName` and `ListLinkViewer`, `ListJoined`,
   `ListAttached`, `HostList`, `JoinableList` (all but `OwnedList` have
   no example in the spec, so their samples are built from the schemas),
-  `DuplicateDraft` (and its `lists` item, `DuplicateDraftList`),
+  `DuplicateDraft` (with the pin; and its `lists` item, `DuplicateDraftList`),
   `FriendLink`, `FriendLinkOwner`, `Settings`, `InviteOptouts`,
   `EventDetailInput`, `WallEntry`/`WallEntryType`/`WallEntryDetails`, `Wall`
   (`wallVisible`, `canPost`), `InboxNotification`/`NotificationType`/
@@ -596,9 +604,21 @@ Swift Testing, in `CanopyEventsTests/`:
   after the original's is removed and the original deleted; every
   `coverFrom` refusal with nothing made; the editor dropping `coverFrom`
   when the cover is taken off or replaced).
+- `LocationTests`: what a pick saves (a named place: name, address,
+  pin, id; a street address: never the name; half a pin or a bad id
+  left out), typed text private, and how Apple's places and addresses
+  are merged. `LocationFieldModelTests`, with a fake Apple Maps
+  (`FakePlaceSearch`): an event opening as a pick or as its text,
+  suggestions from 2 characters and only for what's typed now, typed
+  text private, a pick filled at once then resolved, an address pick
+  without a name, editing after a pick (a late answer doesn't bring it
+  back), clearing. `MockLocationTests`: the pin hidden from someone
+  removed (and `locationAddressHidden` for a pin alone), a street-line
+  name dropped, typed text saved private through the editor, an
+  untouched save keeping the pin, the refusals, and a copy's pin.
 
 They're **not in a target yet**, because adding one means editing the
-project file. They were last run (all 132 passing) through a throwaway
+project file. They were last run (all 152 passing) through a throwaway
 Swift package on macOS that links the non-UI sources with the same
 Swift settings. To run them: in Xcode, File → New → Target
 → Unit Testing Bundle named `CanopyEventsTests` (Swift Testing), then
@@ -1065,3 +1085,76 @@ Save as list), mocked. Judgment calls:
   "All invited"/"All on it", and the plain status badges, which now use
   it too.
 
+### Location (canopy-events db6d651)
+
+The web's one Location field with Apple Maps' suggestions, on the
+device. Judgment calls:
+
+- **Apple Maps on the device, no server**: `MKLocalSearchCompleter` as
+  the host types, `MKLocalSearch` with the picked completion (docs/api.md,
+  "On iOS"). The server's `/places` endpoints aren't in the repository:
+  they're for the web and apps without MapKit. Their reasons are in
+  `APIErrorReason` all the same.
+- **Two completers, one per kind.** `MKLocalSearchCompletion` doesn't
+  say what it is, so the field asks one completer only for points of
+  interest and another only for addresses (`MapKitPlaceSearch`); a
+  suggestion's kind (`mappin` or `house`) is what Apple was asked for,
+  not a guess from its words. docs/api.md suggests one completer with
+  both types and telling them apart afterwards; that can't give the
+  row's icon before the pick. The cost is two of Apple's requests per
+  change. The lists are merged (`PlaceSuggestion.merged`): addresses
+  first when the text starts with a digit (a house number), else places
+  first; the first kind keeps at least 5 rows; 8 at most (the web's);
+  repeats left out. Apple's address completer also offers
+  neighborhoods and cities ("Dolores Heights"): they're addresses, so
+  saved without a name, privately, like any address pick.
+- **No delay of our own before asking**: the completer already waits
+  for typing to settle (the web waits 200 ms because it calls its
+  server). The last suggestions stay until the next come.
+- **The bias**: the completers' `region` is about 50 km around the
+  device's last known location when the app may already use location,
+  else around San Francisco (the server's default) (`PlaceSearchRegion`).
+  **The app never asks for location permission for this**: a prompt
+  just to type a place is too much (the web's call too). It doesn't ask
+  anywhere yet, so today it's always San Francisco.
+- **A pick** shows the completion's title in the field and its subtitle
+  under it at once, saved as what's known (name and address, no pin),
+  then the `MKMapItem` replaces both (`PickedPlace(item:suggestion:)`,
+  then `EventLocation(place:)`, the web's `locationFromPlace`). A failed
+  lookup keeps what's known. A pick or Use "…" lets the field go (the
+  keyboard goes down); Return is Use "…".
+- **The address is iOS 26's `MKMapItem.addressRepresentations`**,
+  `fullAddress(includingRegion: true, singleLine: true)`, with the
+  country, as the web's (Apple's server) has it; `address?.fullAddress`
+  with its lines joined by ", " if that's missing. Both are in the iOS
+  27 SDK as iOS 26.0 API (`MKAddress`, `MKAddressRepresentations`,
+  `MKMapItem.location`); the deprecated `placemark` isn't used. Runs of
+  spaces are folded (Apple writes "CA  94110"). The pin is
+  `item.location.coordinate` to 6 decimals; the id
+  `item.identifier?.rawValue`, sent only in the API's form
+  (`[A-Za-z0-9._:-]{1,128}`) so a strange one can't make Save fail. In
+  the simulator Dolores Park came back as "566 Dolores St, San
+  Francisco, CA 94110, United States", 37.759765, -122.427108,
+  `I501E3D5FE2B085EF`; "1 Market St" (an address) with a pin and no id.
+- **Typed text is private** (the web's call): `locationAddress` only,
+  no name or pin (`EventLocation.typed`). An event opens as a pick
+  (name, address under it) when it has both, else as its text; saved
+  untouched it keeps everything, pin included; once edited it's typed
+  text. The × empties the field.
+- **The completer behind a protocol** (`PlaceSearch`): the field's
+  model (`LocationFieldModel`) is tested with a fake; previews use
+  `PreviewPlaceSearch`. `EventEditorModel` takes one (the real one by
+  default) and copies the field's value into the draft on Save.
+- **Directions**: with a pin, the address on the event page is a button
+  that opens Apple Maps with directions (`EventDirections`: an
+  `MKMapItem` at the pin named as the page names the place,
+  `openInMaps` with the default directions mode). Not the web's
+  Google Maps choice: on an Apple device it's always Apple Maps. It
+  doesn't look the place up by its id first (one more request before
+  Maps opens, and the mock's ids are made up). Without a pin, as before:
+  the address and "Open in Maps".
+- **The mock is the server's rules** (`MockRules+Location`): trimmed,
+  the pin both or neither and in range, a pin with no name or address
+  refused, a name that's the address's first line dropped. Its drafts
+  are whole, so "a changed place without its pin clears the pin" is
+  moot there; the real client sends the five fields together.

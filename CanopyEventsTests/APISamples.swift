@@ -17,7 +17,7 @@ enum APISamples {
     {"id": "4fQ9xKpL2mZa", "url": "https://events.canopysf.com/e/4fQ9xKpL2mZa", "title": "Rooftop dinner",
      "description": "Bring a jacket.", "startsAt": "2026-11-01T02:30:00.000Z", "endsAt": "2026-11-01T06:00:00.000Z",
      "timeZone": "America/Los_Angeles", "locationName": "Ana's place", "locationAddress": "1 Market St, San Francisco",
-     "locationAddressHidden": false,
+     "latitude": 37.794, "longitude": -122.3951, "applePlaceId": null, "locationAddressHidden": false,
      "details": [
        {"type": "link", "label": "Playlist", "value": "https://open.spotify.com/playlist/37i9dQZF1DX4WYpdgoIcn6", "href": "https://open.spotify.com/playlist/37i9dQZF1DX4WYpdgoIcn6"},
        {"type": "dress_code", "label": null, "value": "Warm layers", "href": null},

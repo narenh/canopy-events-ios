@@ -15,9 +15,8 @@ enum MockRules {
         event.viewer = viewer
 
         if viewer.rsvp?.status == .removed {
-            // The signed-out view: no address, no private details.
-            event.locationAddressHidden = event.locationAddress != nil
-            event.locationAddress = nil
+            // The signed-out view: no address or pin, no private details.
+            hideLocation(of: &event)
             event.hiddenDetails = event.details.filter(\.type.isPrivate).count
             event.details.removeAll(where: \.type.isPrivate)
             event.friendsGoing = nil

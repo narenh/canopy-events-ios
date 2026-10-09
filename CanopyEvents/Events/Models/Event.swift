@@ -14,10 +14,20 @@ nonisolated struct Event: Codable, Hashable, Identifiable {
     var endsAt: Date?
     /// IANA time zone, e.g. "America/Los_Angeles". Show times in it.
     var timeZone: String
+    /// A named place ("Dolores Park"), public: link previews show it.
+    /// Never a street address (see `EventLocation`).
     var locationName: String?
     /// Nil when signed out or removed (see `locationAddressHidden`).
     var locationAddress: String?
-    /// True when there's an address you'd see once signed in.
+    /// Where it is on a map, in degrees: private like the address. Nil
+    /// with no pin (typed by hand, or from before pins).
+    var latitude: Double?
+    /// With `latitude`, always.
+    var longitude: Double?
+    /// Apple Maps' id for the place, when it was picked from Apple's
+    /// suggestions. Private like the address.
+    var applePlaceId: String?
+    /// True when there's an address (or a pin) you'd see once signed in.
     var locationAddressHidden: Bool
     /// The host's extra fields, in order (up to 10). Signed out or
     /// removed, parking, stay and phone are left out.
@@ -95,6 +105,12 @@ nonisolated extension Event {
     var isOver: Bool { effectiveEnd < .now }
 
     var isFull: Bool { spotsLeft.map { $0 <= 0 } ?? false }
+
+    /// The five location fields together.
+    var location: EventLocation {
+        EventLocation(locationName: locationName, locationAddress: locationAddress,
+                      latitude: latitude, longitude: longitude, applePlaceId: applePlaceId)
+    }
 
     var eventTimeZone: TimeZone { TimeZone(identifier: timeZone) ?? .current }
 

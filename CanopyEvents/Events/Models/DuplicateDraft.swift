@@ -13,6 +13,10 @@ nonisolated struct DuplicateDraft: Codable, Hashable {
     var timeZone: String
     var locationName: String?
     var locationAddress: String?
+    /// The pin and Apple Maps' id, carried to the copy.
+    var latitude: Double?
+    var longitude: Double?
+    var applePlaceId: String?
     /// Every detail, the hidden-when-signed-out ones too: ready to send back.
     var details: [EventDetailInput]
     var guestListVisibility: GuestListVisibility

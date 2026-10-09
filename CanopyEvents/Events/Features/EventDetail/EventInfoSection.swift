@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The rest of the event's top section, under the title and when: where
-/// (with a map link), who's hosting, spots left, the host's extra details,
+/// (with a pin, the address opens directions; without, "Open in Maps"), who's hosting, spots left, the host's extra details,
 /// and the description.
 /// No card and no border: the cover runs edge to edge above it, so the
 /// whole top reads as one piece on the event's background.
@@ -49,7 +49,15 @@ struct EventInfoSection: View {
                 if let name = event.locationName {
                     Text(name).fontWeight(.semibold)
                 }
-                if let address = event.locationAddress {
+                if let address = event.locationAddress, event.location.hasPin {
+                    // A pin: the address is the way there.
+                    Button(address) { EventDirections.open(event) }
+                        .font(.subheadline.weight(.semibold))
+                        .multilineTextAlignment(.leading)
+                        .accentLink(accent)
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Directions in Maps")
+                } else if let address = event.locationAddress {
                     Text(address)
                         .font(.subheadline)
                         .foregroundStyle(Palette.muted)

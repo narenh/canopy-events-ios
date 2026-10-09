@@ -35,7 +35,7 @@ extension MockEvents {
             MockEventRecord(
                 event: event(id: birthdayId, title: "Maya's birthday picnic", description: "Blankets, snacks, frisbee. Ben's bringing the speaker.",
                              days: 10, hour: 13, hours: 4, locationName: "Dolores Park",
-                             locationAddress: "Dolores St & 19th St, San Francisco", hosts: [host(maya), cohost(p.ben)], guestsAllowed: 2, cover: cover("picnic", hue: 150)),
+                             locationAddress: "Dolores St & 19th St, San Francisco", pin: .doloresPark, hosts: [host(maya), cohost(p.ben)], guestsAllowed: 2, cover: cover("picnic", hue: 150)),
                 guests: [guest(p.ana, .going, plus: 1), guest(p.chloe, .going), guest(p.diego, .maybe), guest(p.elif, .going),
                          guest(p.farah, .invited), guest(p.gus, .invited), guest(p.hana, .going, plus: 2), guest(p.isaac, .notGoing), guest(p.jules, .going)],
                 invitedIds: [p.farah.id, p.gus.id]),
@@ -85,7 +85,7 @@ extension MockEvents {
             MockEventRecord(
                 event: event(id: eggsId, title: "Throw Eggs at Karl", description: "An invisible hand will provide the eggs. Wear something you can wash.",
                              days: MockDate.daysUntil(month: 10, day: 16), hour: 19, hours: 2, locationName: "Hyde Street Pier",
-                             locationAddress: "2905 Hyde St, San Francisco", hosts: [host(p.adam)], theme: .hue(60)),
+                             locationAddress: "2905 Hyde St, San Francisco", pin: .hydeStreetPier, hosts: [host(p.adam)], theme: .hue(60)),
                 guests: [guest(maya, .invited), guest(sam, .invited), guest(p.gus, .going), guest(p.hana, .maybe)],
                 invitedIds: [maya.id, sam.id, p.gus.id]),
         ]

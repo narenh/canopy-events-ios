@@ -22,7 +22,7 @@ enum MockEvents {
     static func event(
         id: String, title: String, description: String? = nil,
         days: Int, hour: Int, minute: Int = 0, hours: Double? = 3,
-        timeZone: String = pacific, locationName: String?, locationAddress: String?,
+        timeZone: String = pacific, locationName: String?, locationAddress: String?, pin: MockPin? = nil,
         visibility: GuestListVisibility = .everyone, hosts: [Host],
         capacity: Int? = nil, guestsAllowed: Int = 0, cover: MockCover? = nil, theme: EventTheme = .canopyGreen,
         accentHue: Int? = nil, details: [EventDetail] = [], cancelled: Bool = false
@@ -36,6 +36,7 @@ enum MockEvents {
             title: title, description: description,
             startsAt: start, endsAt: hours.map { start.addingTimeInterval($0 * 60 * 60) },
             timeZone: timeZone, locationName: locationName, locationAddress: locationAddress,
+            latitude: pin?.latitude, longitude: pin?.longitude, applePlaceId: pin?.applePlaceId,
             locationAddressHidden: false, details: details, hiddenDetails: 0, guestListVisibility: visibility,
             guestsAllowed: guestsAllowed, capacity: capacity, spotsLeft: nil,
             coverImageUrl: cover?.images.last?.url, coverImages: cover?.images ?? [],
