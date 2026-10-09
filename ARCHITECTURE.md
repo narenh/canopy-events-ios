@@ -33,7 +33,9 @@ CanopyEvents/Events/
                 the API's JSON coders
     Mock/       the in-memory "server" and the mock implementations
     MockData/   sample people, events, posts, inbox; PreviewData for #Previews
-  Features/     one folder per screen area (view + @Observable model)
+  Features/     one folder per screen area (view + @Observable model);
+    People/     the picker the invite sheet and a list's "Add people" share,
+                and the people sheets' title bar
   Components/   small reusable views (Avatar, EventCard, VerifyEmailBanner...)
   Design/       palette, spacing, radius, type, the mesh background, glass helpers,
                 event colors (OKLCH, ThemeColors) and the hero's fade
@@ -97,15 +99,19 @@ macOS.
   each tab's stack has `.navigationDestination(for: Route.self) {
   RouteView(route: $0) }`. Routes carry **ids, not models**, so a pushed
   screen always loads fresh data.
-- Sheets (editor, RSVP with plus-ones, the invite sheet, co-hosts, the
-  host's lists, a list's QR code, verify email) are presented by the screen that owns them, with local
-  `@State`. Sheets keep the system's sheet background, except the
+- Sheets (editor, RSVP with plus-ones, the invite sheet, the guests
+  sheet, co-hosts, the host's lists, one of your lists, a list's QR
+  code, verify email) are presented by the screen that owns them, with
+  local `@State`. A list's sheet has its own `NavigationStack`, and its
+  "Add people" is a step pushed inside it (not a `Route`). Sheets keep the system's sheet background, except the
   editor, which is drawn as the event and previews its color.
   `canopyScreen()` (the mesh) is otherwise for full screens.
 - The sign-in flow has its own small stack and `SignInRoute`.
 - Every tab's stack, Profile's included, maps `Route`s, so Profile can
-  push one of your lists (`Route.ownList`) and a list's join screen
-  (`Route.listLink`, what `/l/<code>` will open once the app claims it).
+  push a list's join screen (`Route.listLink`, what `/l/<code>` will
+  open once the app claims it). Your own lists open in a sheet, shown by
+  `ProfileView` (outside the form, which is made afresh whenever your
+  profile changes and would take an open sheet with it).
 
 **To add a pushable screen:** make `Features/<Area>/<Name>View.swift`, add
 a case to `Route`, add one line to `RouteView`. **To add a tab:** add a
@@ -120,7 +126,7 @@ case to `AppTab` and a `Tab` in `MainTabView` with its own
   sit beside it (the view modifier behind `.verifyEmailBanner()`).
 - Files stay small (all under ~120 lines). Each type has a short doc
   comment saying what it's for.
-- **Views** end in `View` when they're a screen (`GuestListView`),
+- **Views** end in `View` when they're a screen (`EventDetailView`),
   `Section` for a card on the event page (`AttendingSection`), `Sheet` for
   something presented modally, `Row`/`Card` for list items.
 - **Every view has a `#Preview`** with mock data, including its key states
@@ -322,7 +328,8 @@ APNs pushes later. The payload the server should send is in
 - `MockEventsRepository` answers as one person, split by topic into
   `+Hosting`, `+Covers`, `+Guests`, `+Invites`, `+Hosts` (co-hosts), `+Moderation`,
   `+Wall`, `+Notifications`, `+People` (lookup), `+Friends`,
-  `+Suggested`, `+Lists` (your own), `+ListMemberships` (links, joining,
+  `+Suggested`, `+Lists` (your own), `+ListAdds` (the owner adding
+  people), `+ListMemberships` (links, joining,
   leaving), `+EventLists` (attaching) and `+Duplicate` (a copy's draft,
   and the cover `coverFrom` copies). `MockRules` applies
   the server's rules from `docs/api.md`: guest list visibility (names
@@ -366,7 +373,8 @@ APNs pushes later. The payload the server should send is in
   Sam is an unverified quick account with one invite and one RSVP.
 - **Lists** (`MockBackend+Lists`, `+EventLists`, `+Suggested`, seeded
   from `MockLists`): Maya owns Drag Race (20 people, on her upcoming
-  "Drag Race: the finale", which invited them) and Climbing (5); Ana owns
+  "Drag Race: the finale", which invited them; all joined by its link)
+  and Climbing (5, all added by Maya, so "Added Oct 8"); Ana owns
   Dumpling crew, on her rooftop dinner (Maya is going, so she's offered
   "Get invited next time") and on Dumpling night II (Maya isn't invited,
   so joining invites her to 1 event); Maya is on Lena's Supper club. Zane
@@ -375,6 +383,11 @@ APNs pushes later. The payload the server should send is in
   `list_not_found`), joining your own list is `own_list`, joining invites
   you to the list's events still to come, attaching invites everyone on
   it, and opt-outs, hosts and removed guests are skipped without a word.
+  Adding people is joining (`MockBackend.putOn`, `source: .added`):
+  verified owners only, 1 to 100 ids, you skipped as `is_you`, the
+  unknown and anyone opted out of your invitations as `not_found` (not
+  added), anyone on it already in `alreadyOn`, all or nothing at 1,000
+  (`list_full`). The server's 300 people a day isn't mocked.
   Suggestions are scored with the API's formula (each event together
   `2^(-days/90)`, doubled for yours; invitations 0.5, links and adds
   0.25, fading from when made, so `MockBackend.friendEdgeDates` keeps
@@ -403,9 +416,13 @@ Set in the scheme's "Arguments Passed On Launch", or with
   inviting you to Throw Eggs at Karl) 5 seconds after signing in, once
   notifications are allowed. Profile's "Debug (TestFlight only)" section
   has the same button, in debug builds and TestFlight.
-- `-mockPush guests|wall` with `-mockEvent <id>`: that event's guest list
-  or wall; `-mockPush past`: Past events; `-mockPush list`: Maya's Drag
-  Race; `-mockPush listLink`: Ana's Dumpling crew's join screen.
+- `-mockPush wall` with `-mockEvent <id>`: that event's updates;
+  `-mockPush past`: Past events; `-mockPush listLink`: Ana's Dumpling
+  crew's join screen.
+- `-mockGuests YES` with `-mockEvent <id>`: that event's guests sheet
+  (e.g. `Bd7Picnic26x`, the birthday, with four statuses).
+- `-mockList YES` with `-mockTab profile`: Maya's Drag Race in its
+  sheet; `-mockList add`: on its "Add people" step.
 - `-mockDuplicate YES` with `-mockEvent <id>`: "Duplicate" on that event
   (one Maya hosts, e.g. `Bd7Picnic26x`, the birthday, with a cover, or
   `Dr7FinaleSF9`, the finale, with her Drag Race list).
@@ -454,7 +471,9 @@ values), checked by decoding the specs' own examples
   `muted`), `FriendsGoing`, `RSVPResult`, `EventList`, `GuestList`,
   `Friend` (`source`, optional `lastTogetherAt`), `FriendList`,
   `SuggestedFriend` (`score`), the lists' `OwnedList`, `ListMember`/
-  `ListMembers` (the spec's inline member), `ListMembership`,
+  `ListMembers` (the spec's inline member, with `source`,
+  `ListMemberSource`), `ListMembersAdded` (`SkippedListAdd`,
+  `SkippedListAddReason`), `ListMembership`,
   `ListLinkOwner` (the spec's `ListLink`, renamed because `ListLink` is
   a view here) with `ListName` and `ListLinkViewer`, `ListJoined`,
   `ListAttached`, `HostList`, `JoinableList` (all but `OwnedList` have
@@ -506,7 +525,6 @@ values), checked by decoding the specs' own examples
   an unverified account" warning, friends screens (the list, adding by
   phone or Instagram, taking out, the friend link with its QR code, and
   opening someone's link at `/f/<code>`), un-inviting,
-  removing and restoring guests (the web puts these behind View all),
   the inbox screen and badge, push
   registration, older wall pages, changing your photo, signed-out link
   previews, opening event links (universal links), persisting the
@@ -550,11 +568,27 @@ Swift Testing, in `CanopyEventsTests/`:
   cancelled, attaching invites everyone on it but opt-outs, an opted-out
   joiner is on the list and nothing else, `hostLists` and
   `joinableList`, rename, reset, remove, leave, delete, the suggestions'
-  order and score). `InvitePickerTests`: the invite sheet's "Invite all"
+  order and score). `MockListAddTests`: adding people against docs/api.md
+  (a verified owner only, 404 for anyone else's list or none, 1 to 100
+  ids; you, the unknown and the opted out skipped and not added; again
+  is `alreadyOn` and changes nothing; being added invites to the list's
+  events still to come, by the owner, and skips the cancelled; a list
+  on nothing makes no friends; all or nothing at 1,000; the added see
+  only the list and can leave; `link` and `added`).
+  `PeoplePickerTests`: the picker's "Invite all"
   ticks, who can't be picked, the tray's order, Suggested and A to Z,
   accent-blind search, what counts as a phone number or @username, and
   "Filter by past event" (its people A to Z, searched within, nobody
   ticked, a hidden guest list, its words, and loading it from the mock).
+  `ListPickerTests`: "On list" can't be picked, the words by kind
+  ("Add 5", "Add all 3", "All on it"), what adding and saving say,
+  "Joined"/"Added", and, against the mock, Add people (the list greyed,
+  left out of "Your lists", "Added 5 people. Invited them to 1 event.")
+  and Save as list (a new list invites nobody, the picks stay; Drag Race
+  invites to the finale, not here). `GuestTabsTests`: the guests
+  sheet's tabs and order, Invited and Removed for hosts only, counts and
+  plus-ones, search across tabs, a host's Remove (the waitlist moves
+  up) and Undo, and a guest's and a hidden list's view.
 - `MockDuplicateTests`: duplicating against docs/api.md (the draft's
   fields and lists, no times; hosts only, unverified refused first, a
   co-host gets only their own lists; a copy with nobody on it, no
@@ -564,7 +598,7 @@ Swift Testing, in `CanopyEventsTests/`:
   when the cover is taken off or replaced).
 
 They're **not in a target yet**, because adding one means editing the
-project file. They were last run (all 113 passing) through a throwaway
+project file. They were last run (all 132 passing) through a throwaway
 Swift package on macOS that links the non-UI sources with the same
 Swift settings. To run them: in Xcode, File → New → Target
 → Unit Testing Bundle named `CanopyEventsTests` (Swift Testing), then
@@ -715,9 +749,8 @@ decisions are in canopy-events' `docs/decision-log.md`):
 - **The home screen name is "Events"** (the owner's call;
   `INFOPLIST_KEY_CFBundleDisplayName`). The bundle id and product name
   are unchanged.
-- **"View all" opens the existing guest list screen** rather than
-  expanding in place (the web's `<details>`), the iOS way; the host's
-  remove and restore tools are still to come there.
+- **"View all" opens the guests sheet** (see "People sheets" below; it
+  first pushed a guest list screen, now gone).
 - **"Co-hosts…" opens a sheet** listing co-hosts (Remove) and friends
   (Add), saved at once. New link, Cancel, Bring back, Delete and Step
   down each ask first in a confirmation dialog; Delete says how many
@@ -821,7 +854,8 @@ The web's lists and inviter, mocked. Judgment calls:
 
 - **Lists live at the top of Profile**, above your details: there's no
   Friends tab, and a list is something you open at a door, not set up
-  once. Each opens its own screen (`OwnListView`): Share link and Show
+  once. Each opened its own screen (`OwnListView`; now a sheet, see
+  "People sheets" below): Share link and Show
   QR side by side, the link, then its people newest first with "Joined
   Oct 8"; swipe to remove (asked first, as the web does). Rename, Reset
   link and Delete are in the ⋯ menu (the web shows them as quiet links;
@@ -857,7 +891,7 @@ The web's lists and inviter, mocked. Judgment calls:
   the person is offered first under "Found"; names are never looked up.
   "Filter by past event" is a menu of your past events (the web's
   `<select>`; see "Inviter follow-ups" below). The picking
-  rules are a plain value (`InvitePicker`) so they're tested without a
+  rules are a plain value (`InvitePicker`, now `PeoplePicker`) so they're tested without a
   screen. People on the event keep their row, greyed, with their
   `StatusBadge`, and aren't buttons.
 - **"Invite all <n>" counts everyone on the list not on the event**,
@@ -951,3 +985,83 @@ The web's "Duplicate" and its 7 PM default, mocked. Judgment calls:
   `no_cover`.
 - **The zone line is its own view** (`EditorZoneLine`), to keep
   `EditorWhenView` small.
+
+### People sheets (canopy-events 3487e2a)
+
+The web's people sheets (a list of yours, Add people, the guests sheet,
+Save as list), mocked. Judgment calls:
+
+- **One picker, two kinds.** `InvitePicker` became `PeoplePicker` with a
+  `kind` (`.invite` or `.list`), and its loading `PeoplePickerModel`,
+  whose `target` is an event or a list: everyone on it is "there
+  already" (`taken`: a status badge, or "On list"), and a list is left
+  out of its own "Your lists". The words that differ are on the kind
+  ("Invite 7"/"Add 7", "Invite all"/"Add all", "All invited"/"All on
+  it"). `PeoplePickerList` (search, Filter by past event, the sections)
+  is the view both sheets put under their title, with their own tray.
+  The pieces moved from `Features/Invite/` to `Features/People/`
+  (`PickerPersonRow`, `PickerListRow`, `PickerTray`,
+  `PastEventFilterMenu`, `PickerLookup`); only `InviteSheet` and
+  `SaveAsListForm` stay in Invite. The three sheets share
+  `peopleSheetTitle(_:)` (a small title and Close, the web's
+  `sheetShell`), `.searchable` through `alwaysShownSearch`, glass rows,
+  `PersonRow` and `NameSearch` (accent-blind, the web's `foldName`).
+- **A list opens in a sheet** (`ListSheet`), from a row on Profile (its
+  name, "9 people", a chevron; the whole row a button). The sheet: the
+  link, then Share, Copy and QR (words only, so three fit across a
+  phone; QR shows the code in place, as the web's toggle does), then
+  "People · 9" with Add people as the section's first row, and its
+  people newest first, "Joined Oct 8" or "Added Oct 8", swipe to Remove
+  (asked first). Rename, Reset link and Delete stay in the ⋯ menu (the
+  web's quiet links). The name search is the sheet's search field, and
+  while it has text the link card steps aside so the matches are the
+  list. A list just made opens with its QR code showing. `OwnListView`,
+  `OwnListHeader` and `Route.ownList` are gone; `-mockPush list` became
+  `-mockList YES|add`.
+- **Add people is pushed inside the sheet's stack** (`ListAddView`,
+  "Add to Drag Race", the system's Back). Its picker model is made on
+  the first visit and kept while the sheet is open, so a second visit
+  doesn't fetch everyone again (the web keeps one per list per page).
+  "Add 5" sends 100 at a time, marks them "On list", pops back, fetches
+  the list again and says "Added 5 people. Invited them to 1 event." (or
+  "Added 1 person.", or "Everyone you picked is on it already."). With
+  more than 100, `invitedTo` is the most any one request said: they're
+  the same list's events, so it's the count, not a sum.
+- **Save as list** is a quiet borderless button beside Invite (off at
+  0), for verified hosts. It swaps the tray for a small form: a "Save
+  to" menu ("New list" or one of yours), a name field for a new one,
+  Cancel and "Save 5". It invites nobody here and the picks stay; the
+  line above the tray says "Saved 5 people to Regulars." and, when the
+  list is on events still to come, "Invited them to 1 event." If that
+  list is on this event too, the people it invited here turn greyed
+  "Invited" (the event's guests are fetched again) and leave the picks.
+  A new list joins the sheet's "Your lists" at once; Profile reloads.
+- **The guests sheet** (`GuestsSheet`) replaces the guest list screen
+  (`GuestListView` and `Route.guestList` are gone; `-mockPush guests`
+  became `-mockGuests YES`). "View all" still shows only when the page
+  shows names, and the sheet is drawn from `GET .../guests` (every page)
+  and, for hosts, `?status=removed`, so it can't show more than the
+  page. The tabs aren't a segmented `Picker`: one can't color each
+  count, so they're capsule buttons with a `CountPill` in the status's
+  fixed color (`StatusBadge.colors`; Can't Go and Removed plain), and
+  they wrap (`FlowLayout`) rather than scroll, as on the web. Under them
+  "5 Going · +3 guests"; searching shows matches from every tab with
+  their badge. The tab logic is a plain value (`GuestTabs`) so it's
+  tested.
+- **A host's tools in the guests sheet**: Remove is a swipe (and a
+  VoiceOver action), asked first with the web's words; the Removed tab
+  has a visible Undo on each row (no confirmation, as on the web), and
+  the line at the top says "Removed Kai Tanaka." / "Kai Tanaka is
+  invited again." Each change fetches the sheet and the page again.
+  Invite is a prominent bar at the foot while the event can still take
+  invitations; it closes the guests sheet and the page opens the invite
+  sheet once it has gone (`onDismiss`), since one view can't present two
+  sheets at once.
+- **The mock's adding** follows the API exactly, except the 300 a day,
+  which isn't mocked. Members' `source` is stored on `ListMember`;
+  joining by the link and the owner adding share `MockBackend.putOn`.
+  Drag Race's seed people joined by the link, Climbing's were added.
+- **`PlainTag`** is the web's `tag off` (outlined capitals): "On list",
+  "All invited"/"All on it", and the plain status badges, which now use
+  it too.
+
