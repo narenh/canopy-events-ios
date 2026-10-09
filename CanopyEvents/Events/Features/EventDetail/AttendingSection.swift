@@ -1,13 +1,16 @@
 import SwiftUI
 
 /// Who's coming: "Attending", the counts ("4 Going · 2 Maybe"), a "View
-/// all" capsule to the whole list, and one row of big faces (friends
-/// first) ending in "+N". While the host shows names only to people who
+/// all" capsule that opens the guests sheet, and one row of big faces
+/// (friends first) ending in "+N". "View all" shows only when the page
+/// shows names. While the host shows names only to people who
 /// have answered, the counts stay and a line says why there are no faces.
 struct AttendingSection: View {
     let event: Event
     /// The first page of the guest list, or nil while it loads.
     let guestList: GuestList?
+    /// "View all": the guests sheet.
+    var onViewAll: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.large) {
@@ -22,7 +25,7 @@ struct AttendingSection: View {
                 }
                 Spacer(minLength: Spacing.small)
                 if let guestList, guestList.guestsVisible, !guestList.guests.isEmpty {
-                    NavigationLink(value: Route.guestList(event.id)) {
+                    Button(action: onViewAll) {
                         Text("View all")
                             .font(.subheadline.weight(.bold))
                             .padding(.horizontal, Spacing.small)

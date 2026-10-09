@@ -2,8 +2,8 @@ import SwiftUI
 
 /// "Filter by past event": a menu of your past events, each by title and
 /// date, most recent first, after "Everyone" (no filter). Picking one
-/// narrows the invite sheet to its people; it ticks nobody.
-struct InviteFromPastMenu: View {
+/// narrows a picker to its people; it ticks nobody.
+struct PastEventFilterMenu: View {
     let events: [Event]
     /// The event filtered to; nil for everyone.
     @Binding var selection: Event.ID?
@@ -28,8 +28,8 @@ struct InviteFromPastMenu: View {
 #Preview {
     @Previewable @State var selection: Event.ID?
     List {
-        InviteFromPastMenu(events: [PreviewData.event(MockEvents.bonfireId), PreviewData.event(MockEvents.snatchGameId)],
-                           selection: $selection)
+        PastEventFilterMenu(events: [PreviewData.event(MockEvents.bonfireId), PreviewData.event(MockEvents.snatchGameId)],
+                            selection: $selection)
     }
     .canopyScreen()
 }

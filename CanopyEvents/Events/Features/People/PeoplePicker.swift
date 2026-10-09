@@ -1,13 +1,21 @@
 import Foundation
 
-/// The invite sheet's state, without the loading: who the sheet knows,
-/// who's on the event already, your lists, and who's picked, in the order
-/// picked. The web's `inviteOrder`, `listPickable` and `setPicked`
-/// (canopy-events public/ui.js and views/event.html), as plain values so
-/// they're testable.
-nonisolated struct InvitePicker {
+/// Picking people, in the invite sheet and a list's "Add people", without
+/// the loading: who the sheet knows, who's there already (on the event,
+/// or on the list), your lists, and who's picked, in the order picked.
+/// The web's `inviteOrder`, `listPickable` and `setPicked` (canopy-events
+/// public/ui.js, `makePicker` in public/sheets.js), as plain values so
+/// they're testable. What differs between the two is `kind`: the words,
+/// and what "already there" looks like.
+nonisolated struct PeoplePicker {
     /// How many suggestions show above everyone else.
     static let suggestedShown = 8
+
+    /// What the picked are for: inviting to an event, or adding to a list.
+    enum Kind: Hashable {
+        case invite
+        case list
+    }
 
     /// Someone the sheet knows, with the line under their name (a friend
     /// made by friend link has an icon before it).
@@ -17,7 +25,7 @@ nonisolated struct InvitePicker {
         var isFriendLink = false
     }
 
-    /// One of your lists, for "Invite all <n>".
+    /// One of your lists, for "Invite all <n>" ("Add all <n>").
     struct PickList: Hashable, Identifiable {
         var id: OwnedList.ID
         var name: String
@@ -33,19 +41,22 @@ nonisolated struct InvitePicker {
         var isHidden: Bool
     }
 
-    /// Someone's part in the event already.
+    /// Why someone is there already: their part in the event, or on the list.
     enum Status: Hashable {
         case hosting
         case rsvp(RSVPStatus)
+        case onList
     }
 
+    var kind = Kind.invite
     var me: Person.ID?
     private(set) var people: [Person.ID: Candidate] = [:]
     /// Best first, from `GET /me/friends/suggested`.
     var suggestedIds: [Person.ID] = []
     var lists: [PickList] = []
-    /// Hosts, everyone invited or answered, and the removed.
-    var onEvent: [Person.ID: Status] = [:]
+    /// Who's there already: for an invitation, the hosts, everyone invited
+    /// or answered, and the removed; for a list, everyone on it.
+    var taken: [Person.ID: Status] = [:]
     /// In the order picked.
     private(set) var selected: [Person.ID] = []
     var query = ""
@@ -58,9 +69,9 @@ nonisolated struct InvitePicker {
         people[person.id] = Candidate(person: person, detail: detail, isFriendLink: isFriendLink)
     }
 
-    /// Not on the event yet, and not you.
+    /// Not there yet, and not you.
     func isPickable(_ id: Person.ID) -> Bool {
-        onEvent[id] == nil && id != me
+        taken[id] == nil && id != me
     }
 
     func isPicked(_ id: Person.ID) -> Bool {
@@ -80,10 +91,10 @@ nonisolated struct InvitePicker {
         setPicked([id], !isPicked(id))
     }
 
-    /// Takes out anyone who's on the event now (after a send, or a reload).
+    /// Takes out anyone who's there now (after a send, or a reload).
     mutating func dropUnpickable() {
-        let onEvent = onEvent, me = me
-        selected.removeAll { onEvent[$0] != nil || $0 == me }
+        let taken = taken, me = me
+        selected.removeAll { taken[$0] != nil || $0 == me }
     }
 
     // MARK: Lists
@@ -93,7 +104,7 @@ nonisolated struct InvitePicker {
         list.memberIds.filter(isPickable)
     }
 
-    /// Every one of them picked: "Invite all" shows as on.
+    /// Every one of them picked: "Invite all" ("Add all") shows as on.
     func isAllPicked(_ list: PickList) -> Bool {
         let ids = pickable(in: list)
         return !ids.isEmpty && ids.allSatisfy(isPicked)
@@ -116,9 +127,9 @@ nonisolated struct InvitePicker {
         !query.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
-    /// Suggested: the first eight suggestions who aren't on the event.
-    /// Everyone: everybody else the sheet knows, A to Z, those on the event
-    /// included (greyed). Searching a name: one list of matches, suggested
+    /// Suggested: the first eight suggestions who aren't there yet.
+    /// Everyone: everybody else the sheet knows, A to Z, those there
+    /// already included (greyed). Searching a name: one list of matches, suggested
     /// first, then A to Z; searching a number or @username: none. Filtered
     /// to a past event: just its people, A to Z, and no Suggested (nobody
     /// at all when its guest list is hidden).
@@ -131,15 +142,10 @@ nonisolated struct InvitePicker {
             return (suggested, known.filter { !suggested.contains($0) }.sorted(by: byName))
         }
         guard LookupKind(typed) == nil else { return ([], []) }
-        let needle = Self.fold(typed)
-        let hits = known.filter { Self.fold(people[$0]?.person.fullName ?? "").contains(needle) }
+        let needle = NameSearch.fold(typed)
+        let hits = known.filter { NameSearch.fold(people[$0]?.person.fullName ?? "").contains(needle) }
         let top = suggested.filter(hits.contains)
         return ([], top + hits.filter { !top.contains($0) }.sorted(by: byName))
-    }
-
-    /// Letters without their accents, in lower case: "Inés" is found by "ines".
-    static func fold(_ text: String) -> String {
-        text.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "en_US"))
     }
 
     private func byName(_ a: Person.ID, _ b: Person.ID) -> Bool {

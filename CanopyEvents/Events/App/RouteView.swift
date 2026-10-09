@@ -14,11 +14,9 @@ struct RouteView: View {
     @ViewBuilder private var destination: some View {
         switch route {
         case .event(let id): EventDetailView(eventId: id)
-        case .guestList(let id): GuestListView(eventId: id)
         case .wall(let id): WallView(eventId: id)
         case .pastEvents: PastEventsView(showsHosted: false)
         case .pastHostedEvents: PastEventsView(showsHosted: true)
-        case .ownList(let id): OwnListView(listId: id)
         case .listLink(let code): ListLinkView(code: code)
         }
     }

@@ -1,26 +1,23 @@
 import SwiftUI
 
-/// Profile's "Your lists" (each opens its own screen; a name field makes
-/// a new one, for verified accounts, like hosting) and, when you're on
-/// any, "Lists you're on", each with Leave.
+/// Profile's "Your lists", a row each (its name, how many, a chevron)
+/// that opens the list's sheet, and a name field that makes a new one
+/// (for verified accounts, like hosting) and opens it with its QR code
+/// showing; then, when you're on any, "Lists you're on", each with Leave.
 struct YourListsSections: View {
     @Environment(\.eventsRepository) private var repository
     @Environment(AppSession.self) private var session
     @State private var model = YourListsModel()
     @State private var leaving: ListMembership?
+    /// The list whose sheet is open. Profile holds it and shows the
+    /// sheet, outside the form, which is made afresh when your profile
+    /// changes and would take an open sheet with it.
+    @Binding var opened: OpenedList?
 
     var body: some View {
         Section("Your lists") {
             ForEach(model.lists) { list in
-                NavigationLink(value: Route.ownList(list.id)) {
-                    VStack(alignment: .leading, spacing: Spacing.xxSmall) {
-                        Text(list.name)
-                        Text(InvitePicker.count(list.memberCount))
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                    .accessibilityElement(children: .combine)
-                }
+                Button { opened = OpenedList(id: list.id) } label: { row(list) }
             }
             if session.needsVerification {
                 Text("Confirm your email to make lists.")
@@ -61,24 +58,48 @@ struct YourListsSections: View {
         Binding(get: { leaving != nil }, set: { if !$0 { leaving = nil } })
     }
 
+    private func row(_ list: OwnedList) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: Spacing.xxSmall) {
+                Text(list.name)
+                    .foregroundStyle(Color.primary)
+                Text(PeoplePicker.count(list.memberCount))
+                    .font(.subheadline)
+                    .foregroundStyle(Color.secondary)
+            }
+            Spacer(minLength: Spacing.small)
+            Image(systemName: "chevron.forward")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(Palette.muted)
+        }
+        .contentShape(.rect)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+    }
+
+    /// Makes the list and opens it, with its QR code showing: the next
+    /// thing anyone does with a new list.
     private func create() {
         guard model.canCreate else { return }
-        Task { _ = await model.create(using: repository) }
+        Task {
+            if let list = await model.create(using: repository) { opened = OpenedList(id: list.id, showsQR: true) }
+        }
     }
 }
 
 #Preview("Verified") {
+    @Previewable @State var opened: OpenedList?
     NavigationStack {
-        Form { YourListsSections() }
+        Form { YourListsSections(opened: $opened) }
             .canopyScreen()
-            .navigationDestination(for: Route.self) { RouteView(route: $0) }
+            .sheet(item: $opened) { ListSheet(listId: $0.id, showsQR: $0.showsQR) }
     }
     .mockEnvironment()
 }
 
 #Preview("Unverified") {
     NavigationStack {
-        Form { YourListsSections() }
+        Form { YourListsSections(opened: .constant(nil)) }
             .canopyScreen()
     }
     .mockEnvironment(signedInAs: MockPeople.sam)

@@ -1,6 +1,6 @@
-/// The found-by-lookup line at the top of the invite sheet: looking, the
-/// person, nobody, or why it couldn't look; for one typed text.
-struct InviteLookup: Equatable {
+/// The found-by-lookup line at the top of a picker: looking, the person,
+/// nobody, or why it couldn't look; for one typed text.
+struct PickerLookup: Equatable {
     enum State: Equatable {
         case looking
         case found(Person.ID)

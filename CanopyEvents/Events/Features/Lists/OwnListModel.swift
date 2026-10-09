@@ -1,14 +1,20 @@
 import Foundation
 import Observation
 
-/// One of your lists and who's on it: rename, a new link, delete, and
-/// taking people off.
+/// One of your lists and who's on it, for its sheet: rename, a new link,
+/// delete, searching its people and taking them off. (Adding them is the
+/// sheet's "Add people" step, a `PeoplePickerModel`.)
 @Observable
 final class OwnListModel {
     let listId: OwnedList.ID
     private(set) var list: OwnedList?
-    /// Newest first.
+    /// Newest first: all of them (up to the 1,000 a list can have), so
+    /// search covers everyone.
     private(set) var members: [ListMember] = []
+    /// The name search over its people.
+    var query = ""
+    /// A line after something was done ("Added 5 people.", "Link copied.").
+    var notice: String?
     private(set) var hasLoaded = false
     /// Set when the list is gone (deleted here or elsewhere), so the screen closes.
     private(set) var isGone = false
@@ -16,6 +22,15 @@ final class OwnListModel {
 
     init(listId: OwnedList.ID) {
         self.listId = listId
+    }
+
+    /// Its people whose names match what's typed (everyone when nothing is).
+    var shownMembers: [ListMember] {
+        members.filter { NameSearch.matches($0.person, query) }
+    }
+
+    var isSearching: Bool {
+        !query.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     func load(from repository: any EventsRepository) async {

@@ -12,21 +12,25 @@ enum LaunchOptions {
     static var startTab: AppTab? { value(for: "mockTab").flatMap(AppTab.init(rawValue:)) }
     /// An event id to open on the Events tab, e.g. `4fQ9xKpL2mZa`.
     static var openEventId: String? { value(for: "mockEvent") }
-    /// What the Events tab opens with: `-mockEvent <id>`, then
-    /// `-mockPush guests|wall` for that event's screen, or `-mockPush
-    /// past|list|listLink` alone (Maya's Drag Race, Ana's Dumpling crew's
-    /// join screen).
+    /// What the Events tab opens with: `-mockEvent <id>`, then `-mockPush
+    /// wall` for that event's updates, or `-mockPush past|listLink` alone
+    /// (Ana's Dumpling crew's join screen).
     static var startPath: [Route] {
         let event = openEventId
         switch value(for: "mockPush") {
         case "past": return [.pastEvents]
-        case "list": return [.ownList(MockLists.dragRaceId)]
         case "listLink": return [.listLink(MockLists.dumplingCrewCode)]
-        case "guests": return event.map { [.event($0), .guestList($0)] } ?? []
         case "wall": return event.map { [.event($0), .wall($0)] } ?? []
         default: return event.map { [.event($0)] } ?? []
         }
     }
+    /// `YES`, with `-mockEvent`, opens that event's guests sheet.
+    static var showsGuests: Bool { value(for: "mockGuests") == "YES" }
+    /// `YES` opens Maya's Drag Race's sheet on Profile (with `-mockTab
+    /// profile`); `add` opens it on its "Add people" step.
+    static var opensList: Bool { ["YES", "add"].contains(value(for: "mockList")) }
+    /// `-mockList add`, until the sheet has opened that step once.
+    static var addsToOpenList = value(for: "mockList") == "add"
     /// `YES`, with `-mockEvent`, opens that event's editor too.
     static var editsOpenEvent: Bool { value(for: "mockEdit") == "YES" }
     /// `YES`, with `-mockEvent`, opens "Duplicate" on that event (one you host).

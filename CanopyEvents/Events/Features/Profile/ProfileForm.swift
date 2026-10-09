@@ -5,6 +5,8 @@ import SwiftUI
 struct ProfileForm: View {
     @Environment(AppSession.self) private var session
     @State var model: ProfileModel
+    /// Your list whose sheet is open (`ProfileView` shows it).
+    @Binding var openedList: OpenedList?
 
     var body: some View {
         Form {
@@ -14,7 +16,7 @@ struct ProfileForm: View {
             .listRowBackground(Color.clear)
 
             // Lists come first: they're shown at a door, not just set up once.
-            YourListsSections()
+            YourListsSections(opened: $openedList)
 
             Section("Name") {
                 TextField("First name", text: $model.draft.firstName)
@@ -67,6 +69,6 @@ struct ProfileForm: View {
 }
 
 #Preview {
-    NavigationStack { ProfileForm(model: ProfileModel(profile: MockPeople.maya)) }
+    NavigationStack { ProfileForm(model: ProfileModel(profile: MockPeople.maya), openedList: .constant(nil)) }
         .mockEnvironment()
 }

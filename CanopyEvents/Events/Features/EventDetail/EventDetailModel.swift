@@ -128,7 +128,7 @@ final class EventDetailModel {
 
     /// After the invite sheet sends: "Invited 7 people.", then a reload.
     func invited(_ count: Int, using repository: any EventsRepository) async {
-        hostNotice = count > 0 ? InvitePicker.invitedNotice(count) : nil
+        hostNotice = count > 0 ? PeoplePicker.invitedNotice(count) : nil
         await load(from: repository)
     }
 

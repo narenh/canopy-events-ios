@@ -4,14 +4,11 @@
 /// whole models, so a pushed screen always loads fresh data.
 enum Route: Hashable {
     case event(Event.ID)
-    case guestList(Event.ID)
     case wall(Event.ID)
     /// Past events you went to (not ones you hosted).
     case pastEvents
     /// Past events you hosted.
     case pastHostedEvents
-    /// One of your lists, with who's on it.
-    case ownList(OwnedList.ID)
     /// Someone's list link, `/l/<code>`: join it.
     case listLink(String)
 }

@@ -2,20 +2,20 @@ import Foundation
 import Testing
 @testable import CanopyEvents
 
-/// The invite sheet's picking and order (`InvitePicker`), the web's
-/// `inviteOrder`, `listPickable`, "Invite all <n>" and "Filter by past
-/// event".
-struct InvitePickerTests {
+/// Picking people (`PeoplePicker`), in the invite sheet and a list's "Add
+/// people": the web's `inviteOrder`, `listPickable`, "Invite all <n>" /
+/// "Add all <n>", "Filter by past event", and their words.
+struct PeoplePickerTests {
     private let p = MockPeople.self
 
-    private func picker() -> InvitePicker {
-        var picker = InvitePicker()
+    private func picker() -> PeoplePicker {
+        var picker = PeoplePicker()
         picker.me = MockPeople.maya.id
         for person in [p.ana, p.ben, p.chloe, p.diego, p.elif, p.farah, p.gus, p.hana, p.isaac, p.jules, p.ines, p.theo] {
             picker.add(person, detail: "")
         }
-        picker.lists = [InvitePicker.PickList(id: "L", name: "Drag Race", memberIds: [p.theo.id, p.ines.id, p.ben.id, p.jules.id])]
-        picker.onEvent = [p.ben.id: .rsvp(.going), p.chloe.id: .hosting]
+        picker.lists = [PeoplePicker.PickList(id: "L", name: "Drag Race", memberIds: [p.theo.id, p.ines.id, p.ben.id, p.jules.id])]
+        picker.taken = [p.ben.id: .rsvp(.going), p.chloe.id: .hosting]
         return picker
     }
 
@@ -106,30 +106,30 @@ struct InvitePickerTests {
     }
 
     @Test func thePastEventsWords() {
-        func from(_ ids: [Person.ID], hidden: Bool = false) -> InvitePicker.PastFilter {
+        func from(_ ids: [Person.ID], hidden: Bool = false) -> PeoplePicker.PastFilter {
             .init(eventId: "E", title: "Beach bonfire", ids: ids, isHidden: hidden)
         }
-        #expect(InvitePicker.showing(from([p.ana.id, p.ben.id, p.gus.id, p.hana.id])) == "Showing 4 from Beach bonfire.")
-        #expect(InvitePicker.showing(from([p.ana.id])) == "Showing 1 from Beach bonfire.")
-        #expect(InvitePicker.showing(from([])) == "No one else from Beach bonfire.")
-        #expect(InvitePicker.showing(from([p.ana.id], hidden: true)) == "Beach bonfire's guest list isn't shown to you.")
+        #expect(PeoplePicker.showing(from([p.ana.id, p.ben.id, p.gus.id, p.hana.id])) == "Showing 4 from Beach bonfire.")
+        #expect(PeoplePicker.showing(from([p.ana.id])) == "Showing 1 from Beach bonfire.")
+        #expect(PeoplePicker.showing(from([])) == "No one else from Beach bonfire.")
+        #expect(PeoplePicker.showing(from([p.ana.id], hidden: true)) == "Beach bonfire's guest list isn't shown to you.")
     }
 
     @Test func detailsUseTheWebsWords() {
         let friend = Friend(person: p.ana, source: .invite, eventsInCommon: 3, lastTogetherAt: nil)
-        #expect(InvitePicker.detail(for: friend) == "Invitation, 3 events together")
-        #expect(InvitePicker.detail(for: Friend(person: p.ana, source: .sharedEvents, eventsInCommon: 1, lastTogetherAt: nil)) == "1 event together")
+        #expect(PeoplePicker.detail(for: friend) == "Invitation, 3 events together")
+        #expect(PeoplePicker.detail(for: Friend(person: p.ana, source: .sharedEvents, eventsInCommon: 1, lastTogetherAt: nil)) == "1 event together")
         // A friend link is an icon, not words.
-        #expect(InvitePicker.detail(for: Friend(person: p.ana, source: .link, eventsInCommon: 2, lastTogetherAt: nil)) == "2 events together")
-        #expect(InvitePicker.detail(for: Friend(person: p.ana, source: .link, eventsInCommon: 0, lastTogetherAt: nil)).isEmpty)
-        #expect(InvitePicker.invitedNotice(7) == "Invited 7 people." && InvitePicker.invitedNotice(1) == "Invited 1 person.")
+        #expect(PeoplePicker.detail(for: Friend(person: p.ana, source: .link, eventsInCommon: 2, lastTogetherAt: nil)) == "2 events together")
+        #expect(PeoplePicker.detail(for: Friend(person: p.ana, source: .link, eventsInCommon: 0, lastTogetherAt: nil)).isEmpty)
+        #expect(PeoplePicker.invitedNotice(7) == "Invited 7 people." && PeoplePicker.invitedNotice(1) == "Invited 1 person.")
     }
 
     @MainActor @Test func filteringByAPastEventLoadsItsPeopleAndTicksNobody() async throws {
         let session = AppSession.mock(delay: .zero)
         try await session.signInWithPasskey()
         let repository = session.repository
-        let model = InviteModel(event: try await repository.event(id: MockEvents.gameNightId), me: MockPeople.maya.id)
+        let model = PeoplePickerModel(target: .event(try await repository.event(id: MockEvents.gameNightId)), me: MockPeople.maya.id)
         await model.load(from: repository)
         let bonfire = try await repository.event(id: MockEvents.bonfireId)
         let going = try await repository.guestList(eventId: bonfire.id, status: .going, page: PageRequest(limit: 100))

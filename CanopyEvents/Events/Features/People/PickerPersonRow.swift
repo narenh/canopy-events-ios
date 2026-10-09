@@ -1,11 +1,12 @@
 import SwiftUI
 
-/// Someone in the invite sheet: their face, name and how you know them
-/// (a friend link is an icon, read as "Friend link"), and a tick. Already on the event, they're greyed with their status
-/// badge (the fixed status colors) and can't be ticked.
-struct InvitePersonRow: View {
-    let candidate: InvitePicker.Candidate
-    let status: InvitePicker.Status?
+/// Someone in a picker: their face, name and how you know them (a friend
+/// link is an icon, read as "Friend link"), and a tick. Already there,
+/// they're greyed and can't be ticked: on the event with their status
+/// badge (the fixed status colors), on the list with "On list".
+struct PickerPersonRow: View {
+    let candidate: PeoplePicker.Candidate
+    let status: PeoplePicker.Status?
     let isPicked: Bool
     let onToggle: () -> Void
 
@@ -15,9 +16,11 @@ struct InvitePersonRow: View {
         Button(action: onToggle) {
             PersonRow(person: person, detail: candidate.detail.isEmpty ? nil : candidate.detail,
                       isFriendLink: candidate.isFriendLink) {
-                if let status {
-                    StatusBadge(kind: badge(status))
-                } else {
+                switch status {
+                case .hosting: StatusBadge(kind: .hosting)
+                case .rsvp(let rsvp): StatusBadge(kind: .status(rsvp))
+                case .onList: PlainTag(title: "On list")
+                case nil:
                     Image(systemName: isPicked ? "checkmark.circle.fill" : "circle")
                         .font(.title2)
                         .foregroundStyle(isPicked ? Color.accentColor : Palette.muted)
@@ -37,29 +40,24 @@ struct InvitePersonRow: View {
         .accessibilityAction { if status == nil { onToggle() } }
     }
 
-    private func badge(_ status: InvitePicker.Status) -> StatusBadge.Kind {
-        switch status {
-        case .hosting: .hosting
-        case .rsvp(let rsvp): .status(rsvp)
-        }
-    }
-
-    private func words(_ status: InvitePicker.Status) -> String {
+    private func words(_ status: PeoplePicker.Status) -> String {
         switch status {
         case .hosting: "Hosting"
         case .rsvp(.waitlisted): "On the waitlist"
         case .rsvp(let rsvp): rsvp.title
+        case .onList: "On list"
         }
     }
 }
 
 #Preview {
     List {
-        InvitePersonRow(candidate: .init(person: MockPeople.ana, detail: "Invitation, 3 events together"), status: nil, isPicked: true) {}
-        InvitePersonRow(candidate: .init(person: MockPeople.ines, detail: "2 events together", isFriendLink: true), status: nil, isPicked: false) {}
-        InvitePersonRow(candidate: .init(person: MockPeople.theo, detail: "On Drag Race"), status: nil, isPicked: false) {}
-        InvitePersonRow(candidate: .init(person: MockPeople.ben, detail: "4 events together"), status: .rsvp(.going), isPicked: false) {}
-        InvitePersonRow(candidate: .init(person: MockPeople.chloe, detail: ""), status: .hosting, isPicked: false) {}
+        PickerPersonRow(candidate: .init(person: MockPeople.ana, detail: "Invitation, 3 events together"), status: nil, isPicked: true) {}
+        PickerPersonRow(candidate: .init(person: MockPeople.ines, detail: "2 events together", isFriendLink: true), status: nil, isPicked: false) {}
+        PickerPersonRow(candidate: .init(person: MockPeople.theo, detail: "On Drag Race"), status: nil, isPicked: false) {}
+        PickerPersonRow(candidate: .init(person: MockPeople.ben, detail: "4 events together"), status: .rsvp(.going), isPicked: false) {}
+        PickerPersonRow(candidate: .init(person: MockPeople.chloe, detail: ""), status: .hosting, isPicked: false) {}
+        PickerPersonRow(candidate: .init(person: MockPeople.diego, detail: ""), status: .onList, isPicked: false) {}
     }
     .canopyScreen()
 }

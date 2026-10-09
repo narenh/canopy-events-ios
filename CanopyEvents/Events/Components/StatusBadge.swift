@@ -13,20 +13,17 @@ struct StatusBadge: View {
     }
 
     var body: some View {
-        let words = Text(title.uppercased())
-            .font(Typography.tag)
-            .tracking(0.4)
-            .padding(.horizontal, 9)
-            .padding(.vertical, 3)
-        if let colors {
-            words
+        if let colors = Self.colors(for: kind) {
+            Text(title.uppercased())
+                .font(Typography.tag)
+                .tracking(0.4)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 3)
                 .foregroundStyle(colors.text.color)
                 .background(colors.pill.color, in: .rect(cornerRadius: 8))
+                .accessibilityLabel(title)
         } else {
-            words
-                .foregroundStyle(.white)
-                .background(.white.opacity(0.10), in: .rect(cornerRadius: 8))
-                .overlay { RoundedRectangle(cornerRadius: 8).strokeBorder(.white.opacity(0.55), lineWidth: 1) }
+            PlainTag(title: title)
         }
     }
 
@@ -38,8 +35,9 @@ struct StatusBadge: View {
         }
     }
 
-    /// The pill and its text; nil for plain glass.
-    private var colors: (pill: RGB, text: RGB)? {
+    /// The pill and its text; nil for plain glass. The guests sheet's
+    /// counts use them too.
+    static func colors(for kind: Kind) -> (pill: RGB, text: RGB)? {
         switch kind {
         case .hosting: (RGB(hex: "#6CB4FF"), RGB(hex: "#03122A"))
         case .status(.going): (RGB(hex: "#2EC44F"), RGB(hex: "#03190A"))

@@ -14,6 +14,10 @@ struct EventDetailView: View {
     @State private var answeringWithGuests: RSVPStatus?
     @State private var isEditing = false
     @State private var isInviting = false
+    /// "View all": the guests sheet.
+    @State private var showsGuests = false
+    /// Its Invite: the invite sheet opens once it has closed.
+    @State private var invitesAfterGuests = false
     @State private var isManagingCohosts = false
     @State private var isManagingLists = false
     @State private var showsListQR = false
@@ -36,6 +40,7 @@ struct EventDetailView: View {
         _model = State(initialValue: EventDetailModel(eventId: eventId))
         _isEditing = State(initialValue: LaunchOptions.editsOpenEvent && LaunchOptions.openEventId == eventId)
         _isInviting = State(initialValue: LaunchOptions.invitesOpenEvent && LaunchOptions.openEventId == eventId)
+        _showsGuests = State(initialValue: LaunchOptions.showsGuests && LaunchOptions.openEventId == eventId)
         _isManagingLists = State(initialValue: showsLists)
         _launchesDuplicate = State(initialValue: LaunchOptions.duplicatesOpenEvent && LaunchOptions.openEventId == eventId)
     }
@@ -108,6 +113,11 @@ struct EventDetailView: View {
             }
             .eventAccent(event.accent)
         }
+        .sheet(isPresented: $showsGuests, onDismiss: inviteAfterGuests) {
+            GuestsSheet(event: event, onChange: { Task { await model.load(from: repository) } },
+                        onInvite: EventPhase(event: event).isOpen ? { invitesAfterGuests = true } : nil)
+                .eventAccent(event.accent)
+        }
         .sheet(isPresented: $isManagingCohosts) {
             CohostsSheet(event: event) { model.update($0) }
         }
@@ -168,7 +178,7 @@ struct EventDetailView: View {
             }
         }
         if event.myStatus != .removed {
-            AttendingSection(event: event, guestList: model.guestList)
+            AttendingSection(event: event, guestList: model.guestList) { showsGuests = true }
             WallPreviewSection(eventId: event.id, entries: model.latestEntries, isVisible: model.wallVisible)
         }
     }
@@ -184,11 +194,17 @@ struct EventDetailView: View {
         )
     }
 
+    private func inviteAfterGuests() {
+        guard invitesAfterGuests else { return }
+        invitesAfterGuests = false
+        isInviting = true
+    }
+
     private var isConfirmingJoin: Binding<Bool> {
         Binding(get: { joining != nil }, set: { if !$0 { joining = nil } })
     }
 
-        private var isConfirming: Binding<Bool> {
+    private var isConfirming: Binding<Bool> {
         Binding(get: { pendingAction != nil }, set: { if !$0 { pendingAction = nil } })
     }
 

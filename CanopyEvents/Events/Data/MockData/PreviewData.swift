@@ -22,6 +22,12 @@ enum PreviewData {
         return MockRules.guestList(record, for: me.person)
     }
 
+    /// One of the seed's lists as its owner sees it.
+    static func ownedList(_ id: OwnedList.ID = MockLists.dragRaceId) -> OwnedList {
+        guard let list = MockLists.all.first(where: { $0.id == id }) else { fatalError("No mock list \(id)") }
+        return list.owned
+    }
+
     static func wallEntries(_ id: Event.ID = MockEvents.rooftopId) -> [WallEntry] {
         MockWall.entries[id, default: []].sorted { $0.createdAt > $1.createdAt }
     }

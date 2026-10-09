@@ -1,8 +1,8 @@
 import Foundation
 
-/// The line under each name in the invite sheet, in the web's words
+/// The line under each name in a picker, in the web's words
 /// (public/copy.js, `invite` and `friends.source`).
-nonisolated extension InvitePicker {
+nonisolated extension PeoplePicker {
     /// How a friend is in your list ("Invitation", "Added") when it isn't
     /// events, then the events together: "Invitation, 3 events together".
     /// A friend link isn't words; the row shows it as an icon
@@ -51,10 +51,5 @@ nonisolated extension InvitePicker {
         case 1: "1 person"
         default: "\(n) people"
         }
-    }
-
-    /// After sending: "Invited 7 people." or "Invited 1 person."
-    static func invitedNotice(_ n: Int) -> String {
-        n == 1 ? "Invited 1 person." : "Invited \(n) people."
     }
 }

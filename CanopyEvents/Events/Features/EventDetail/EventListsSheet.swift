@@ -72,7 +72,7 @@ struct EventListsSheet: View {
                 Text("You don't have any lists yet.").foregroundStyle(.secondary)
             }
             ForEach(model.others) { list in
-                EventListRow(name: list.name, detail: InvitePicker.count(list.memberCount)) {
+                EventListRow(name: list.name, detail: PeoplePicker.count(list.memberCount)) {
                     Button("Add") {
                         if list.memberCount > 0 { adding = list } else { change { await model.attach(list, using: repository) } }
                     }
@@ -92,7 +92,7 @@ struct EventListsSheet: View {
     }
 
     private func detail(for list: HostList) -> String {
-        list.isYours ? "Your list · \(InvitePicker.count(list.memberCount ?? 0))" : "\(list.owner.fullName)'s list"
+        list.isYours ? "Your list · \(PeoplePicker.count(list.memberCount ?? 0))" : "\(list.owner.fullName)'s list"
     }
 
     private func create() {
