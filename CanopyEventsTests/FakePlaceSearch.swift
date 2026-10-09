@@ -7,11 +7,13 @@ final class FakePlaceSearch: PlaceSearch {
     var onSuggestions: ((String, [PlaceSuggestion]) -> Void)?
     private(set) var asked: [String] = []
     private(set) var cancels = 0
+    private(set) var prepares = 0
     var places: [PlaceSuggestion.ID: PickedPlace] = [:]
     /// Held picks, resumed by `resolve()`.
     private var waiting: [CheckedContinuation<Void, Never>] = []
     var holdsPicks = false
 
+    func prepare() { prepares += 1 }
     func suggest(_ query: String) { asked.append(query) }
     func cancel() { cancels += 1 }
 

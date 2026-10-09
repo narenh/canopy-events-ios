@@ -3,8 +3,9 @@ import Testing
 @testable import CanopyEvents
 
 /// The Location field's behavior, driven by a fake Apple Maps: how an
-/// event opens, typing and suggestions, Use "…", picking, editing after a
-/// pick and clearing (the web's views/editor.html). Not in a target yet.
+/// event opens, focus, typing and suggestions, Use "…", picking, editing
+/// after a pick and clearing (the web's views/editor.html). Not in a
+/// target yet.
 @MainActor
 struct LocationFieldModelTests {
     let search = FakePlaceSearch()
@@ -24,6 +25,15 @@ struct LocationFieldModelTests {
         #expect(addressOnly.text == "742 Valencia St" && addressOnly.line.isEmpty)
         let nameOnly = field(EventLocation(locationName: "The usual"))
         #expect(nameOnly.text == "The usual" && nameOnly.value.locationName == "The usual")
+    }
+
+    @Test func focusLetsTheSearchFindTheDeviceWithoutWaiting() {
+        let model = field()
+        model.focus()
+        #expect(search.prepares == 1)
+        // Typing doesn't wait for a location.
+        model.edit("do")
+        #expect(search.asked == ["do"])
     }
 
     @Test func typingAsksFromTwoCharactersAndKeepsOnlyCurrentAnswers() {

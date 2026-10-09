@@ -72,6 +72,12 @@ final class LocationFieldModel {
         }
     }
 
+    /// The field got focus: suggestions start leaning towards where the
+    /// device is (the first time, the system may ask), never waited for.
+    func focus() {
+        search.prepare()
+    }
+
     /// The list closed (Use "…", Return, or the field let go): what's
     /// typed stays as typed.
     func close() {

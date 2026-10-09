@@ -13,6 +13,7 @@ final class PreviewPlaceSearch: PlaceSearch {
         onSuggestions?(query, Self.samples)
     }
 
+    func prepare() {}
     func cancel() {}
 
     func place(for suggestion: PlaceSuggestion) async throws -> PickedPlace {

@@ -608,17 +608,21 @@ Swift Testing, in `CanopyEventsTests/`:
   pin, id; a street address: never the name; half a pin or a bad id
   left out), typed text private, and how Apple's places and addresses
   are merged. `LocationFieldModelTests`, with a fake Apple Maps
-  (`FakePlaceSearch`): an event opening as a pick or as its text,
+  (`FakePlaceSearch`): an event opening as a pick or as its text, focus
+  asking the search to find the device without typing waiting,
   suggestions from 2 characters and only for what's typed now, typed
   text private, a pick filled at once then resolved, an address pick
   without a name, editing after a pick (a late answer doesn't bring it
-  back), clearing. `MockLocationTests`: the pin hidden from someone
+  back), clearing. `PlaceSearchRegionTests`, with a fake device
+  location: San Francisco before a location (asked, not yet answered),
+  the device's 50 km after, nothing on a denial, asked only once,
+  starting at the last known location. `MockLocationTests`: the pin hidden from someone
   removed (and `locationAddressHidden` for a pin alone), a street-line
   name dropped, typed text saved private through the editor, an
   untouched save keeping the pin, the refusals, and a copy's pin.
 
 They're **not in a target yet**, because adding one means editing the
-project file. They were last run (all 152 passing) through a throwaway
+project file. They were last run (all 158 passing) through a throwaway
 Swift package on macOS that links the non-UI sources with the same
 Swift settings. To run them: in Xcode, File → New → Target
 → Unit Testing Bundle named `CanopyEventsTests` (Swift Testing), then
@@ -1112,11 +1116,34 @@ device. Judgment calls:
   for typing to settle (the web waits 200 ms because it calls its
   server). The last suggestions stay until the next come.
 - **The bias**: the completers' `region` is about 50 km around the
-  device's last known location when the app may already use location,
-  else around San Francisco (the server's default) (`PlaceSearchRegion`).
-  **The app never asks for location permission for this**: a prompt
-  just to type a place is too much (the web's call too). It doesn't ask
-  anywhere yet, so today it's always San Francisco.
+  device's location once it's known, else around San Francisco (the
+  server's default) (`PlaceSearchRegion`). It starts at the device's
+  last known location when the app may already use location.
+- **Location is asked for once, the first time the Location field gets
+  focus** (the owner's call; it replaced "never ask", under which the
+  bias was always San Francisco). Focus calls `LocationFieldModel.focus()`
+  → `PlaceSearch.prepare()`; `MapKitPlaceSearch` starts
+  `PlaceSearchRegion.find()` in a task and never waits for it, so typing
+  goes on with San Francisco. When-in-use only, through iOS 18's
+  `CLServiceSession(authorization: .whenInUse)` (the system asks if it
+  hasn't yet) and the first location from `CLLocationUpdate.liveUpdates()`;
+  then the session ends. Approximate is enough: no full accuracy
+  purpose key, no temporary full accuracy, and a reduced-accuracy
+  location is used like any other. Already denied or restricted: no
+  session; denied at the prompt: the session ends. Either way nothing
+  changes and the system won't ask again; `find()` also runs only once
+  per field. The location
+  re-biases both completers and the pick's `MKLocalSearch`; suggestions
+  already shown stay until the next keystroke. Closing the editor
+  cancels the task. The Mac has no `CLServiceSession`: there it's
+  `CLLocationManager.requestWhenInUseAuthorization()` then the same
+  live updates (`#if os(macOS)`); visionOS is as iOS. The prompt's text
+  is `INFOPLIST_KEY_NSLocationWhenInUseUsageDescription` ("Suggests
+  places near you when you add a location."), a build setting like the
+  project's other keys; `Info.plist` keeps only what has no build
+  setting (`NSUserActivityTypes`). Not run against the real prompt or a
+  real location here: `PlaceSearchRegionTests` drive it with a fake
+  location.
 - **A pick** shows the completion's title in the field and its subtitle
   under it at once, saved as what's known (name and address, no pin),
   then the `MKMapItem` replaces both (`PickedPlace(item:suggestion:)`,

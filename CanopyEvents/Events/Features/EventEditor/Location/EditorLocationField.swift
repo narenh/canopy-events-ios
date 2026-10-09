@@ -29,7 +29,7 @@ struct EditorLocationField: View {
             }
         }
         .onChange(of: focused) { _, isFocused in
-            if !isFocused { model.close() }
+            if isFocused { model.focus() } else { model.close() }
         }
     }
 
