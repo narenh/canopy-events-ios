@@ -54,6 +54,10 @@ protocol EventsRepository: AnyObject, Sendable {
     func resetListLink(id: OwnedList.ID) async throws -> OwnedList
     /// `GET /api/v1/me/lists/{listId}/members`, newest first. The owner only.
     func listMembers(listId: OwnedList.ID, page: PageRequest) async throws -> ListMembers
+    /// `POST /api/v1/me/lists/{listId}/members` with `{personIds}` (1 to
+    /// 100): the people you could invite, added. Being added is joining:
+    /// each is invited to the list's events still to come. Verified only.
+    func addListMembers(listId: OwnedList.ID, personIds: [Person.ID]) async throws -> ListMembersAdded
     /// `DELETE /api/v1/me/lists/{listId}/members/{personId}`: they aren't told.
     func removeListMember(listId: OwnedList.ID, personId: Person.ID) async throws
     /// `GET /api/v1/me/list-memberships`: lists you're on, newest first.

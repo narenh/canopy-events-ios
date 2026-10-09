@@ -12,4 +12,5 @@ extension APIError {
     static let tooManyLists = APIError(message: "That's as many lists as you can have.", reason: .tooManyLists)
     static let tooManyListsOnEvent = APIError(message: "An event can have at most 10 lists.", reason: .tooManyLists)
     static let listFull = APIError(message: "That list is full.", reason: .listFull)
+    static let badListPersonIds = APIError(message: "Add 1 to 100 people at a time.", reason: .badPersonIds)
 }

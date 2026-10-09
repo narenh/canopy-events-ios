@@ -39,7 +39,7 @@ extension MockEventsRepository {
         guard list.ownerId != personId else { throw APIError.ownList }
         if let membership = membership(in: list) { return ListJoined(list: membership, invitedTo: 0) }
         guard list.members.count < 1000 else { throw APIError.listFull }
-        let invitedTo = backend.join(currentUser.person, listId: list.id)
+        let invitedTo = backend.putOn([currentUser.person], listId: list.id, source: .link)
         guard let joined = backend.list(id: list.id).flatMap(membership(in:)) else { throw APIError.listNotFound }
         return ListJoined(list: joined, invitedTo: invitedTo)
     }

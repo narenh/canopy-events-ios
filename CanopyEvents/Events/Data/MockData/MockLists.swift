@@ -1,10 +1,11 @@
 import Foundation
 
-/// The mock world's lists. Maya has "Drag Race" (20 people, on her
-/// finale viewing) and "Climbing"; Ana has "Dumpling crew" (on her
-/// rooftop dinner, which Maya is going to, and on her next dumpling
-/// night, which Maya isn't invited to), so joining it from the rooftop
-/// page invites Maya to one event; Maya is on Lena's "Supper club".
+/// The mock world's lists. Maya has "Drag Race" (20 people who joined by
+/// its link, on her finale viewing) and "Climbing" (5 she added); Ana
+/// has "Dumpling crew" (on her rooftop dinner, which Maya is going to,
+/// and on her next dumpling night, which Maya isn't invited to), so
+/// joining it from the rooftop page invites Maya to one event; Maya is
+/// on Lena's "Supper club".
 enum MockLists {
     static let dragRaceId = "LqDragRace01"
     static let climbingId = "LqClimbing02"
@@ -20,7 +21,7 @@ enum MockLists {
                 p.theo, p.ines, p.noor, p.oscar, p.quinn, p.tomas, p.wren, p.amara, p.bea, p.jules,
                 p.marcus, p.sven, p.uma, p.vic, p.xavier, p.ben, p.kofi, p.yuki, p.zane, p.chloe,
             ]),
-            list(climbingId, owner: p.maya.person, "Climbing", code: "Cl7mB3rsJoin", madeDaysAgo: 30, members: [
+            list(climbingId, owner: p.maya.person, "Climbing", code: "Cl7mB3rsJoin", madeDaysAgo: 30, source: .added, members: [
                 p.ana, p.diego, p.cyrus, p.dani, p.freya,
             ]),
             list(dumplingCrewId, owner: p.ana, "Dumpling crew", code: dumplingCrewCode, madeDaysAgo: 40, members: [
@@ -38,14 +39,18 @@ enum MockLists {
         [MockPeople.zane.id: [MockPeople.maya.id]]
     }
 
-    /// Made `madeDaysAgo` days ago; the people joined in the order given,
-    /// a day or two apart, the last one most recently.
-    private static func list(_ id: String, owner: Person, _ name: String, code: String, madeDaysAgo: Int, members: [Person]) -> MockListRecord {
+    /// Made `madeDaysAgo` days ago; the people joined (or, for `.added`,
+    /// were added) in the order given, a day or two apart, the last one
+    /// most recently.
+    private static func list(_ id: String, owner: Person, _ name: String, code: String, madeDaysAgo: Int,
+                             source: ListMemberSource = .link, members: [Person]) -> MockListRecord {
         let made = MockDate.ago(minutes: madeDaysAgo * 24 * 60)
         let step = TimeInterval(madeDaysAgo * 24 * 60 * 60) / Double(members.count + 1)
         return MockListRecord(
             id: id, ownerId: owner.id, name: name, code: code, createdAt: made,
-            members: members.enumerated().map { ListMember(person: $1, joinedAt: made.addingTimeInterval(step * Double($0 + 1))) }
+            members: members.enumerated().map {
+                ListMember(person: $1, joinedAt: made.addingTimeInterval(step * Double($0 + 1)), source: source)
+            }
         )
     }
 }

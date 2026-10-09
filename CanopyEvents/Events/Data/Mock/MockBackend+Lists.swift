@@ -44,17 +44,21 @@ extension MockBackend {
         return invited
     }
 
-    /// Puts `person` on the list and invites them to every event still to
-    /// come that the list is on (and whose hosts include its owner).
-    /// Returns how many events. Already on it changes nothing.
-    func join(_ person: Person, listId: String) -> Int {
-        guard var list = list(id: listId), !list.hasMember(person.id) else { return 0 }
-        list.members.append(ListMember(person: person, joinedAt: .now))
+    /// Puts `people` on the list (joined by its link, or added by its
+    /// owner: the same thing) and, in the same step, invites them, in the
+    /// owner's name, to every event the list is on that isn't over or
+    /// cancelled (and whose hosts include its owner). Anyone on it already
+    /// is left alone. Returns how many events at least one was invited to.
+    func putOn(_ people: [Person], listId: String, source: ListMemberSource, at date: Date = .now) -> Int {
+        guard var list = list(id: listId) else { return 0 }
+        let new = people.filter { !list.hasMember($0.id) }
+        guard !new.isEmpty else { return 0 }
+        list.members += new.map { ListMember(person: $0, joinedAt: date, source: source) }
         save(list)
         let events = records.filter { record in
             record.isUpcoming && record.isHost(list.ownerId) && record.attachedLists.contains { $0.listId == listId }
         }
-        return events.filter { !invite([person], to: $0.id, by: list.ownerId).isEmpty }.count
+        return events.filter { !invite(new, to: $0.id, by: list.ownerId).isEmpty }.count
     }
 
     /// The seed's lists on events invite their people, as attaching them

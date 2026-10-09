@@ -91,7 +91,11 @@ struct APIDecodingTests {
     @Test func listsAndSuggestions() throws {
         #expect(try decode(OwnedList.self, APISamples.ownedList).memberCount == 14)
         #expect(try JSONDecoder.eventsAPI.decode([String: [OwnedList]].self, from: Data(APISamples.ownedLists.utf8))["lists"]?.count == 1)
-        #expect(try decode(ListMembers.self, APISamples.listMembers).members.first?.person.firstName == "Ana")
+        let members = try decode(ListMembers.self, APISamples.listMembers).members
+        #expect(members.map(\.person.firstName) == ["Ana", "Ben"] && members.map(\.source) == [.added, .link])
+        let added = try decode(ListMembersAdded.self, APISamples.listMembersAdded)
+        #expect(added.added.first?.firstName == "Ana" && added.alreadyOn.count == 1 && added.invitedTo == 1)
+        #expect(added.skipped.map(\.reason) == [.notFound, .isYou] && added.list.memberCount == 14)
         #expect(try decode(ListLinkOwner.self, APISamples.listLink).viewer?.isOwner == false)
         #expect(try decode(ListLinkOwner.self, APISamples.listLinkSignedOut).viewer == nil)
         #expect(try decode(ListJoined.self, APISamples.listJoined).invitedTo == 2)
