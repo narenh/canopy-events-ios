@@ -9,6 +9,13 @@ enum PreviewData {
         return repository.resolved(record)
     }
 
+    /// What "Duplicate" starts with for an event `me` hosts.
+    static func duplicateDraft(_ id: Event.ID = MockEvents.dragFinaleId, as me: AccountProfile = MockPeople.maya) -> DuplicateDraft {
+        let repository = MockEventsRepository(signedInAs: me)
+        guard let record = try? repository.record(id) else { fatalError("No mock event \(id)") }
+        return repository.draft(copying: record)
+    }
+
     static func guestList(_ id: Event.ID = MockEvents.rooftopId, as me: AccountProfile = MockPeople.maya) -> GuestList {
         let repository = MockEventsRepository(signedInAs: me)
         guard let record = try? repository.record(id) else { fatalError("No mock event \(id)") }

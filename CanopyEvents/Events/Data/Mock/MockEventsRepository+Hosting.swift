@@ -5,6 +5,8 @@ extension MockEventsRepository {
     func createEvent(_ draft: EventDraft) async throws -> Event {
         await pause()
         guard currentUser.emailVerified else { throw APIError.emailUnverified }
+        // A copy's original is checked before anything is made.
+        let coverSource = try draft.coverFrom.map(coverSource(_:))
         let id = newEventId()
         var event = MockEvents.event(
             id: id, title: draft.title, days: 0, hour: 0, hours: nil,
@@ -12,6 +14,7 @@ extension MockEventsRepository {
         )
         event.createdAt = .now
         try apply(draft, to: &event)
+        if let coverSource { copyCover(of: coverSource, to: &event) }
         records.append(MockEventRecord(event: event, guests: []))
         backend.hostedPeople.insert(personId)
         return resolved(try record(id))
@@ -93,10 +96,11 @@ extension MockEventsRepository {
         if draft.accentHue != nil && !draft.themeGrayscale {
             throw APIError(message: "Only a grey event has its own accent.", reason: .accentNeedsGrayscale)
         }
+        guard let startsAt = draft.startsAt else { throw APIError.badStartsAt }
         event.details = try MockDetails.checked(draft.details)
         event.title = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
         event.description = draft.description.isEmpty ? nil : draft.description
-        event.startsAt = draft.startsAt
+        event.startsAt = startsAt
         event.endsAt = draft.endsAt
         event.timeZone = draft.timeZone
         event.locationName = draft.locationName.isEmpty ? nil : draft.locationName

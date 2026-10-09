@@ -27,10 +27,17 @@ struct EventDetailView: View {
     /// How far the page is pulled down past its top: the picture stays put.
     @State private var overscroll: CGFloat = 0
 
-    init(eventId: Event.ID) {
+    /// `-mockDuplicate YES`: open the duplicate editor once loaded.
+    @State private var launchesDuplicate: Bool
+
+    /// `showsLists` opens Lists… at once (a copy just made from an event
+    /// that had your lists on it).
+    init(eventId: Event.ID, showsLists: Bool = false) {
         _model = State(initialValue: EventDetailModel(eventId: eventId))
         _isEditing = State(initialValue: LaunchOptions.editsOpenEvent && LaunchOptions.openEventId == eventId)
         _isInviting = State(initialValue: LaunchOptions.invitesOpenEvent && LaunchOptions.openEventId == eventId)
+        _isManagingLists = State(initialValue: showsLists)
+        _launchesDuplicate = State(initialValue: LaunchOptions.duplicatesOpenEvent && LaunchOptions.openEventId == eventId)
     }
 
     var body: some View {
@@ -42,7 +49,14 @@ struct EventDetailView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .task(id: session.dataVersion) { await model.load(from: repository) }
+        .task(id: session.dataVersion) {
+            await model.load(from: repository)
+            if launchesDuplicate {
+                launchesDuplicate = false
+                await model.duplicate(using: repository)
+            }
+        }
+        .duplicating($model.duplicating)
         .errorAlert($model.errorMessage)
         .eventAccent(model.event?.accent ?? .canopyGreen)
         .canopyScreen(theme: model.event?.theme ?? .canopyGreen)
@@ -136,7 +150,9 @@ struct EventDetailView: View {
                 event: event, notice: model.hostNotice,
                 onInvite: { isInviting = true }, onEdit: { isEditing = true },
                 onCohosts: { isManagingCohosts = true }, onLists: { isManagingLists = true },
-                onShowListQR: { showsListQR = true }, onAction: { pendingAction = $0 }
+                onShowListQR: { showsListQR = true },
+                onDuplicate: session.needsVerification ? nil : { Task { await model.duplicate(using: repository) } },
+                onAction: { pendingAction = $0 }
             )
         } else {
             YourRSVPSection(

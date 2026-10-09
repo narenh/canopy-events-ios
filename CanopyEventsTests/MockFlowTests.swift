@@ -72,6 +72,7 @@ struct MockFlowTests {
 
         var draft = EventDraft.blank()
         draft.title = "Ada's first party"
+        draft.startsAt = .now.addingTimeInterval(86_400)
         let created = try await session.repository.createEvent(draft)
         try await session.refresh()
         #expect(session.isHost)

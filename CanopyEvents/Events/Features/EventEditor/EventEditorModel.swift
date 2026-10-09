@@ -3,11 +3,18 @@ import Observation
 
 /// The editor's state: a draft of the event's fields, a cover picked or
 /// removed (sent only on Save), and saving it all through the repository.
+/// A copy (`duplicating:`) is a new event filled in from its draft. The
+/// date and times are in `+When`.
 @Observable
 final class EventEditorModel {
     /// The event being edited, or nil when making a new one.
     let original: Event?
+    /// What a copy started from, or nil: its cover shows until it's
+    /// taken off or replaced, and its lists are offered once it's made.
+    let duplicate: DuplicateDraft?
     var draft: EventDraft
+    /// A start time picked before the day, on the event's clock.
+    var pendingStartTime: ClockTime?
     /// A photo picked for the cover, not uploaded until Save.
     private(set) var pickedCover: Data?
     /// The color that matches the picked photo, once worked out.
@@ -22,41 +29,34 @@ final class EventEditorModel {
 
     init(event: Event?) {
         original = event
+        duplicate = nil
         draft = event.map(EventDraft.init(event:)) ?? .blank()
+    }
+
+    /// A new event filled in from a copy's draft, with no date or times.
+    init(duplicating duplicate: DuplicateDraft) {
+        original = nil
+        self.duplicate = duplicate
+        draft = EventDraft(duplicate: duplicate)
     }
 
     var isNew: Bool { original == nil }
 
-    /// Whether the hero shows a photo (picked, or the saved one kept).
+    /// Whether the hero shows a photo (picked, the saved one kept, or a
+    /// copy's original's).
     var hasCover: Bool {
-        pickedCover != nil || pickedBackground != nil || (original?.hasCover == true && !removesCover)
+        pickedCover != nil || pickedBackground != nil || draft.coverFrom != nil
+            || (original?.hasCover == true && !removesCover)
     }
 
     /// The color "Match photo" applies: the picked photo's, else the
-    /// saved cover's (its `coverHue`), or nil when it isn't known.
+    /// saved cover's (its `coverHue`) or a copy's original's, or nil when
+    /// it isn't known.
     var coverMatch: EventTheme? {
         if pickedCover != nil { return pickedCoverTheme }
         if let pickedBackground { return pickedBackground.theme }
+        if draft.coverFrom != nil { return duplicate?.coverTheme }
         return removesCover ? nil : original?.coverTheme
-    }
-
-    // MARK: When
-
-    /// Moving the start moves the end with it, keeping the length.
-    func setStart(_ start: Date) {
-        if let end = draft.endsAt {
-            draft.endsAt = start.addingTimeInterval(end.timeIntervalSince(draft.startsAt))
-        }
-        draft.startsAt = start
-    }
-
-    /// "+ End time": three hours after the start.
-    func addEnd() {
-        draft.endsAt = draft.startsAt.addingTimeInterval(3 * 60 * 60)
-    }
-
-    func removeEnd() {
-        draft.endsAt = nil
     }
 
     // MARK: Cover and color
@@ -66,6 +66,7 @@ final class EventEditorModel {
     func pick(_ data: Data) {
         pickedCover = data
         pickedBackground = nil
+        draft.coverFrom = nil
         removesCover = false
         pickedCoverTheme = PhotoHue.theme(ofImageData: data)
         if let pickedCoverTheme { draft.theme = pickedCoverTheme }
@@ -76,6 +77,7 @@ final class EventEditorModel {
         pickedBackground = background
         pickedCover = nil
         pickedCoverTheme = nil
+        draft.coverFrom = nil
         removesCover = false
         draft.theme = background.theme
     }
@@ -84,6 +86,7 @@ final class EventEditorModel {
         pickedCover = nil
         pickedBackground = nil
         pickedCoverTheme = nil
+        draft.coverFrom = nil
         removesCover = original?.hasCover == true
     }
 
@@ -93,7 +96,8 @@ final class EventEditorModel {
 
     // MARK: Saving
 
-    /// Creates or updates the event, then uploads or removes its cover.
+    /// Creates or updates the event (a copy with its original's cover,
+    /// unless taken off or replaced), then uploads or removes its cover.
     /// Returns it on success.
     func save(using repository: any EventsRepository) async -> Event? {
         isSaving = true

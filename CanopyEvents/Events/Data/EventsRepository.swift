@@ -92,8 +92,13 @@ protocol EventsRepository: AnyObject, Sendable {
     func events(_ list: EventListKind, page: PageRequest) async throws -> EventList
     /// `GET /api/v1/events/{id}`
     func event(id: Event.ID) async throws -> Event
-    /// `POST /api/v1/events`
+    /// `POST /api/v1/events`. A copy sends `coverFrom` (its original's id)
+    /// to start with its own copy of that cover.
     func createEvent(_ draft: EventDraft) async throws -> Event
+    /// `GET /api/v1/events/{id}/duplicate-draft`: what a copy of an event
+    /// you host starts with, to fill the new-event editor (no date or
+    /// times). Nothing is made until `createEvent`. `{"draft": …}` unwrapped.
+    func duplicateDraft(eventId: Event.ID) async throws -> DuplicateDraft
     /// `PATCH /api/v1/events/{id}`
     func updateEvent(id: Event.ID, with draft: EventDraft) async throws -> Event
     /// `PATCH /api/v1/events/{id}` with `status: cancelled` (the creator only).

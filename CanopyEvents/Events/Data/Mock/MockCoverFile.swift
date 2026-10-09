@@ -15,6 +15,13 @@ enum MockCoverFile {
         }
     }
 
+    /// A copy of a cover kept here, under a new name; nil for anything
+    /// else (an address on the web) or if it can't be copied.
+    static func copy(_ url: URL) -> URL? {
+        guard url.isFileURL, let data = try? Data(contentsOf: url) else { return nil }
+        return save(data)
+    }
+
     /// The photo's width and height in pixels, upright; nil if it isn't one.
     static func pixelSize(of data: Data) -> (width: Int, height: Int)? {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil),

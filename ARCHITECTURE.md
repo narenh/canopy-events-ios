@@ -323,7 +323,8 @@ APNs pushes later. The payload the server should send is in
   `+Hosting`, `+Covers`, `+Guests`, `+Invites`, `+Hosts` (co-hosts), `+Moderation`,
   `+Wall`, `+Notifications`, `+People` (lookup), `+Friends`,
   `+Suggested`, `+Lists` (your own), `+ListMemberships` (links, joining,
-  leaving) and `+EventLists` (attaching). `MockRules` applies
+  leaving), `+EventLists` (attaching) and `+Duplicate` (a copy's draft,
+  and the cover `coverFrom` copies). `MockRules` applies
   the server's rules from `docs/api.md`: guest list visibility (names
   only for hosts, `everyone`, or once you've answered), counts (people,
   plus-ones, and the two together), capacity and the waitlist (a `going`
@@ -405,6 +406,9 @@ Set in the scheme's "Arguments Passed On Launch", or with
 - `-mockPush guests|wall` with `-mockEvent <id>`: that event's guest list
   or wall; `-mockPush past`: Past events; `-mockPush list`: Maya's Drag
   Race; `-mockPush listLink`: Ana's Dumpling crew's join screen.
+- `-mockDuplicate YES` with `-mockEvent <id>`: "Duplicate" on that event
+  (one Maya hosts, e.g. `Bd7Picnic26x`, the birthday, with a cover, or
+  `Dr7FinaleSF9`, the finale, with her Drag Race list).
 - `-mockInvite YES` with `-mockEvent <id>`: open that event's invite
   sheet (e.g. `Gm8Night4Fun`, Board game night, or `Dr7FinaleSF9`, the
   finale with Drag Race on it).
@@ -455,6 +459,7 @@ values), checked by decoding the specs' own examples
   a view here) with `ListName` and `ListLinkViewer`, `ListJoined`,
   `ListAttached`, `HostList`, `JoinableList` (all but `OwnedList` have
   no example in the spec, so their samples are built from the schemas),
+  `DuplicateDraft` (and its `lists` item, `DuplicateDraftList`),
   `FriendLink`, `FriendLinkOwner`, `Settings`, `InviteOptouts`,
   `EventDetailInput`, `WallEntry`/`WallEntryType`/`WallEntryDetails`, `Wall`
   (`wallVisible`, `canPost`), `InboxNotification`/`NotificationType`/
@@ -468,7 +473,8 @@ values), checked by decoding the specs' own examples
   and un-cancel, cover upload and delete, answering (an answer changes,
   never goes back: there's no withdrawing), the guest list (with
   `?status=`), invite and uninvite, lookup (a POST), co-hosts, removal
-  and restore, new link, the guest menu (mute, leave, invite opt-outs),
+  and restore, new link, a copy's draft (`duplicateDraft`, and
+  `coverFrom` on create), the guest menu (mute, leave, invite opt-outs),
   friends (list, add, take out, friend link, reset, owner, accept),
   settings, the wall, the inbox (list, unread count, mark some or all
   read) and push devices.
@@ -522,7 +528,9 @@ Swift Testing, in `CanopyEventsTests/`:
   `public/ui.js` in node. `CoverSizeTests` checks picking a cover size.
   `EventWhenTests` the how-soon words, the big when, list lines,
   friendly zone names and the nearby zones; `EditorAndAttendingTests`
-  the editor's rules and Attending's words and order.
+  the editor's rules and Attending's words and order; `StartTimeTests`
+  the 7 PM default (`ClockTime.startTime`, the web's `startTimeFor`, and
+  the editor picking a day or a time first, a copy, an edited event).
 - `NotificationCardTests`: the card built from an event (friends
   first, the 800 px cover), its trip through `userInfo`, its size, the
   test invite's content carrying a card the extension can read, and the
@@ -547,9 +555,16 @@ Swift Testing, in `CanopyEventsTests/`:
   accent-blind search, what counts as a phone number or @username, and
   "Filter by past event" (its people A to Z, searched within, nobody
   ticked, a hidden guest list, its words, and loading it from the mock).
+- `MockDuplicateTests`: duplicating against docs/api.md (the draft's
+  fields and lists, no times; hosts only, unverified refused first, a
+  co-host gets only their own lists; a copy with nobody on it, no
+  updates or lists, the original untouched; the copy's cover its own
+  after the original's is removed and the original deleted; every
+  `coverFrom` refusal with nothing made; the editor dropping `coverFrom`
+  when the cover is taken off or replaced).
 
 They're **not in a target yet**, because adding one means editing the
-project file. They were last run (all 99 passing) through a throwaway
+project file. They were last run (all 113 passing) through a throwaway
 Swift package on macOS that links the non-UI sources with the same
 Swift settings. To run them: in Xcode, File → New → Target
 → Unit Testing Bundle named `CanopyEventsTests` (Swift Testing), then
@@ -890,3 +905,49 @@ The web's lists and inviter, mocked. Judgment calls:
   the friends screens aren't built and the co-host picker shows names
   only, so nothing else changed. `PersonRow` takes `isFriendLink` for
   when they are.
+
+### Duplicate and the 7 PM start (canopy-events a29ca50)
+
+The web's "Duplicate" and its 7 PM default, mocked. Judgment calls:
+
+- **Every new event now starts with no date or times**, not tomorrow at
+  7 PM as before: the web's new event starts empty, and the 7 PM rule
+  ("picking a day while the start time is unset") only means something
+  then. The when reads "Pick a date" and "Start time" (the web's words),
+  dimmed; "+ End time" appears once there's a start; Create is off
+  until there's a title and a start. `EventDraft.startsAt` is optional
+  (the mock refuses none with `bad_starts_at`).
+- **Tapping "Pick a date" picks today at once** (so 7 PM shows) and
+  opens the calendar on it. The system's graphical `DatePicker` always
+  shows a day as chosen and doesn't report a tap on that day, so without
+  this "today" couldn't be picked. The system pickers stay (the wheel
+  already takes any minute).
+- **A start time picked before the day is kept** (`pendingStartTime`)
+  and used when the day is picked; the time wheel shows 7:00 PM until
+  then. An edited event's date moves without its time, through the same
+  `ClockTime.startTime` the web uses.
+- **Duplicate fetches the draft first, then opens the editor** (no
+  half-filled editor; a refusal shows on the event page). It's the same
+  new-event editor ("New Event", "Create event") with the copy's color
+  and cover; taking the cover off, picking a photo or a background drops
+  `coverFrom`, and the new one uploads after Create, as for any new
+  event. A refused `coverFrom` shows as the editor's alert with the
+  web's sentence (the editor has no per-field lines yet).
+- **It's hidden for an unverified host** (`session.needsVerification`),
+  shown in every phase, past and cancelled included, after Lists… and
+  Show list QR and before Make a new link… / Step down. Its icon is
+  `plus.square.on.square`, the system's duplicate symbol.
+- **The copy opens on the same stack**, over the original (Back returns
+  to it), rather than switching to Hosting as the New event button does,
+  so it can open with Lists… showing when the original had your own
+  lists on it (the web's `?lists=1`). Adding one there still asks first
+  when it has people on it, as before.
+- **The mock copies an uploaded cover to a file of its own**; a seed or
+  TMDB cover is a web address it can't copy, so the copy keeps the
+  address, in its own record, so removing or replacing either event's
+  cover never touches the other. Refusals come in the API's order:
+  `email_unverified`, then `event_not_found`, then `hosts_only`; and for
+  `coverFrom`, before anything is made, `bad_cover_from`, `hosts_only`,
+  `no_cover`.
+- **The zone line is its own view** (`EditorZoneLine`), to keep
+  `EditorWhenView` small.

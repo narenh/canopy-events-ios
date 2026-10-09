@@ -3,11 +3,13 @@ import Foundation
 /// The editable fields of an event, used by the create/edit form and sent
 /// to the repository. The API client turns it into an `EventInput` (POST)
 /// or an `EventPatch` with only what changed (PATCH); empty strings
-/// become null.
+/// become null. A new event (a copy too) has no start until the host
+/// picks one.
 nonisolated struct EventDraft: Hashable {
     var title = ""
     var description = ""
-    var startsAt: Date
+    /// Nil until picked (a new event starts with none).
+    var startsAt: Date?
     var endsAt: Date?
     var timeZone: String
     var locationName = ""
@@ -24,6 +26,9 @@ nonisolated struct EventDraft: Hashable {
     var accentHue: Int?
     /// The extra fields, in order.
     var details: [EventDetailInput] = []
+    /// A copy's original, whose cover it starts with (`EventInput.coverFrom`).
+    /// Nil once the host takes the cover off or picks another.
+    var coverFrom: Event.ID?
 
     var theme: EventTheme {
         get { EventTheme(hue: themeHue, grayscale: themeGrayscale) }
@@ -36,20 +41,38 @@ nonisolated struct EventDraft: Hashable {
     /// The accent the event will have.
     var accent: AccentColors { AccentColors(theme: theme, accentHue: accentHue) }
 
+    /// A title, a start, and any end after the start.
     var isValid: Bool {
-        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        guard let startsAt else { return false }
+        return !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && (endsAt.map { $0 > startsAt } ?? true)
     }
 }
 
 extension EventDraft {
-    /// A blank event starting at the next whole hour, tomorrow evening.
+    /// A blank event in your time zone, with no date or times yet (as the
+    /// web's): picking its day makes it start at 7 PM.
     static func blank(timeZone: TimeZone = .current) -> EventDraft {
-        var calendar = Calendar.current
-        calendar.timeZone = timeZone
-        let tomorrow = calendar.date(byAdding: .day, value: 1, to: .now) ?? .now
-        let start = calendar.date(bySettingHour: 19, minute: 0, second: 0, of: tomorrow) ?? tomorrow
-        return EventDraft(startsAt: start, timeZone: timeZone.identifier)
+        EventDraft(timeZone: timeZone.identifier)
+    }
+
+    /// A copy's starting fields (`duplicateDraft`), with no date or times.
+    init(duplicate: DuplicateDraft) {
+        self.init(
+            title: duplicate.title,
+            description: duplicate.description ?? "",
+            timeZone: duplicate.timeZone,
+            locationName: duplicate.locationName ?? "",
+            locationAddress: duplicate.locationAddress ?? "",
+            guestListVisibility: duplicate.guestListVisibility,
+            guestsAllowed: duplicate.guestsAllowed,
+            capacity: duplicate.capacity,
+            themeHue: duplicate.themeHue,
+            themeGrayscale: duplicate.themeGrayscale,
+            accentHue: duplicate.accentHue,
+            details: duplicate.details,
+            coverFrom: duplicate.coverFrom
+        )
     }
 
     /// The current values of an existing event, ready to edit.

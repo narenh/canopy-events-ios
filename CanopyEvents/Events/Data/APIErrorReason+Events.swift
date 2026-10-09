@@ -35,6 +35,10 @@ nonisolated extension APIErrorReason {
     static let badThemeGrayscale = Self(rawValue: "bad_theme_grayscale")
     static let badAccentHue = Self(rawValue: "bad_accent_hue")
     static let accentNeedsGrayscale = Self(rawValue: "accent_needs_grayscale")
+    /// A copy's `coverFrom` that isn't an event (or no longer is).
+    static let badCoverFrom = Self(rawValue: "bad_cover_from")
+    /// A copy's original has no cover now: another host took it off.
+    static let noCover = Self(rawValue: "no_cover")
     static let badDetails = Self(rawValue: "bad_details")
     static let tooManyDetails = Self(rawValue: "too_many_details")
     /// With `index`: which detail.

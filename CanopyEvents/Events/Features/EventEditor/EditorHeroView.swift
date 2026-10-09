@@ -5,7 +5,8 @@ import SwiftUI
 /// out the same way), with a dashed line where the clear 2:1 ends, so the host sees
 /// what stays clear. A gallery button (a TMDB background, when the set is
 /// on), a camera button (add or change a photo) and a × (remove) sit top
-/// right as 48 pt dark glass circles. Nothing uploads until Save.
+/// right as 48 pt dark glass circles. Nothing uploads until Save. A copy
+/// shows its original's cover until it's taken off or replaced.
 /// Pulled down, the picture (with its buttons) stays put and the fields
 /// slide down over it, as on the page.
 struct EditorHeroView: View {
@@ -60,6 +61,9 @@ struct EditorHeroView: View {
                          theme: model.draft.theme)
         } else if model.hasCover, let original = model.original {
             CoverPicture(eventId: original.id, images: original.coverImages, fullSizeUrl: original.coverImageUrl,
+                         theme: model.draft.theme)
+        } else if let from = model.draft.coverFrom, let duplicate = model.duplicate {
+            CoverPicture(eventId: from, images: duplicate.coverImages, fullSizeUrl: duplicate.coverImageUrl,
                          theme: model.draft.theme)
         } else {
             CoverArt(eventId: model.original?.id ?? "", theme: model.draft.theme)

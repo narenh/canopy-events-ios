@@ -7,6 +7,7 @@ import SwiftUI
 /// then the Guests and Color cards, and Save in a bar at the bottom.
 /// The background is the event's color as it's being picked. No help
 /// text. Cancelling, deleting and the rest live in the event page's ⋯.
+/// A copy ("Duplicate") is this same new-event form, filled in.
 struct EventEditorView: View {
     /// Called with the saved event, after the sheet closes.
     let onSaved: (Event) -> Void
@@ -23,6 +24,13 @@ struct EventEditorView: View {
     init(event: Event?, onSaved: @escaping (Event) -> Void) {
         self.onSaved = onSaved
         _model = State(initialValue: EventEditorModel(event: event))
+    }
+
+    /// A new event filled in from a copy's draft ("Duplicate"): the same
+    /// "New Event" and "Create event", with the date and times empty.
+    init(duplicating draft: DuplicateDraft, onSaved: @escaping (Event) -> Void) {
+        self.onSaved = onSaved
+        _model = State(initialValue: EventEditorModel(duplicating: draft))
     }
 
     var body: some View {
@@ -121,6 +129,11 @@ struct EventEditorView: View {
 
 #Preview("New") {
     EventEditorView(event: nil) { _ in }
+        .mockEnvironment()
+}
+
+#Preview("Duplicate, dates empty") {
+    EventEditorView(duplicating: PreviewData.duplicateDraft(MockEvents.birthdayId)) { _ in }
         .mockEnvironment()
 }
 

@@ -7,7 +7,7 @@ import Foundation
 /// The rest is in the extensions next to this file: `+Hosting`, `+Covers`,
 /// `+Guests`, `+GuestMenu`, `+Invites`, `+Hosts`, `+Moderation`, `+Wall`,
 /// `+Notifications`, `+People`, `+Friends`, `+Suggested`, `+Lists`,
-/// `+ListMemberships`, `+EventLists` and `+Settings`.
+/// `+ListMemberships`, `+EventLists`, `+Duplicate` and `+Settings`.
 final class MockEventsRepository: EventsRepository {
     let backend: MockBackend
     let personId: Person.ID

@@ -29,6 +29,8 @@ enum LaunchOptions {
     }
     /// `YES`, with `-mockEvent`, opens that event's editor too.
     static var editsOpenEvent: Bool { value(for: "mockEdit") == "YES" }
+    /// `YES`, with `-mockEvent`, opens "Duplicate" on that event (one you host).
+    static var duplicatesOpenEvent: Bool { value(for: "mockDuplicate") == "YES" }
     /// `YES`, with `-mockEvent`, opens that event's invite sheet too.
     static var invitesOpenEvent: Bool { value(for: "mockInvite") == "YES" }
     /// `YES` sends the test notification (Adam Smith's invite) 5 seconds

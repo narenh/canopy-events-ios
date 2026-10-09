@@ -21,6 +21,8 @@ final class EventDetailModel {
     private(set) var optedOut: Set<Person.ID> = []
     /// After joining a list from "Get invited next time".
     private(set) var joinedList: ListJoined?
+    /// "Duplicate": what the copy starts with, while its editor is open.
+    var duplicating: DuplicateDraft?
     var errorMessage: String?
 
     init(eventId: Event.ID) {

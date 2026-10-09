@@ -76,6 +76,7 @@ struct MockGuestMenuTests {
         try await session.signInWithPasskey()
         var draft = EventDraft.blank()
         draft.title = "Picnic"
+        draft.startsAt = .now.addingTimeInterval(86_400)
         draft.details = [EventDetailInput(type: .link, value: "partiful.com/e/x"),
                          EventDetailInput(type: .phone, label: "Ana", value: "(415) 555-0142")]
         let event = try await session.repository.createEvent(draft)

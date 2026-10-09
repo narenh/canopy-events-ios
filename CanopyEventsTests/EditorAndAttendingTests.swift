@@ -5,11 +5,15 @@ import Testing
 /// The editor's when and color rules, and Attending's words and order.
 @MainActor
 struct EditorAndAttendingTests {
-    @Test func theEndMovesWithTheStartAndDefaultsToThreeHours() {
+    @Test func theEndMovesWithTheStartAndDefaultsToThreeHours() throws {
         let model = EventEditorModel(event: nil)
         model.addEnd()
-        #expect(model.draft.endsAt == model.draft.startsAt.addingTimeInterval(3 * 3600))
-        let later = model.draft.startsAt.addingTimeInterval(86_400)
+        #expect(model.draft.endsAt == nil, "no end before there's a start")
+        model.pickStartDay(.now)
+        model.addEnd()
+        let start = try #require(model.draft.startsAt)
+        #expect(model.draft.endsAt == start.addingTimeInterval(3 * 3600))
+        let later = start.addingTimeInterval(86_400)
         model.setStart(later)
         #expect(model.draft.endsAt == later.addingTimeInterval(3 * 3600))
         model.removeEnd()

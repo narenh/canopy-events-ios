@@ -110,6 +110,22 @@ struct APIDecodingTests {
         #expect(error.reason == .badDetailURL && error.index == 1)
     }
 
+    @Test func duplicateDraft() throws {
+        let envelope = try JSONDecoder.eventsAPI.decode([String: DuplicateDraft].self, from: Data(APISamples.duplicateDraft.utf8))
+        let draft = try #require(envelope["draft"])
+        #expect(draft.title == "Drag Race night" && draft.timeZone == "America/Los_Angeles" && draft.capacity == nil)
+        #expect(draft.details.map(\.type) == [.dressCode] && draft.details.first?.label == nil)
+        #expect(draft.themeHue == 320 && draft.coverFrom == "4fQ9xKpL2mZa" && draft.coverTheme == .hue(318))
+        #expect(draft.coverImages.count == 2 && draft.coverImages.last?.url == draft.coverImageUrl)
+        #expect(draft.lists == [DuplicateDraftList(id: "Lw3Kp9QzX2aB", name: "Drag Race")])
+        // Round trip (details get new row ids, so compare the JSON's own fields).
+        let again = try JSONDecoder.eventsAPI.decode(DuplicateDraft.self, from: JSONEncoder.eventsAPI.encode(draft))
+        #expect(again.details.map(\.value) == draft.details.map(\.value))
+        var same = again
+        same.details = draft.details
+        #expect(same == draft)
+    }
+
     @Test func backgrounds() throws {
         let list = try decode(BackgroundList.self, APISamples.backgrounds)
         #expect(list.enabled && list.backgrounds.first?.theme == .hue(35) && list.groups.count == 1)

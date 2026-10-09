@@ -3,8 +3,10 @@ import SwiftUI
 /// What hosts see instead of the RSVP buttons: "Share link" and "Invite"
 /// side by side (while the event is on), then "Edit" with a ⋯ menu. The
 /// creator's menu: Co-hosts…, Lists…, Show list QR (once a list is on),
-/// Make a new link…, Cancel or Bring back event, and Delete event… last.
-/// A co-host's: Lists…, Show list QR, Step down.
+/// Duplicate, Make a new link…, Cancel or Bring back event, and Delete
+/// event… last. A co-host's: Lists…, Show list QR, Duplicate, Step down.
+/// Duplicate is for verified hosts only, in every phase (a past event is
+/// the usual one to copy).
 struct HostControlsSection: View {
     let event: Event
     /// A line to show after something was done ("New link made...").
@@ -16,6 +18,9 @@ struct HostControlsSection: View {
     var onLists: () -> Void = {}
     /// "Show list QR": the lists on the event as big QR codes.
     var onShowListQR: () -> Void = {}
+    /// "Duplicate": a new event filled in from this one. Nil hides it
+    /// (an unverified host can't make events).
+    var onDuplicate: (() -> Void)?
     let onAction: (HostAction) -> Void
 
     @Environment(\.eventAccent) private var accent
@@ -92,6 +97,9 @@ struct HostControlsSection: View {
         Button("Lists…", systemImage: "list.bullet", action: onLists)
         if !(event.hostLists ?? []).isEmpty {
             Button("Show list QR", systemImage: "qrcode", action: onShowListQR)
+        }
+        if let onDuplicate {
+            Button("Duplicate", systemImage: "plus.square.on.square", action: onDuplicate)
         }
     }
 
